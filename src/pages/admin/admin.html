@@ -1,0 +1,46 @@
+<!--
+  Generated template for the AdminPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="trap_theme">
+    <button ion-button menuToggle end>
+        <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>admin</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <ion-card (click)="gestionPays()">
+    <ion-item style="text-align: center">Geston des pays
+    </ion-item>
+  </ion-card>
+ 
+  <ion-card (click)="gestionRegions()">
+    <ion-item style="text-align: center">Gestion des régions
+    </ion-item>
+  </ion-card>
+
+  <ion-card (click)="gestionDepartements()" >
+    <ion-item style="text-align: center">Gestion des departments
+    </ion-item>
+  </ion-card>
+
+  <ion-card (click)="gestionCommunes()">
+    <ion-item style="text-align: center">Gestion des communes
+    </ion-item>
+  </ion-card>
+
+  <ion-card (click)="gestionVillages()">
+    <ion-item style="text-align: center">Gestion des villages
+    </ion-item>
+  </ion-card>
+
+</ion-content>

@@ -1,0 +1,113 @@
+<!--
+  Generated template for the GestionRegionPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="trap_theme">
+    <ion-buttons *ngIf="liste || !gestion_pays" left>
+      <button ion-button icon-only color="royal" (click)="annuler()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="ajouter || modifier" left>
+      <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+    </ion-buttons>
+
+    <ion-buttons *ngIf="liste"  start>
+      <button ion-button icon-only>
+        <ion-badge color="green" item-right>{{allRegion.length}}</ion-badge>
+      </button>
+    </ion-buttons>
+    <ion-title>Gestion regions</ion-title>
+  </ion-navbar>
+
+</ion-header>
+  
+  
+<ion-content padding>
+
+  <div *ngIf="liste">
+      <ion-item>
+          <ion-searchbar placeholder="Rechercher regions..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+        </ion-item>
+    <ion-list *ngIf="allRegion.length && liste">
+      <ion-item-sliding *ngFor="let region of allRegion">
+        <ion-item>
+          <h6><strong>Pays:</strong> {{region.nom_pays}} ({{region.id_pays}})</h6>
+          <h6><strong>ID région:</strong> {{region.id}}</h6>
+          <h6><strong>Nom région:</strong> {{region.nom}}</h6>
+        </ion-item> 
+
+        <ion-item-options side="right">
+            <button ion-button color="my_primary" (click)="modifierRegion(region)">
+              <ion-icon name="create"></ion-icon>
+              Editer
+            </button>
+          </ion-item-options>
+
+          <ion-item-options side="left">
+            <button ion-button color="danger" (click)="supprimerRegion(region)">
+              <ion-icon name="trash"></ion-icon>
+              Supprimer
+            </button>
+          </ion-item-options>
+      </ion-item-sliding>
+    </ion-list>
+  </div>
+
+
+<div *ngIf="!liste">
+  <form [formGroup]="regionForm" (ngSubmit) = "actionForm()" >
+
+    <ion-item *ngIf="pays_defini">
+      <ion-label floating>Id pays <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="id_pays" type="text"  [(ngModel)]="id_pays" disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="regionForm.controls['id_pays'].hasError('required') && regionForm.controls['id_pays'].touched">* Le ID du pays est obligatoire</div>
+
+    <ion-item *ngIf="pays_defini">
+      <ion-label floating>Nom pays</ion-label>
+      <ion-input formControlName="nom_pays" type="text"  [(ngModel)]="nom_pays"  disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="regionForm.controls['nom_pays'].hasError('required') && regionForm.controls['nom_pays'].touched">* Le Nom du pays est obligatoire</div>
+
+    <ion-item *ngIf="!pays_defini">
+      <ion-label floating>Pays <span class="error-box">*</span></ion-label>
+      <ion-select formControlName="id_pays" [(ngModel)]="id_pays" cancelText="Annuler" okText="Ok">
+        <ion-option *ngFor="let p of allPays" [value]="p">{{p.nom}}</ion-option>
+      </ion-select>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="regionForm.controls['id_pays'].hasError('required') && regionForm.controls['id_pays'].touched">* Le pays est obligatoire</div>
+
+
+    <ion-item>
+      <ion-label floating>Id région <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="id" type="text"  [(ngModel)]="id"  [(ngModel)]="id" disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="regionForm.controls['id'].hasError('required') && regionForm.controls['id'].touched">* Le ID de la région est obligatoire</div>
+
+    <ion-item *ngIf="ajouter">
+      <ion-label floating>Nom région <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="nom" type="text"  [(ngModel)]="nom" (keyup)="genererID()"></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="regionForm.controls['nom'].hasError('required') && regionForm.controls['nom'].touched">* Le nom de la région est obligatoire</div>
+
+    <ion-item *ngIf="modifier">
+      <ion-label floating>Nom région <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="nom" type="text"  [(ngModel)]="nom"></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="regionForm.controls['nom'].hasError('required') && regionForm.controls['nom'].touched">* Le nom de la région est obligatoire</div>
+
+    <br>
+    <button ion-button type="submit" color="my_secondary" [disabled]="!regionForm.valid" block>Sauvegarder</button>
+  </form>
+  <button ion-button color="my_primary" block (click)="annuler()">Annuler</button>
+  </div>
+
+  <ion-fab bottom right *ngIf="liste" bottom>
+    <button ion-fab mini (click)="ajouterRegion()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+    <!--button ion-fab mini (click)="fusionnerEssais()" color="my_primary">FUS</button-->
+  </ion-fab>
+</ion-content>
+    

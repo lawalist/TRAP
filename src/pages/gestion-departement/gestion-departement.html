@@ -1,0 +1,117 @@
+<!--
+  Generated template for the GestionDepartementPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="trap_theme">
+    <ion-buttons *ngIf="liste || !gestion_pays" left>
+      <button ion-button icon-only color="royal" (click)="annuler()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="ajouter || modifier" left>
+      <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+    </ion-buttons>
+
+    <ion-buttons *ngIf="liste"  start>
+      <button ion-button icon-only>
+        <ion-badge color="green" item-right>{{allDepartement.length}}</ion-badge>
+      </button>
+    </ion-buttons>
+    <ion-title>Gestion departements</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+  
+<ion-content padding>
+
+
+  <div *ngIf="liste">
+      <ion-item>
+          <ion-searchbar placeholder="Rechercher departement..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          </ion-item>
+    <ion-list *ngIf="allDepartement.length && liste">
+      <ion-item-sliding *ngFor="let departement of allDepartement">
+        <ion-item>
+          <h6><strong>Région:</strong> {{departement.nom_region}} ({{departement.id_region}})</h6>
+          <h6><strong>ID departement:</strong> {{departement.id}}</h6>
+          <h6><strong>Nom departement:</strong> {{departement.nom}}</h6>
+        </ion-item> 
+
+        <ion-item-options side="right">
+            <button ion-button color="my_primary" (click)="modifierDepartement(departement)">
+              <ion-icon name="create"></ion-icon>
+              Editer
+            </button>
+          </ion-item-options>
+
+          <ion-item-options side="left">
+            <button ion-button color="danger" (click)="supprimerDepartement(departement)">
+              <ion-icon name="trash"></ion-icon>
+              Supprimer
+            </button>
+          </ion-item-options>
+      </ion-item-sliding>
+    </ion-list>
+  </div>
+
+
+<div *ngIf="!liste">
+
+  <form [formGroup]="departementForm" (ngSubmit) = "actionForm()" >
+
+    <ion-item *ngIf="region_defini">
+      <ion-label floating>Id région <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="id_region" [(ngModel)]="id_region" type="text" disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="departementForm.controls['id_region'].hasError('required') && departementForm.controls['id_region'].touched">* Le ID de la région est obligatoire</div>
+
+    <ion-item *ngIf="region_defini">
+      <ion-label floating>Nom région</ion-label>
+      <ion-input formControlName="nom_region" [(ngModel)]="nom_region" type="text" disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="departementForm.controls['nom_region'].hasError('required') && departementForm.controls['nom_region'].touched">* Le Nom de la région est obligatoire</div>
+
+    <ion-item *ngIf="!region_defini">
+      <ion-label floating>Région <span class="error-box">*</span></ion-label>
+      <!--ion-input formControlName="id_region" [(ngModel)]="id_region" type="text" disabled></ion-input-->
+      <ion-select formControlName="id_region" [(ngModel)]="id_region" cancelText="Annuler" okText="Ok">
+        <ion-option *ngFor="let r of allRegion" [value]="r">{{r.nom}}</ion-option>
+      </ion-select>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="departementForm.controls['id_region'].hasError('required') && departementForm.controls['id_region'].touched">* Le ID de la région est obligatoire</div>
+
+
+    <ion-item>
+      <ion-label floating>Id departement <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="id" type="text"  [(ngModel)]="id" disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="departementForm.controls['id'].hasError('required') && departementForm.controls['id'].touched">* Le ID de la région est obligatoire</div>
+
+    <ion-item *ngIf="ajouter">
+      <ion-label floating>Nom departement <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="nom" type="text"  [(ngModel)]="nom" (keyup)="genererID()"></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="departementForm.controls['nom'].hasError('required') && departementForm.controls['nom'].touched">* Le nom de la région est obligatoire</div>
+
+    <ion-item *ngIf="modifier">
+      <ion-label floating>Nom departement <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="nom" type="text"  [(ngModel)]="nom"></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="departementForm.controls['nom'].hasError('required') && departementForm.controls['nom'].touched">* Le nom de la région est obligatoire</div>
+
+    <br>
+    <button ion-button type="submit" color="my_secondary" [disabled]="!departementForm.valid" block>Sauvegarder</button>
+  </form>
+  <button ion-button color="my_primary" block (click)="annuler()">Annuler</button>
+</div>
+
+  <ion-fab bottom right *ngIf="liste" bottom>
+    <button ion-fab mini (click)="ajouterDepartement()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+    <!--button ion-fab mini (click)="fusionnerEssais()" color="my_primary">FUS</button-->
+  </ion-fab>
+
+</ion-content>
+    

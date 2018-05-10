@@ -1,0 +1,114 @@
+<!--
+  Generated template for the GestionVillagePage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="trap_theme">
+    <ion-buttons *ngIf="liste || !gestion_pays" left>
+      <button ion-button icon-only color="royal" (click)="annuler()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="ajouter || modifier" left>
+      <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+    </ion-buttons>
+
+    <ion-buttons *ngIf="liste"  start>
+      <button ion-button icon-only>
+        <ion-badge color="green" item-right>{{allVillage.length}}</ion-badge>
+      </button>
+    </ion-buttons>
+    <ion-title>Gestion villages</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+    <div *ngIf="liste">
+        <ion-item>
+            <ion-searchbar placeholder="Rechercher village..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          </ion-item>
+    <ion-list *ngIf="allVillage.length && liste">
+
+      <ion-item-sliding *ngFor="let village of allVillage">
+        <ion-item>
+          <h6><strong>Commune:</strong> {{village.nom_commune}} ({{village.id_commune}})</h6>
+          <h6><strong>ID village:</strong> {{village.id}}</h6>
+          <h6><strong>Nom village:</strong> {{village.nom}}</h6>
+        </ion-item> 
+
+        <ion-item-options side="right">
+            <button ion-button color="my_primary" (click)="modifierVillage(village)">
+              <ion-icon name="create"></ion-icon>
+              Editer
+            </button>
+          </ion-item-options>
+
+          <ion-item-options side="left">
+            <button ion-button color="danger" (click)="supprimerVillage(village)">
+              <ion-icon name="trash"></ion-icon>
+              Supprimer
+            </button>
+          </ion-item-options>
+      </ion-item-sliding>
+    </ion-list>
+  </div>
+
+  <div *ngIf="!liste">
+  <form [formGroup]="villageForm" (ngSubmit) = "actionForm()" >
+
+    <ion-item *ngIf="commune_defini">
+      <ion-label floating>Id commune <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="id_commune" [(ngModel)]="id_commune"  type="text" disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['id_commune'].hasError('required') && villageForm.controls['id_commune'].touched">* Le ID de la commune est obligatoire</div>
+
+    <ion-item *ngIf="commune_defini">
+      <ion-label floating>Nom commune</ion-label>
+      <ion-input formControlName="nom_commune" [(ngModel)]="nom_commune"  type="text" disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['nom_commune'].hasError('required') && villageForm.controls['nom_commune'].touched">* Le Nom de la commune est obligatoire</div>
+
+    <ion-item *ngIf="!commune_defini">
+      <ion-label floating>Commune <span class="error-box">*</span></ion-label>
+      <!--ion-input formControlName="id_commune" [(ngModel)]="id_commune"  type="text" disabled></ion-input-->
+      <ion-select formControlName="id_commune" [(ngModel)]="id_commune" cancelText="Annuler" okText="Ok">
+        <ion-option *ngFor="let c of allCommune" [value]="c">{{c.nom}}</ion-option>
+      </ion-select>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['id_commune'].hasError('required') && villageForm.controls['id_commune'].touched">* Le ID de la commune est obligatoire</div>
+
+    <ion-item>
+      <ion-label floating>Id village <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="id" type="text"  [(ngModel)]="id" disabled></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['id'].hasError('required') && villageForm.controls['id'].touched">* Le ID du village est obligatoire</div>
+
+    <ion-item *ngIf="ajouter">
+      <ion-label floating>Nom village <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="nom" type="text"  [(ngModel)]="nom" (keyup)="genererID()"></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['nom'].hasError('required') && villageForm.controls['nom'].touched">* Le nom du village est obligatoire</div>
+
+    <ion-item *ngIf="modifier">
+      <ion-label floating>Nom village <span class="error-box">*</span></ion-label>
+      <ion-input formControlName="nom" type="text"  [(ngModel)]="nom"></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['nom'].hasError('required') && villageForm.controls['nom'].touched">* Le nom du village est obligatoire</div>
+
+    <br>
+    <button ion-button type="submit" color="my_secondary" [disabled]="!villageForm.valid" block>Sauvegarder</button>
+  </form>
+  <button ion-button color="my_primary" block (click)="annuler()">Annuler</button>
+  </div>
+
+  <ion-fab bottom right *ngIf="liste" bottom>
+    <button ion-fab mini (click)="ajouterVillage()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+    <!--button ion-fab mini (click)="fusionnerEssais()" color="my_primary">FUS</button-->
+  </ion-fab>
+
+</ion-content>
+    
