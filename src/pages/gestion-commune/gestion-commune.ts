@@ -45,9 +45,9 @@ export class GestionCommunePage {
       this.ajouter = false;
     }
 
-    if(this.navParams.data.id_departement){
-      this.id_departement = this.navParams.data.id_pays;
-      this.nom_departement = this.navParams.data.nom_departement;
+    if(this.navParams.data.departementID){
+      this.id_departement = this.navParams.data.departementID;
+      //this.nom_departement = this.navParams.data.localite.nom;
       this.departement_defini = true;
     }
     
@@ -69,6 +69,14 @@ export class GestionCommunePage {
 
       this.servicePouchdb.getDocById('departement').then((departement) => {
           this.allDepartement = departement.data;
+          if(this.id_departement){
+            for(let i = 0; i < this.allDepartement.length; i++){
+              if(this.allDepartement[i].id == this.id_departement){
+                this.nom_departement = this.allDepartement[i].nom;
+                break;
+              }
+            }
+          } 
         });
 
   }
@@ -231,7 +239,13 @@ export class GestionCommunePage {
         }
       });
 
-      this.commune.data = this.allCommune;
+      this.commune.data.forEach((r, i) => {
+        if(r.id === commune.id){
+          this.commune.data[i] = commune;
+        }
+      });
+
+      //this.commune.data = this.allCommune;
       //this.allPays.splice(this.pays.indesOf())
       //this.servicePouchdb.updateLocalite(this.commune);
       this.servicePouchdb.updateLocalite(this.commune).then((res) => {
@@ -357,7 +371,12 @@ export class GestionCommunePage {
               }
             });
 
-            this.commune.data = this.allCommune;
+            this.commune.data.forEach((r, i) => {
+              if(r.id === commune.id){
+                this.commune.data.splice(i, 1);
+              }
+            });
+            //this.commune.data = this.allCommune;
             //this.allPays.splice(this.pays.indesOf())
             //this.servicePouchdb.updateLocalite(this.commune);
             this.servicePouchdb.updateLocalite(this.commune).then((res) => {

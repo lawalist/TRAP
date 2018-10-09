@@ -1,0 +1,260 @@
+<!--
+  Generated template for the CulturePage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+
+<ion-header>
+
+  <ion-navbar color="trap_theme">
+    <ion-buttons *ngIf="!ajoutForm && !modifierFrom && !detailCulture" left>
+      <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="ajoutForm || modifierFrom" left>
+      <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="detailCulture" left>
+      <button ion-button icon-only color="royal" (click)="fermerDetail()"><ion-icon name="arrow-back"></ion-icon></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="!ajoutForm && !detailCulture && !modifierFrom"  start>
+
+      <button ion-button *ngIf="rechercher" icon-only>
+          <ion-spinner></ion-spinner>
+      </button>
+
+      <button ion-button icon-only>
+        <ion-badge color="fuma-green" item-right>{{cultures.length}}</ion-badge>
+      </button>
+
+      <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+          <ion-icon name="sync"></ion-icon>
+      </button>
+
+    </ion-buttons>
+
+    <ion-title *ngIf="!ajoutForm && !detailCulture">culture</ion-title>
+    <ion-title *ngIf="ajoutForm && !modifierFrom">ajouter-culture</ion-title>
+    <ion-title *ngIf="ajoutForm && modifierFrom">modifier-culture</ion-title>
+    <ion-title *ngIf="detailCulture">detail-culture</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <div *ngIf="!ajoutForm && !detailCulture">
+
+        <ion-list>
+          <ion-row>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Choisir la limite</ion-label>
+                <ion-select [(ngModel)]="selectedLimit" (ionChange)="choixLimit()" cancelText="Annuler" okText="Ok" >
+                  <ion-option value="" selected disabled>Selectionnez la limite</ion-option>
+                  <ion-option *ngFor="let limit of limits" [value]=limit>{{limit}}</ion-option>
+                </ion-select>
+              </ion-item>
+            </ion-col>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Style affichage</ion-label>
+                <ion-select [(ngModel)]="selectedStyle" cancelText="Annuler" okText="Ok" >
+                  <ion-option value="" selected disabled>Selectionnez le style de la liste</ion-option>
+                  <ion-option value="liste" >Liste</ion-option>
+                  <ion-option value="tableau" >Tableau</ion-option>
+                </ion-select>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+          <ion-item>
+            <ion-searchbar placeholder="Rechercher par nom..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          </ion-item>
+        </ion-list>
+        <br >
+          <ion-list class="info-card" *ngIf="cultures.length > 0 && selectedStyle === 'liste'">
+          <!--ion-list *ngIf="selectedStyle === 'liste'" [virtualScroll]="cultures" [headerFn]="myHeaderFn"-->
+          
+            <ion-list-header>
+              <h2  class="fond-gris"><strong>Les cultures </strong></h2>
+            </ion-list-header>
+    
+            <!--ion-item-divider *virtualHeader="let header" class="message">
+              <strong style="width: 100%" >cultures {{selectedAnnee}}: {{header}}</strong>
+            </ion-item-divider-->
+        <!--ion-item-sliding *ngFor="let c of cultures; let i = index"-->
+    
+          <ion-item *ngFor="let c of cultures; let i = index" (click)="detail(c.doc)"> 
+          <!--ion-item *virtualItem="let ess" (click)="detail(ess.doc)" --> 
+            <!--h6><strong>Code culture:</strong> {{ess.doc.data.code_culture}}</h6-->
+            <h6><strong>Code:</strong> {{c.doc.data.code}}</h6>
+            <h6><strong>Nom:</strong> {{c.doc.data.nom}}</h6>
+            <!--h6><strong>Cycle semis:</strong> {{v.doc.data.cycle_semis}}</h6-->
+          </ion-item>
+          <!--ion-item-options side="right"> 
+              <button ion-button icon-only color="my_primary" (click)="partager(c.doc._id)">
+                <ion-icon name="share"></ion-icon>
+              </button>
+            </ion-item-options>
+        </ion-item-sliding-->
+        </ion-list>
+    
+      <ion-card class="info-card" *ngIf="cultures.length > 0 && selectedStyle === 'tableau'">
+        <ion-card-header>
+          <h2 class="fond-gris"><strong>Les cultures</strong></h2>
+        </ion-card-header> 
+        <ion-scroll scrollX="true" scrollY="true" id="tableau" style="height: 80vh"> 
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+              <th style="min-width: 100px" >
+                <strong>Code</strong> 
+              </th>
+              <th >
+                <strong>nom</strong> 
+              </th>
+              <th>
+                <strong>description</strong>
+              </th>
+              </tr>
+            </thead>
+            <!--hr style="width: 375%"-->
+            <tbody>
+                <tr *ngFor="let c of cultures" (click)="detail(c.doc)">
+                  <td  >
+                    {{c.doc.data.code}}
+                  </td>
+                  <td  >
+                    {{c.doc.data.nom}}
+                  </td>
+                  <td  >
+                    {{c.doc.data.description}}
+                  </td>       
+                </tr>
+            </tbody>
+          </table>
+        </ion-scroll>
+      </ion-card>
+    
+      <div *ngIf="cultures.length > 0">
+        <br><br><br><br>
+      </div>
+        <ion-list *ngIf="!cultures.length > 0">
+          <ion-item>
+            <div class="message">La liste est vide!</div>
+          </ion-item>    
+        </ion-list>
+      </div>
+
+
+
+
+<div *ngIf="detailCulture">
+    <ion-card class="info-card" (dblclick)="editer(culture, true)"> 
+      <ion-card-header>
+        <h2 class="fond-gris"><strong>Détail culture: {{culture.data.nom}}</strong></h2>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <!--ion-row><h5 class="sans-fond-gris"><strong>Caractères généraux</strong></h5> </ion-row-->
+          <ion-row> <ion-col class='meta-key'><strong>Code:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.code}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.nom}} </ion-col> </ion-row>
+          
+          <ion-row> <ion-col class='meta-key'><strong>Description:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.description}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date enregistrement:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.today | date: 'dd-MM-yyyy'}}</ion-col> </ion-row>
+                
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+  
+    <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(culture, true)"> 
+      <ion-card-header>
+        <h2 class="fond-gris"><strong>Plus d'informations</strong></h2>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row><ion-col class='meta-key'><strong>Id:</strong></ion-col> <ion-col class='meta-value'>{{culture._id}} </ion-col>   </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>No révision:</strong></ion-col> <ion-col class='meta-value'> {{culture._rev }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date création:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.created_at | date: 'dd-MM-yyyy'}} à {{culture.data.created_at | date: 'HH:mm:ss:ms'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Créateur:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.created_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.phonenumber}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date dernière mise à jour:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.updatet_at | date: 'dd-MM-yyyy'}}  à {{culture.data.updatet_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Dernière mise à jour par:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.updated_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.update_deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.update_imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.update_phonenumber}} </ion-col> </ion-row>
+          <ion-row *ngIf="culture.data.deleted"> <ion-col class='meta-key'><strong>Date suppression:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.deleted_at | date: 'dd-MM-yyyy'}}  à {{culture.data.deleted_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row *ngIf="culture.data.deleted"> <ion-col class='meta-key'><strong>Supprimé par:</strong></ion-col> <ion-col class='meta-value'> {{culture.data.deleted_by}} </ion-col> </ion-row>
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+  
+  </div>
+  
+  <div *ngIf="ajoutForm || modifierFrom">
+  
+    <form [formGroup]="cultureForm" novalidate (ngSubmit)="actionForm()">
+        <!-- we will place our fields here -->
+        <ion-item>
+          <ion-label floating>Date d'ajout <span class="error-box">*</span></ion-label>
+          <ion-datetime displayFormat="DD/MM/YYYY" formControlName="today" [(ngModel)]="today" cancelText="Annuler" doneText="Valider" disabled></ion-datetime>
+          <!--ion-datetime ion-datepicker  (ionChanged)="setDate($event);" [value]="dateAjout" full="true" calendar="true" locale="fr-FR" clear class="ScheduleDate" displayFormat="DD/MM/YYYY" formControlName="today" [(ngModel)]="today" cancelText="Annuler" okText="Valider" disabled></ion-datetime-->
+        </ion-item>
+
+        <ion-item>
+          <ion-label floating>Nom <span class="error-box">*</span></ion-label>
+          <!--ion-input type="text" formControlName="nom"></ion-input-->
+          <ion-select formControlName="nom" cancelText="Annuler" okText="Ok">
+            <ion-option *ngFor="let c of listeCultures" [value]=c>{{c}}</ion-option>
+          </ion-select>
+        </ion-item>
+        <div style="padding-left: 15px;" class="error-box" *ngIf="cultureForm.controls['nom'].hasError('required') && cultureForm.controls['nom'].touched">* le nom de la culture est obligatoir!</div>
+          
+        <ion-item>
+          <ion-label floating>Description</ion-label>
+          <ion-textarea formControlName="description" row="6"></ion-textarea>
+        </ion-item>
+      
+      <br>
+      <ion-row>
+        <ion-col>
+          <button ion-button type="submit" color="my_secondary" [disabled]="!cultureForm.valid" block>Sauvegarder</button>
+        </ion-col>
+        <ion-col>
+          <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+        </ion-col>
+      </ion-row>
+    </form>
+    
+  </div>
+  
+  <ion-fab bottom right *ngIf="!ajoutForm &&!detailCulture && selectedStyle != 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)" bottom>
+      <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+          <!--button ion-fab mini (click)="fusionnercultures()" color="my_primary">FUS</button-->
+    </ion-fab>
+    
+  
+  
+    <ion-fab bottom right *ngIf="!ajoutForm &&!detailCulture && selectedStyle == 'tableau'">
+      <button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
+      <ion-fab-list side="top"> 
+        <button ion-fab mini *ngIf="cultures.length > 0" (click)="onPrint()" color="my_primary"><ion-icon name="print"></ion-icon></button>
+        <button ion-fab mini *ngIf="cultures.length > 0" (click)="exportExcel()" color="my_primary"><ion-icon name="logo-windows"></ion-icon></button>
+        <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+        
+      </ion-fab-list>
+    </ion-fab>
+  
+    <ion-fab bottom right *ngIf="detailCulture">
+      <button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
+      <ion-fab-list side="top">
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(culture)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+        <button ion-fab mini (click)="varietes(culture)" color="my_primary" ><strong>VR</strong></button>
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(culture)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      </ion-fab-list>
+    </ion-fab>
+  
+</ion-content>

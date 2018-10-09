@@ -45,9 +45,9 @@ export class GestionDepartementPage {
       this.ajouter = false;
     }
 
-    if(this.navParams.data.id_region){
-      this.id_region = this.navParams.data.id_region;
-      this.nom_region = this.navParams.data.nom_region;
+    if(this.navParams.data.regionID){
+      this.id_region = this.navParams.data.regionID;
+      //this.nom_region = this.navParams.data.localite.nom;
       this.region_defini = true;
     }
     
@@ -69,6 +69,14 @@ export class GestionDepartementPage {
 
      this.servicePouchdb.getDocById('region').then((regions) => {
           this.allRegion = regions.data;
+          if(this.id_region){
+            for(let i = 0; i < this.allRegion.length; i++){
+              if(this.allRegion[i].id == this.id_region){
+                this.nom_region = this.allRegion[i].nom;
+                break;
+              }
+            }
+          } 
         });
   }
 
@@ -221,8 +229,8 @@ export class GestionDepartementPage {
       //loading.present();
       //let region = this.regionForm.value;
       if(!this.region_defini){
-        departement.id_pays = this.id_region.id;
-        departement.nom_pays = this.id_region.nom;
+        departement.id_region = this.id_region.id;
+        departement.nom_region = this.id_region.nom;
       }
       this.allDepartement.forEach((d, i) => {
         if(d.id === departement.id){
@@ -230,7 +238,13 @@ export class GestionDepartementPage {
         }
       });
 
-      this.departement.data = this.allDepartement;
+      this.departement.data.forEach((d, i) => {
+        if(d.id === departement.id){
+          this.departement.data[i] = departement;
+        }
+      });
+
+      //this.departement.data = this.allDepartement;
       //this.allPays.splice(this.pays.indesOf())
       //this.servicePouchdb.updateLocalite(this.departement);
       this.servicePouchdb.updateLocalite(this.departement).then((res) => {
@@ -338,7 +352,13 @@ ajouterDepartement(){
               }
             });
 
-            this.departement.data = this.allDepartement;
+            this.departement.data.forEach((r, i) => {
+              if(r.id === departement.id){
+                this.departement.data.splice(i, 1);
+              }
+            });
+
+            //this.departement.data = this.allDepartement;
             //this.allPays.splice(this.pays.indesOf())
             //this.servicePouchdb.updateLocalite(this.departement);
             this.servicePouchdb.updateLocalite(this.departement).then((res) => {

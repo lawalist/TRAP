@@ -45,10 +45,10 @@ export class GestionVillagePage {
       this.gestion_village = true;
       this.ajouter = false;
     }
-    
-    if(this.navParams.data.id_commune){
-      this.id_commune = this.navParams.data.id_commune;
-      this.nom_commune = this.navParams.data.nom_commune;
+
+    if(this.navParams.data.communeID){
+      this.id_commune = this.navParams.data.communeID;
+      //this.nom_commune = this.navParams.data.localite.nom;
       this.commune_defini = true;
     }
     
@@ -70,6 +70,14 @@ export class GestionVillagePage {
 
      this.servicePouchdb.getDocById('commune').then((communes) => {
           this.allCommune = communes.data;
+          if(this.id_commune){
+            for(let i = 0; i < this.allCommune.length; i++){
+              if(this.allCommune[i].id == this.id_commune){
+                this.nom_commune = this.allCommune[i].nom;
+                break;
+              }
+            }
+          } 
         });
   }
 
@@ -230,7 +238,13 @@ export class GestionVillagePage {
         }
       });
 
-      this.village.data = this.allVillage;
+      this.village.data.forEach((r, i) => {
+        if(r.id === village.id){
+          this.village.data[i] = village;
+        }
+      });
+
+      //this.village.data = this.allVillage;
       //this.allcommune.splice(this.commune.indesOf())
       //this.servicePouchdb.updateLocalite(this.village);
       this.servicePouchdb.updateLocalite(this.village).then((res) => {
@@ -357,7 +371,13 @@ export class GestionVillagePage {
               }
             });
 
-            this.village.data = this.allVillage;
+            this.village.data.forEach((r, i) => {
+              if(r.id === village.id){
+                this.village.data.splice(i, 1);
+              }
+            });
+
+            //this.village.data = this.allVillage;
             //this.allcommune.splice(this.commune.indesOf())
             //this.servicePouchdb.updateLocalite(this.village);
             this.servicePouchdb.updateLocalite(this.village).then((res) => {

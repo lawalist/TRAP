@@ -47,9 +47,9 @@ export class GestionRegionPage {
       this.ajouter = false;
     }
 
-    if(this.navParams.data.id_pays){
-      this.id_pays = this.navParams.data.id_pays;
-      this.nom_pays = this.navParams.data.nom_pays;
+    if(this.navParams.data.paysID){
+      this.id_pays = this.navParams.data.paysID;
+      //this.nom_pays = this.navParams.data.localite.nom;
       this.pays_defini = true;
     }
     
@@ -70,6 +70,14 @@ export class GestionRegionPage {
 
        this.servicePouchdb.getDocById('pays').then((pays) => {
           this.allPays = pays.data;
+          if(this.id_pays){
+            for(let i = 0; i < this.allPays.length; i++){
+              if(this.allPays[i].id == this.id_pays){
+                this.nom_pays = this.allPays[i].nom;
+                break;
+              }
+            }
+          }  
         });
 
   }
@@ -230,7 +238,13 @@ export class GestionRegionPage {
         }
       });
 
-      this.region.data = this.allRegion;
+      this.region.data.forEach((r, i) => {
+        if(r.id === region.id){
+          this.region.data[i] = region;
+        }
+      });
+
+      //this.region.data = this.allRegion;
       //this.allPays.splice(this.pays.indesOf())
       //this.servicePouchdb.updateLocalite(this.region);
       this.servicePouchdb.updateLocalite(this.region).then((res) => {
@@ -339,7 +353,13 @@ export class GestionRegionPage {
               }
             });
 
-            this.region.data = this.allRegion;
+            this.region.data.forEach((r, i) => {
+              if(r.id === region.id){
+                this.region.data.splice(i, 1);
+              }
+            });
+
+            //this.region.data = this.allRegion;
             //this.allPays.splice(this.pays.indesOf())
             //this.servicePouchdb.updateLocalite(this.region);
             this.servicePouchdb.updateLocalite(this.region).then((res) => {

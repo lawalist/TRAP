@@ -12,14 +12,14 @@ import { global } from '../global-variables/variable';
 declare var require: any;
 import PouchDB from 'pouchdb';
 //import * as cordovaSqlitePlugin from 'pouchdb-adapter-cordova-sqlite';
-import * as pouchdbAuthentication from 'pouchdb-authentication';
+//import * as pouchdbAuthentication from 'pouchdb-authentication';
 
 //import * as pouchdbQuickSearch from 'pouchdb-quick-search';
 
 //import * as pouchdbdesign from 'pouchdb-design';
 //PouchDB.plugin(require('pouchdb-adapter-cordova-sqlite'));
 
-PouchDB.plugin(pouchdbAuthentication);
+//PouchDB.plugin(pouchdbAuthentication);
 //PouchDB.plugin(require('pouchdb-design'));
 //PouchDB.plugin(require('relational-pouch'));
 //PouchDB.plugin(require('pouchdb-full-sync'));
@@ -76,6 +76,7 @@ export class PouchdbProvider {
         //createWriteStream('output.txt');
 
         //le pour appreil autres que les mobiles
+        this.database = new PouchDB("trap-db"/*, {adapter: 'cordova-sqlite'}*/);
         if(!this.platform.is('android') && !this.platform.is('ios')){
           this.batch_size = 100;
           this.batches_limit = 10
@@ -83,7 +84,7 @@ export class PouchdbProvider {
 
         if (!this.isInstantiated) { 
 
-            this.database = new PouchDB("trap-db"/*, {adapter: 'cordova-sqlite'}*/);
+            
             //this.database.info().then(console.log.bind(console))
             
             this.storage.get('info_db').then((info_db) => {
@@ -1053,6 +1054,12 @@ getProgress(pending){
       this.database.remove(doc).catch((err) => console.log(err));
   }
 
+  deleteReturn(doc){
+    doc._deleted = true;
+    return this.database.put(doc);
+    //return this.database.remove(doc);
+}
+
   createDoc(doc){
     let dat = new Date();
     doc.data.created_at = dat.toJSON();
@@ -1468,25 +1475,25 @@ getProgress(pending){
     }
   }
 
-  generateId(operation, pays, region, departement, commune, village){
+  generateId(operation, pays, region/*, departement, commune, village*/){
     var pays = pays||'XX'
     var region = region||'XX'
-    var department = departement || 'XX'
-    var commune = commune || 'XX'
-    var village = village || 'XX'
+    //var department = departement || 'XX'
+    //var commune = commune || 'XX'
+    //var village = village || 'XX'
     //select 3 random numbers and random letter for up to 25,000 unique per department
-    var chars='ABCDEFGHIJKLMNPQRSTUVWYZ'
-    var numbers='0123456789'
+    //var chars='ABCDEFGHIJKLMNPQRSTUVWYZ'
+    var numbers='0123456789ABCDEFGHIJKLMNPQRSTUVWYZ'
     var randomArray=[]
-    for(let i=0;i<3;i++){
-      var rand = Math.floor(Math.random()*10)
+    for(let i=0;i<6;i++){
+      var rand = Math.floor(Math.random()*34)
       randomArray.push(numbers[rand])
     }
-    randomArray.push('-')
-    var rand = Math.floor(Math.random()*24)
-    randomArray.push(chars[rand])
+    //randomArray.push('-')
+    //var rand = Math.floor(Math.random()*24)
+    //randomArray.push(chars[rand])
     var randomString=randomArray.join("");
-    var Id= ':'+operation+':'+pays+'-'+region+'-'+department+'-'+commune +'-'+ village+ '-'+randomString 
+    var Id= operation+':'+pays+'-'+region+/*'-'+department+'-'+commune +'-'+ village+*/ '-'+randomString 
     return Id
   }
 

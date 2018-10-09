@@ -172,7 +172,13 @@ export class GestionPaysPage {
         }
       });
 
-      this.pays.data = this.allPays;
+      this.pays.data.forEach((p, i) => {
+        if(p.id === pays.id){
+          this.pays.data[i] = pays;
+        }
+      });
+
+      //this.pays.data = this.allPays;
       //this.allPays.splice(this.pays.indesOf())
       this.servicePouchdb.updateLocalite(this.pays).then((res) => {
           this.pays._rev = res.rev;
@@ -229,7 +235,13 @@ export class GestionPaysPage {
               }
             });
 
-            this.pays.data = this.allPays;
+            this.pays.data.forEach((p, i) => {
+              if(p.id === pays.id){
+                this.pays.data.splice(i, 1);
+              }
+            });
+
+            //this.pays.data = this.allPays;
             //this.allPays.splice(this.pays.indesOf())
             //this.servicePouchdb.updateLocalite(this.pays);
             this.servicePouchdb.updateLocalite(this.pays).then((res) => {

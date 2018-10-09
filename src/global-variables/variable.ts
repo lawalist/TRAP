@@ -44,7 +44,8 @@ export var global = {
     //info_user: null,
     info_user: {
       name: 'Admin',
-      roles: ['admin']
+      roles: ['admin'],
+      codes_unions: []
     },
     info_connexion: null,
     config_app: {
