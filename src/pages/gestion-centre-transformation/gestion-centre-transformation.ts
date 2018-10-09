@@ -179,7 +179,7 @@ export class GestionCentreTransformationPage {
     let maDate = new Date();
     let today = this.createDate(maDate.getDate(), maDate.getMonth(), maDate.getFullYear());
 
-
+ 
     this.centreForm = this.formBuilder.group({
       //_id:[''],
       type:['centre'],

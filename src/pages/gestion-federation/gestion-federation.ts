@@ -641,7 +641,7 @@ export class GestionFederationPage {
           }
         }
       }
-      
+       
       federation.deviceid = this.device.uuid;
       federation.phonenumber = this.phonenumber;
       federation.imei = this.imei;

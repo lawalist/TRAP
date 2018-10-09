@@ -75,7 +75,7 @@
         </ion-select>
       </ion-item>
   
-        <ion-item>
+        <ion-item> 
           <ion-searchbar *ngIf="typeRecherche == 'nom'" placeholder="Rechercher par nom federation..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
           <ion-searchbar *ngIf="typeRecherche == 'code'" placeholder="Rechercher par code federation..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
           <ion-searchbar *ngIf="typeRecherche == 'aggrement'" placeholder="Rechercher par num. aggrément federation..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>

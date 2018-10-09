@@ -359,7 +359,7 @@
       <ion-item>
         <ion-label floating>Nom du centre <span class="error-box">*</span></ion-label>
         <ion-input type="text" formControlName="nom_centre" [(ngModel)]="nom_centre" (keyup)="genererCodecentre()" ></ion-input>
-      </ion-item>
+      </ion-item> 
       <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['nom_centre'].hasError('required') && centreForm.controls['nom_centre'].touched">* le nom de l'centre des est obligatoir!</div>
       
       <ion-item>

@@ -364,7 +364,7 @@
           <ion-input type="text" formControlName="num_aggrement" ></ion-input>
         </ion-item>
         <div style="padding-left: 15px;" class="error-box" *ngIf="unionForm.controls['num_aggrement'].hasError('required') && unionForm.controls['num_aggrement'].touched">* le numéro d'aggrément est obligatoir!</div>
-  
+   
         <ion-item>
           <ion-label floating>Nom de l'union <span class="error-box">*</span></ion-label>
           <ion-input type="text" formControlName="nom_union" [(ngModel)]="nom_union" (keyup)="genererCodeUnion()" ></ion-input>

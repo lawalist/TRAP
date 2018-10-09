@@ -166,7 +166,7 @@ export class GestionUnionPage {
           }
         }
       ]
-    });
+    }); 
     actionSheet.present();
   }
 

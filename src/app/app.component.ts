@@ -36,7 +36,7 @@ export class MyApp {
       { title: 'Admin', component: 'AdminPage' },
     ];
   }
-742
+
 
   initializeApp() {
     this.platform.ready().then(() => {
