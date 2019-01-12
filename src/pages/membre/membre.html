@@ -1,0 +1,536 @@
+<!--
+  Generated template for the MembrePage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="trap_theme">
+    <ion-buttons *ngIf="action == 'liste'" left>
+        <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'ajouter' || action == 'modifier'" left>
+        <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'detail'" left>
+        <button ion-button icon-only color="royal" (click)="fermerDetail()"><ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'liste'"  start>
+  
+        <button ion-button *ngIf="rechercher" icon-only>
+            <ion-spinner></ion-spinner>
+        </button>
+   
+        <button ion-button icon-only>
+          <ion-badge color="fuma-green" item-right>{{membres.length}}</ion-badge>
+        </button>
+   
+        <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+            <ion-icon name="sync"></ion-icon>
+        </button>
+
+
+        <!--ion-buttons *ngIf="action != 'liste'" start>
+          <button *ngIf="myPlatform" ion-button icon-only color="royal" (click)="takePhoto()">
+            <ion-icon name="camera"></ion-icon>
+          </button>
+          </ion-buttons-->
+      </ion-buttons>
+  
+      <ion-title *ngIf="action == 'liste'">Membres</ion-title>
+      <ion-title *ngIf="action == 'ajouter'">Ajouter membre</ion-title>
+      <ion-title *ngIf="action == 'modifier'">Modifier membre</ion-title>
+      <ion-title *ngIf="action == 'detail'">Détail membre</ion-title>
+
+      <button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
+        <ion-icon name="menu"></ion-icon>
+      </button>
+
+      <ion-buttons *ngIf="action == 'ajouter' || action == 'modifier'" end>
+        <button *ngIf="myPlatform" ion-button icon-only color="royal" (click)="takePhoto()">
+            <ion-icon name="camera"></ion-icon>
+          </button>
+        <!--button ion-button icon-only color="royal" (click)="option()"><ion-icon name="options"></ion-icon></button-->
+        <button *ngIf="myPlatform" ion-button icon-only color="royal" (click)="chooseImage()">
+          <ion-icon name="image"></ion-icon>
+        </button>
+      </ion-buttons>
+
+  </ion-navbar>
+</ion-header>
+
+
+
+<ion-content padding>
+
+  <ion-refresher *ngIf="action == 'liste'" (ionRefresh)="doRefresh($event)">
+      <ion-refresher-content
+        pullingIcon="arrow-dropdown"
+        pullingText="Tirer pour actualiser"
+        refreshingSpinner="circles"
+        refreshingText="Actualisation...">
+      </ion-refresher-content>
+    </ion-refresher>
+  <div  *ngIf="action  == 'liste'">
+    
+    
+      <ion-list>
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-label stacked>Choisir la limite</ion-label>
+              <ion-select [(ngModel)]="selectedLimit" (ionChange)="choixLimit()" cancelText="Annuler" okText="Ok" >
+                <ion-option value="" selected disabled>Selectionnez la limite</ion-option>
+                <ion-option *ngFor="let limit of limits" [value]=limit>{{limit}}</ion-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+          <ion-col>
+            <ion-item>
+                <ion-label floating>Style affichage</ion-label>
+                <ion-select [(ngModel)]="selectedStyle" cancelText="Annuler" okText="Ok" >
+                  <ion-option value="" selected disabled>Selectionnez le style de la liste</ion-option>
+                  <ion-option value="liste" >Liste</ion-option>
+                  <ion-option value="tableau" >Tableau</ion-option>
+                </ion-select>
+              </ion-item>
+          </ion-col>
+        </ion-row>
+  
+      <ion-item>
+        <ion-label floating>Type de recherche</ion-label>
+        <ion-select [(ngModel)]="typeRecherche" (ionChange)="typeRechercheChange()" cancelText="Annuler" okText="Ok" >
+          <ion-option value="matricule" >Par numéro matricule</ion-option>
+          <ion-option value="nom" >Par nom</ion-option>
+          <ion-option value="prenom" >Par prénom</ion-option>
+          <ion-option value="code_centre" >Par code centre</ion-option>
+          <ion-option value="site">Par site</ion-option>
+          <ion-option value="village">Par village</ion-option>
+        </ion-select>
+      </ion-item>
+  
+        <ion-item>
+          <ion-searchbar *ngIf="typeRecherche == 'code_centre'" placeholder="Rechercher par code centre..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'nom'" placeholder="Rechercher par nom..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'prenom'" placeholder="Rechercher par prénom..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'matricule'" placeholder="Rechercher par matricule..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'site'" placeholder="Rechercher par site..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'village'" placeholder="Rechercher par village..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+        </ion-item>
+      </ion-list>
+  
+      <br >
+      <ion-list class="info-card" *ngIf="membres.length > 0 && selectedStyle === 'liste'">
+        <ion-list-header>
+          <ion-item class="message">
+            <h2  class="fond-gris blanc"><strong>Liste des membres <span *ngIf="nom_centre && nom_centre != ''">du centre: {{nom_centre}}</span> </strong></h2>
+          </ion-item>
+        </ion-list-header>
+        <ion-item-sliding *ngFor="let membre of membres">
+          <ion-item (click)="detail(membre, selectedSource)" >
+            <!--ion-row>
+              <ion-col-->
+                  <ion-avatar item-left>
+                    <img [src]="membre.photo" imageViewer />
+                  </ion-avatar>
+                  <span  (click)="detail(membre, true)" >
+                  <h6><strong>Numéro matricule:</strong> {{membre.doc.data.matricule_membre}}</h6>
+                  <h6><strong>Nom & prénom:</strong> {{membre.doc.data.nom_membre}} {{membre.doc.data.prenom_membre}}</h6>
+              <!--/ion-col>
+              <ion-col class="aligneDate"-->
+                <p><strong>Date:</strong> {{membre.doc.data.today | date: 'dd-MM-yyyy'}}</p>
+                </span>
+              <!--/ion-col>
+            </ion-row-->
+          </ion-item> 
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(membre.doc._id)">
+              <ion-icon name="share"></ion-icon>   
+            </button>
+          </ion-item-options-->
+      </ion-item-sliding> 
+      </ion-list>
+  
+  
+    <ion-card class="info-card" *ngIf="membres.length > 0 && selectedStyle === 'tableau'">
+      <ion-card-header>
+        <ion-item class="message">
+          <h2 class="fond-gris blanc"><strong>Liste des membres <span *ngIf="nom_centre && nom_centre != ''">du centre: {{nom_centre}}</span></strong></h2>
+        </ion-item>
+      </ion-card-header> 
+      <ion-scroll scrollX="true" scrollY="true" id="membre_tableau" style="height: 80vh"> 
+      <!--ion-card-header  style="width: 100vw">
+        <h2><strong>Liste des membres</strong></h2>
+      </ion-card-header--> 
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+          <th style="min-width: 150px" >
+            <strong>Numéro matricule</strong> 
+          </th>
+          <th>
+            <strong>Nom</strong>
+          </th>
+          <th  >
+            <strong>Prénom</strong>
+          </th>
+          <th  >
+            <strong>Sexe</strong>
+          </th>
+          <th  >
+            <strong>date de maissance</strong>
+          </th>
+          <th  >
+            <strong>Nom centre</strong>
+          </th>
+          <th  >
+            <strong>Code centre</strong>
+          </th>
+          <th  >
+            <strong>Pays</strong>
+          </th>
+          <th  >
+            <strong>Région</strong>
+          </th>
+          <th  >
+            <strong>Departement</strong>
+          </th>
+          <th  >
+            <strong>Commune/Site</strong>
+          </th>
+          <th  >
+            <strong>Village</strong>
+          </th>
+          </tr>
+        </thead>
+        <!--hr style="width: 375%"-->
+        <tbody>
+          <tr *ngFor="let membre of membres" (click)="detail(membre)">
+            <td  >
+              {{membre.doc.data.matricule_membre}}
+            </td>
+            <td  >
+              {{membre.doc.data.nom_membre}}
+            </td>
+            <td  >
+              {{membre.doc.data.prenom_membre}}
+            </td>
+            <td  >
+              {{membre.doc.data.sexe_membre}}
+            </td>
+            <td  >
+              {{membre.doc.data.date_maissance_membre | date: 'dd-MM-yyyy'}}
+            </td>
+            <td  >
+              {{membre.doc.data.nom_centre}}
+            </td>
+            <td  >
+              {{membre.doc.data.code_centre}}
+            </td>
+            <td  >
+              {{membre.doc.data.pays_nom}}
+            </td>          
+            <td  >
+              {{membre.doc.data.region_nom}}
+            </td>
+            <td  >
+              {{membre.doc.data.departement_nom}}
+            </td>
+            <td  >
+              {{membre.doc.data.commune_nom}}
+            </td>
+            <td  >
+              {{membre.doc.data.village_nom}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ion-scroll>
+  </ion-card>
+  
+  <div *ngIf="membres.length > 0">
+    <br><br><br><br>
+  </div>
+  
+    <ion-list *ngIf="!membres.length > 0">
+      <ion-item>
+        <div class="message">La liste est vide!</div>
+      </ion-item> 
+    </ion-list> 
+</div>
+
+<ion-card class="info-card" [hidden]="action != 'detail'">
+    <ion-row>
+      <ion-col class='meta-key' *ngIf="action == 'detail'" >
+        <img [src]="membre.photo" style="max-height: 55vh" imageViewer />
+      </ion-col>
+      <ion-col class='meta-value'>
+        <h2 *ngIf="action == 'detail'" >{{membre.doc.data.nom_membre}} {{membre.doc.data.prenom_membre}}</h2>
+        <img #barcode id="barcode">
+      </ion-col>
+    </ion-row>
+  </ion-card>
+
+<div *ngIf="action == 'detail'">
+    <ion-card class="info-card" (dblclick)="editer(membre)"> 
+      <ion-card-header>
+        <ion-item class="message">
+          <h2 class="fond-gris blanc">
+            <strong>Information membre: {{membre.doc.data.matricule_membre}}</strong>
+          </h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro matricule:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.matricule_membre}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.nom_membre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Prénom:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.prenom_membre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Sexe:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.sexe_membre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date de maissance:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.date_maissance_membre | date: 'dd-MM-yyyy'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Age:</strong></ion-col> <ion-col class='meta-value'> {{age}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom centre:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.nom_centre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Code centre:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.code_centre}} </ion-col> </ion-row>
+          <!--ion-row> <ion-col class='meta-key'><strong>Nombre d'OP:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.num_OP}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nombre de membres:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.num_membre}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nombre hommes:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.num_hommes}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nombre femmes:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.num_femmes}}</ion-col> </ion-row-->
+          <ion-row *ngIf="membre.doc.data.pays != 'AUTRE' && !membre.doc.data.pays_nom"> <ion-col class='meta-key'><strong>Pays:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.pays}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.pays != 'AUTRE' && membre.doc.data.pays_nom"> <ion-col class='meta-key'><strong>Pays:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.pays_nom}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.pays == 'AUTRE'"> <ion-col class='meta-key'><strong>Pays:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.pays_autre}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.region != 'AUTRE' && !membre.doc.data.region_nom"> <ion-col class='meta-key'><strong>Région:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.region}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.region != 'AUTRE' && membre.doc.data.region_nom"> <ion-col class='meta-key'><strong>Région:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.region_nom}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.region == 'AUTRE'"> <ion-col class='meta-key'><strong>Région:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.region_autre}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.departement != 'AUTRE' && !membre.doc.data.departement_nom"> <ion-col class='meta-key'><strong>Departement:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.departement}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.departement != 'AUTRE' && membre.doc.data.departement_nom"> <ion-col class='meta-key'><strong>Departement:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.departement_nom}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.departement == 'AUTRE'"> <ion-col class='meta-key'><strong>Departement:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.departement_autre}} </ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.commune != 'AUTRE' && !membre.doc.data.commune_nom"> <ion-col class='meta-key'><strong>Commune:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.commune}}</ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.commune != 'AUTRE' && membre.doc.data.commune_nom"> <ion-col class='meta-key'><strong>Commune:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.commune_nom}}</ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.commune == 'AUTRE'"> <ion-col class='meta-key'><strong>Commune:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.commune_autre}}</ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.village != 'AUTRE' && !membre.doc.data.village_nom"> <ion-col class='meta-key'><strong>Village:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.village}}</ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.village != 'AUTRE' && membre.doc.data.village_nom"> <ion-col class='meta-key'><strong>Village:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.village_nom}}</ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.village == 'AUTRE'"> <ion-col class='meta-key'><strong>Village:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.village_autre}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date enregistrement:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.today | date: 'dd-MM-yyyy'}}</ion-col> </ion-row>
+          <!--ion-row> <ion-col class='meta-key'><strong>deviceid:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.deviceid}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>imei:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.imei}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>phonenumber:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.phonenumber}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>start:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.start | date: 'dd-MM-yyyy'}} à {{membre.doc.data.start | date: 'HH:mm:ss'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>end:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.end | date: 'dd-MM-yyyy'}} à {{membre.doc.data.end | date: 'HH:mm:ss'}}</ion-col> </ion-row-->
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(membre, true)"> 
+      <ion-card-header>
+        <ion-item class="message">
+          <h2 class="fond-gris blanc">
+            <strong>Plus d'informations</strong>
+          </h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Id:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc._id }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>No révision:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc._rev }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date création:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.created_at | date: 'dd-MM-yyyy'}} à {{membre.doc.data.created_at | date: 'HH:mm:ss:ms'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Créateur:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.created_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.phonenumber}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date dernière mise à jour:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.updatet_at | date: 'dd-MM-yyyy'}}  à {{membre.doc.data.updatet_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Dernière mise à jour par:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.updated_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.update_deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.update_imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.update_phonenumber}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Id photo:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.photoID }} </ion-col> </ion-row>
+          
+          <ion-row *ngIf="membre.doc.data.deleted"> <ion-col class='meta-key'><strong>Date suppression:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.deleted_at | date: 'dd-MM-yyyy'}}  à {{membre.doc.data.deleted_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row *ngIf="membre.doc.data.deleted"> <ion-col class='meta-key'><strong>Supprimé par:</strong></ion-col> <ion-col class='meta-value'> {{membre.doc.data.deleted_by}} </ion-col> </ion-row>
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+
+    <br><br><br>
+  </div>
+
+
+  
+<div *ngIf="action == 'ajouter' || action == 'modifier'">
+
+    <ion-card text-center>
+        <img [src]="photo" *ngIf="photo" id="imageid">
+  
+        <ion-row *ngIf="!myPlatform">
+          <ion-col>
+            <ion-item>
+              <ion-label stacked>Photo profile<span class="error-box">*</span></ion-label>
+              <ion-input type="file" id="avatar" [(ngModel)]="fileInput"  (change)="onFileChange($event)" #fileInput1></ion-input>
+            </ion-item>
+          </ion-col>
+          <ion-col>
+            <br>
+            <button ion-button color="my_primary" block (click)="clearFile()" [disabled]="photo == 'SafeValue must use [property]=binding: assets/imgs/no-photo.png (see http://g.co/ng/security#xss)'">supprimer la photo</button>
+          </ion-col>
+        </ion-row>
+        <!--div class="form-group">
+          <label for="avatar">Avatar</label>
+          <input type="file" id="avatar" (change)="onFileChange($event)" #fileInput>
+          <button type="button" class="btn btn-sm btn-default" (click)="clearFile()">clear file</button>
+        </div-->
+      </ion-card>
+  
+    <form [formGroup]="membreForm" (ngSubmit) = "validAction()">
+
+      <ion-item>
+        <ion-label floating>Date <span class="error-box">*</span></ion-label>
+        <ion-datetime disabled="true" displayFormat="DD/MM/YYYY" formControlName="today" cancelText="Annuler" doneText="Valider"></ion-datetime>
+      </ion-item>
+
+      <ion-item>
+        <ion-label stacked>Selectionnez le centre trans. <span class="error-box">*</span></ion-label>
+        <ion-select formControlName="id_centre" [(ngModel)]="selectedCentre" (ionChange)="getMatriculeMembre(selectedCentre)" [disabled]="id_centre && id_centre != '' && action == 'ajouter'" cancelText="Annuler" okText="Ok">
+          <ion-option value="" selected disabled>Selectionnez le centre</ion-option>
+          <ion-option *ngFor="let c of centres" [value]=c.doc._id >{{c.doc.data.nom_centre}}</ion-option>
+        </ion-select>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['id_centre'].hasError('required') && membreForm.controls['id_centre'].touched">* le centre de transformation est obligatoir!</div>
+
+      <ion-item>
+        <ion-label floating>Numéro matricule <span class="error-box">*</span></ion-label>
+        <ion-input type="text" formControlName="matricule_membre" [(ngModel)]="matricule_membre" disabled></ion-input>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['matricule_membre'].hasError('required') && membreForm.controls['matricule_membre'].touched">* le numéro matricule est obligatoir!</div>
+
+      <ion-row>
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Nom du membre <span class="error-box">*</span></ion-label>
+            <ion-input type="text" formControlName="nom_membre"></ion-input>
+          </ion-item> 
+          <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['nom_membre'].hasError('required') && membreForm.controls['nom_membre'].touched">* le nom du membre des est obligatoir!</div>
+        </ion-col>
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Prénom du membre <span class="error-box">*</span></ion-label>
+            <ion-input type="text" formControlName="prenom_membre"></ion-input>
+          </ion-item> 
+          <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['prenom_membre'].hasError('required') && membreForm.controls['prenom_membre'].touched">* le prénom du membre des est obligatoir!</div>
+        </ion-col>
+      </ion-row>
+      <ion-item>
+        <ion-label stacked>Sexe du membre <span class="error-box">*</span></ion-label>
+        <ion-select formControlName="sexe_membre"  cancelText="Annuler" okText="Ok">
+          <ion-option value="" selected disabled>Selectionnez le sex</ion-option>
+          <ion-option value="homme">Homme</ion-option>
+          <ion-option value="femme">Femme</ion-option>
+        </ion-select>
+      </ion-item> 
+      <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['sexe_membre'].hasError('required') && membreForm.controls['sexe_membre'].touched">* le sexe du membre des est obligatoir!</div>
+
+      <ion-row>
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Date de maissance</ion-label>
+            <ion-datetime  (ionChange)="setAge();" [max]="max_date" (ionCancel)="autreActionDate();" displayFormat="DD/MM/YYYY" formControlName="date_maissance_membre" [(ngModel)]="date_maissance_membre" cancelText="Annuler" okText="Valider"></ion-datetime>
+          </ion-item> 
+          <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['date_maissance_membre'].hasError('required') && membreForm.controls['date_maissance_membre'].touched">* la date de maissance du membre des est obligatoir!</div>
+        </ion-col>
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Age approximative</ion-label>
+            <ion-input type="number" [ngModelOptions]="{standalone: true}" [(ngModel)]="age" (keyup)="setDate(age)"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      
+      <ion-row>
+        <ion-col>
+          <ion-item>
+              <ion-label stacked>Selectionnez le pays</ion-label>
+              <ion-select formControlName="pays" [(ngModel)]="selectedPays" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedPays, 'pays')" >
+                <ion-option value="" selected disabled>Selectionnez le le pays</ion-option>
+                <ion-option *ngFor="let p of pays" [value]=p.id >{{p.nom}}</ion-option>
+              </ion-select>
+            </ion-item>
+            <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['pays'].hasError('required') && membreForm.controls['pays'].touched">* le pays est obligatoir!</div>
+        </ion-col>
+
+        <ion-col>
+            <ion-item>
+                <ion-label stacked>Selectionnez le region</ion-label>
+                <ion-select [disabled]="!selectedPays || selectedPays == ''" formControlName="region" [(ngModel)]="selectedRegion" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedRegion, 'region')" >
+                  <ion-option value="" selected disabled>Selectionnez le region</ion-option>
+                  <ion-option *ngFor="let r of regions" [value]=r.id >{{r.nom}}</ion-option>
+                </ion-select>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['region'].hasError('required') && membreForm.controls['region'].touched">* le region est obligatoir!</div>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col>
+            <ion-item>
+                <ion-label stacked>Selectionnez le departement</ion-label>
+                <ion-select [disabled]="!selectedRegion || selectedRegion == ''" formControlName="departement" [(ngModel)]="selectedDepartement" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedDepartement, 'departement')" >
+                  <ion-option value="" selected disabled>Selectionnez le departement</ion-option>
+                  <ion-option *ngFor="let d of departements" [value]=d.id >{{d.nom}}</ion-option>
+                </ion-select>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['departement'].hasError('required') && membreForm.controls['departement'].touched">* le departement est obligatoir!</div>
+        </ion-col>
+
+        <ion-col>
+            <ion-item>
+                <ion-label stacked>Selectionnez le commune</ion-label>
+                <ion-select [disabled]="!selectedDepartement || selectedDepartement == ''" formControlName="commune" [(ngModel)]="selectedCommune" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedCommune, 'commune')" >
+                  <ion-option value="" selected disabled>Selectionnez le commune</ion-option>
+                  <ion-option *ngFor="let c of communes" [value]=c.id >{{c.nom}}</ion-option>
+                </ion-select>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['commune'].hasError('required') && membreForm.controls['commune'].touched">* le commune est obligatoir!</div>
+        </ion-col>
+      </ion-row> 
+
+      <ion-item>
+        <ion-label stacked>Selectionnez le village</ion-label>
+        <ion-select [disabled]="!selectedCommune || selectedCommune == ''" formControlName="village" [(ngModel)]="selectedVillage" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedVillage, 'village')" >
+          <ion-option value="" selected disabled>Selectionnez le village</ion-option>
+          <ion-option *ngFor="let villag of villages" [value]=villag.id >{{villag.nom}}</ion-option>
+        </ion-select>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['village'].hasError('required') && membreForm.controls['village'].touched">* le village est obligatoir!</div>
+      
+        <br>
+        <button ion-button type="submit" color="my_secondary" [disabled]="!membreForm.valid" block>Sauvegarder</button>
+      </form>
+      <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+      <br><br><br>
+  </div>
+
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+    <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+    <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+    <!--ion-fab-list side="top">
+      <button ion-fab mini *ngIf="membres.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
+      <button ion-fab mini *ngIf="membres.length > 0" (click)="exportExcel()"><ion-icon name="logo-windows"></ion-icon></button>
+      <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button> 
+    </ion-fab-list-->
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'detail'" >
+      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+      <!--ion-fab-list side="top">
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(membre)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(membre.doc.data.code_membre)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(membre.doc.data.code_membre)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
+        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="membremembre(membre.doc.data.num_aggrement, membre.doc.data.nom_membre, membre.doc.data.code_membre)" color="my_primary"><strong>OP</strong></button>
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(membre)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      </ion-fab-list-->
+    </ion-fab> 
+
+</ion-content>
+

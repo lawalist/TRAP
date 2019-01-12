@@ -32,6 +32,11 @@
         <ion-searchbar placeholder="Rechercher commune..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
         </ion-item>
     <ion-list *ngIf="allCommune.length && liste">
+        <ion-list-header>
+            <ion-item class="message">
+              <h2  class="fond-gris blanc"><strong>Liste des communes</strong></h2>
+            </ion-item>
+          </ion-list-header>
       <ion-item-sliding *ngFor="let commune of allCommune">
         <ion-item>
           <h6><strong>Departement:</strong> {{commune.nom_departement}} ({{commune.id_departement}})</h6>
@@ -103,7 +108,7 @@
     <br>
     <button ion-button type="submit" color="my_secondary" [disabled]="!communeForm.valid" block>Sauvegarder</button>
   </form>
-  <button ion-button color="my_primary" block (click)="annuler()">Annuler</button>
+  <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
 
 </div>
 

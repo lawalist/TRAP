@@ -32,6 +32,11 @@
           <ion-searchbar placeholder="Rechercher regions..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
         </ion-item>
     <ion-list *ngIf="allRegion.length && liste">
+        <ion-list-header>
+            <ion-item class="message">
+              <h2  class="fond-gris blanc"><strong>Liste des régions</strong></h2>
+            </ion-item>
+          </ion-list-header>
       <ion-item-sliding *ngFor="let region of allRegion">
         <ion-item>
           <h6><strong>Pays:</strong> {{region.nom_pays}} ({{region.id_pays}})</h6>

@@ -7,17 +7,429 @@
 <ion-header>
 
   <ion-navbar color="trap_theme">
-      <button ion-button menuToggle end>
-          <ion-icon name="menu"></ion-icon>
-      </button>
-    <ion-title>gestion-produit</ion-title>
+    <ion-buttons *ngIf="action == 'liste'" left>
+        <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'ajouter' || action == 'modifier'" left>
+        <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'detail'" left>
+        <button ion-button icon-only color="royal" (click)="fermerDetail()"><ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'liste'"  start>
+  
+        <button ion-button *ngIf="rechercher" icon-only>
+            <ion-spinner></ion-spinner>
+        </button>
+   
+        <button ion-button icon-only>
+          <ion-badge color="fuma-green" item-right>{{produits.length}}</ion-badge>
+        </button>
+  
+        <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+            <ion-icon name="sync"></ion-icon>
+        </button>
+  
+      </ion-buttons>
+  
+      <ion-title *ngIf="action == 'liste'">Produits</ion-title>
+      <ion-title *ngIf="action == 'ajouter'">Ajouter produit</ion-title>
+      <ion-title *ngIf="action == 'modifier'">Modifier produit</ion-title>
+      <ion-title *ngIf="action == 'detail'">Détail produit</ion-title>
+
+      <!--button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
+        <ion-icon name="menu"></ion-icon>
+    </button-->
   </ion-navbar>
 
 </ion-header>
 
 
 <ion-content padding>
-  <p>Ici sera fait la gestion des produits<br>Possibilité d'ajouter, modifier ou supprimer une produit</p>
-  <p>Cette rubrique permet de savoir les produit transformée et les information relative a la transformation</p>
-  <p>Par exemple pour le couscous du mil: on aura le nom = couscous mil, culture = mil, variété = sosate, quantité mil utilisée = 10kg, .....</p>
+
+  <ion-refresher *ngIf="action == 'liste'" (ionRefresh)="doRefresh($event)">
+      <ion-refresher-content
+        pullingIcon="arrow-dropdown"
+        pullingText="Tirer pour actualiser"
+        refreshingSpinner="circles"
+        refreshingText="Actualisation...">
+      </ion-refresher-content>
+    </ion-refresher>
+  <div  *ngIf="action  == 'liste'">
+    
+    
+      <ion-list>
+        <ion-item>
+          <ion-label floating>Style affichage</ion-label>
+          <ion-select [(ngModel)]="selectedStyle" cancelText="Annuler" okText="Ok" >
+            <ion-option value="" selected disabled>Selectionnez le style de la liste</ion-option>
+            <ion-option value="liste" >Liste</ion-option>
+            <ion-option value="tableau" >Tableau</ion-option>
+          </ion-select>
+        </ion-item>
+  
+        <ion-item>
+        <ion-label floating>Type de recherche</ion-label>
+        <ion-select [(ngModel)]="typeRecherche" (ionChange)="typeRechercheChange()" cancelText="Annuler" okText="Ok" >
+          <ion-option value="code" >Par code produit</ion-option>
+          <ion-option value="nom" >Par nom produit</ion-option>
+          <ion-option value="type-produit" >Par type produit</ion-option>
+        </ion-select>
+      </ion-item>
+  
+        <ion-item>
+          <ion-searchbar *ngIf="typeRecherche == 'nom'" placeholder="Rechercher par nom produit..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'code'" placeholder="Rechercher par code produit..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'type-produit'" placeholder="Rechercher par type produit..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+        </ion-item>
+      </ion-list>
+  
+      <br >
+      <ion-list class="info-card" *ngIf="produits.length > 0 && selectedStyle === 'liste'">
+        <ion-list-header>
+          <ion-item class="message">
+            <h2  class="fond-gris blanc" item-left><strong>Liste des produits <span *ngIf="nom_centre && nom_centre != ''">du centre {{nom_centre}}</span><span *ngIf="nom_type_produit && nom_type_produit != ''">de type {{nom_type_produit}}</span> </strong></h2>
+          </ion-item>
+        </ion-list-header>
+        <ion-item-sliding *ngFor="let produit of produits">
+          <ion-item (click)="detail(produit.doc, selectedSource)" >
+            <!--ion-row>
+              <ion-col-->
+                  <h6><strong>Type produit:</strong> {{produit.doc.data.nom_type_produit}}</h6>
+                  <h6><strong>Code:</strong> {{produit.doc.data.code}}</h6>
+                  <h6><strong>Nom:</strong> {{produit.doc.data.nom}} ({{produit.doc.data.unite}})</h6>
+              <!--/ion-col>
+              <ion-col class="aligneDate"-->
+                <p><strong>Date:</strong> {{produit.doc.data.today | date: 'dd-MM-yyyy'}}</p>
+              <!--/ion-col>
+            </ion-row-->
+          </ion-item> 
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(produit.doc._id)">
+              <ion-icon name="share"></ion-icon>   
+            </button>
+          </ion-item-options-->
+      </ion-item-sliding> 
+      </ion-list>
+  
+  
+    <ion-card class="info-card" *ngIf="produits.length > 0 && selectedStyle === 'tableau'">
+      <ion-card-header>
+        <ion-item class="message">
+          <h2 class="fond-gris blanc"><strong>Liste des produits <span *ngIf="nom_centre && nom_centre != ''">du centre {{nom_centre}}</span><span *ngIf="nom_type_produit && nom_type_produit != ''">de type {{nom_type_produit}}</span></strong></h2>
+        </ion-item>
+      </ion-card-header> 
+      <ion-scroll scrollX="true" scrollY="true" id="produit_tableau" style="height: 80vh"> 
+      <!--ion-card-header  style="width: 100vw">
+        <h2><strong>Liste des produits</strong></h2>
+      </ion-card-header--> 
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+          <th>
+            <strong>Type produit</strong>
+          </th>
+          <th  >
+            <strong>Code</strong>
+          </th>
+          <th>
+            <strong>Nom</strong>
+          </th>
+          <th>
+            <strong>Unité de mésure</strong>
+          </th>
+          <th>
+            <strong>Prix unitaire</strong>
+          </th>
+          <th  >
+            <strong>Nom centre</strong>
+          </th>
+          <th  >
+            <strong>Code centre</strong>
+          </th>
+          </tr>
+        </thead>
+        <!--hr style="width: 375%"-->
+        <tbody>
+          <tr *ngFor="let produit of produits" (click)="detail(produit.doc)">
+            <td  >
+              {{produit.doc.data.nom_type_produit}}
+            </td>
+            <td  >
+              {{produit.doc.data.code}}
+            </td>
+            <td  >
+              {{produit.doc.data.nom}}
+            </td>
+            <td  >
+              {{produit.doc.data.unite}}
+            </td>
+            <td  >
+              {{produit.doc.data.prix_unitaire}}
+            </td>
+            <td  >
+              {{produit.doc.data.nom_centre}}
+            </td>
+            <td  >
+              {{produit.doc.data.code_centre}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ion-scroll>
+  </ion-card>
+  
+  <div *ngIf="produits.length > 0">
+    <br><br><br><br>
+  </div>
+  
+    <ion-list *ngIf="!produits.length > 0">
+      <ion-item>
+        <div class="message">La liste est vide!</div>
+      </ion-item> 
+    </ion-list> 
+</div>
+
+
+<div *ngIf="action == 'detail'">
+    <ion-card class="info-card" (dblclick)="editer(produit)"> 
+      <ion-card-header>
+        <ion-item class="message">
+            <h2 class="fond-gris blanc"><strong>Information produit: {{produit.data.nom}}</strong></h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Type produit:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.nom_type_produit}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Code:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.code}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.nom}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Unité de mésure:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.unite}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Prix unitaire:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.prix_unitaire}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom centre:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.nom_centre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Code centre:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.code_centre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date enregistrement:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.today | date: 'dd-MM-yyyy'}}</ion-col> </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    
+    <ion-card class="info-card" (dblclick)="editer(produit)"> 
+        <ion-card-header>
+          <ion-item class="message">
+              <h2 class="fond-gris blanc"><strong>Formule / Ingrédients</strong></h2>
+          </ion-item>
+        </ion-card-header>
+        <ion-card-content>
+        <ion-scroll scrollX="true" scrollY="true" id="ingredients_tableau" style="height: 50vh"> 
+            <!--ion-card-header  style="width: 100vw">
+              <h2><strong>Liste des productions</strong></h2>
+            </ion-card-header--> 
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                <th>
+                  <strong>Type</strong>
+                </th>
+                <th>
+                    <strong>Variété</strong>
+                  </th>
+                <th  >
+                  <strong>Code</strong>
+                </th>
+                <th>
+                  <strong>Nom</strong>
+                </th>
+                <th>
+                  <strong>Unité de mésure</strong>
+                </th>
+                <th>
+                  <strong>Valeur par défaut</strong>
+                </th>
+                <th  >
+                  <strong>Coût par défaut</strong>
+                </th>
+                </tr>
+              </thead>
+              <!--hr style="width: 375%"-->
+              <tbody>
+                <tr *ngFor="let i of produit.data.ingredients; let ind=index">
+                  <td  >
+                    {{i.type}}
+                  </td>
+                  <td  >
+                      {{i.variete}}
+                  </td>
+                  <td  >
+                    {{i.code}}
+                  </td>
+                  <td  >
+                    {{i.nom}}
+                  </td>
+                  <td  >
+                    {{i.unite}}
+                  </td>
+                  <td  >
+                    {{i.quantite}}
+                  </td>
+                  <td  >
+                    {{i.cout}}
+                  </td>
+
+                </tr>
+              </tbody>
+            </table>
+          </ion-scroll>
+
+          <!--ion-grid>
+            <ion-list *ngIf="produit.data.ingredients.length > 0">
+              <div *ngFor="let i of produit.data.ingredients; let ind=index">
+                <ion-item (click)="detailIngredient(i)" class="item-color">
+                  <ion-row> <ion-col class='meta-key'><strong>Type:</strong></ion-col> <ion-col class='meta-value'> {{i.type}} </ion-col> </ion-row>
+                  <ion-row> <ion-col class='meta-key'><strong>Code:</strong></ion-col> <ion-col class='meta-value'> {{i.code}} </ion-col> </ion-row>
+                  <ion-row> <ion-col class='meta-key'><strong>Nom:</strong></ion-col> <ion-col class='meta-value'> {{i.nom}} </ion-col> </ion-row>
+                </ion-item>
+                <hr style="width: 100%">
+              </div>
+            </ion-list>
+
+            <ion-list *ngIf="!produit.data.ingredients.length > 0">
+              <ion-item>
+                <div class="message">La liste est vide!</div>
+              </ion-item>    
+            </ion-list>
+
+          </ion-grid-->
+        </ion-card-content> 
+      </ion-card>
+  
+
+
+    <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(produit, true)"> 
+      <ion-card-header>
+        <ion-item class="message">
+            <h2 class="fond-gris blanc"><strong>Plus d'informations</strong></h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Id:</strong></ion-col> <ion-col class='meta-value'> {{produit._id }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Id stock:</strong></ion-col> <ion-col class='meta-value'> {{produit.id_stock }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>No révision:</strong></ion-col> <ion-col class='meta-value'> {{produit._rev }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date création:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.created_at | date: 'dd-MM-yyyy'}} à {{produit.data.created_at | date: 'HH:mm:ss:ms'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Créateur:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.created_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.phonenumber}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date dernière mise à jour:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.updatet_at | date: 'dd-MM-yyyy'}}  à {{produit.data.updatet_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Dernière mise à jour par:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.updated_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.update_deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.update_imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.update_phonenumber}} </ion-col> </ion-row>
+          <ion-row *ngIf="produit.data.deleted"> <ion-col class='meta-key'><strong>Date suppression:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.deleted_at | date: 'dd-MM-yyyy'}}  à {{produit.data.deleted_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row *ngIf="produit.data.deleted"> <ion-col class='meta-key'><strong>Supprimé par:</strong></ion-col> <ion-col class='meta-value'> {{produit.data.deleted_by}} </ion-col> </ion-row>
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+
+    <br><br><br>
+  </div>
+
+
+  
+<div *ngIf="action == 'ajouter' || action == 'modifier'">
+  
+    <form [formGroup]="produitForm" (ngSubmit) = "validAction()">
+
+      <ion-item>
+        <ion-label floating>Date <span class="error-box">*</span></ion-label>
+        <ion-datetime disabled="true" displayFormat="DD/MM/YYYY" formControlName="today" cancelText="Annuler" doneText="Valider"></ion-datetime>
+      </ion-item>
+
+      <ion-item>
+        <ion-label floating>Code produit <span class="error-box">*</span></ion-label>
+        <ion-input type="text" formControlName="code" [(ngModel)]="code" disabled></ion-input>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['code'].hasError('required') && produitForm.controls['code'].touched">* le code du produit des est obligatoir!</div>
+  
+      <ion-item>
+        <ion-label floating>Selectionnez le centre<span class="error-box">*</span></ion-label>
+        <ion-select formControlName="id_centre" [(ngModel)]="selectedCentre" [disabled]="id_centre && id_centre != ''" cancelText="Annuler" okText="Ok">
+          <ion-option *ngFor="let u of centres" [value]=u.doc._id >{{u.doc.data.nom_centre}}</ion-option>
+        </ion-select>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['id_centre'].hasError('required') && produitForm.controls['id_centre'].touched">* le centre est obligatoir!</div>  
+      
+      <ion-item>
+        <ion-label floating>Selectionnez le type de produit <span class="error-box">*</span></ion-label>
+        <ion-select formControlName="id_type_produit" [(ngModel)]="selectedTypeProduit" cancelText="Annuler" okText="Ok">
+            <ion-option *ngFor="let t of typeProduits" [value]=t.doc._id >{{t.doc.data.nom}}</ion-option>
+          </ion-select>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['id_type_produit'].hasError('required') && produitForm.controls['id_type_produit'].touched">* le type de produit est obligatoir!</div>
+
+      <ion-item>
+        <ion-label floating>Nom produit <span class="error-box">*</span></ion-label>
+        <ion-input type="text" formControlName="nom"></ion-input>
+      </ion-item> 
+      <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['nom'].hasError('required') && produitForm.controls['nom'].touched">* le nom du produit des est obligatoir!</div>
+      
+      <ion-item>
+        <ion-label floating>Unite de mésure <span class="error-box">*</span></ion-label>
+        <ion-select formControlName="unite" cancelText="Annuler" okText="Ok">
+            <ion-option value="g">Gramme (g)</ion-option>
+            <ion-option value="kg">Kilogramme (kg)</ion-option>
+            <ion-option value="l">Litre (l)</ion-option>
+            <ion-option value="ml">Millilitre (ml)</ion-option>
+            <ion-option value="sachet">Sachet</ion-option>
+            <ion-option value="tia">Tia (tia)</ion-option>
+            <ion-option value="u">Unité (u)</ion-option>
+        </ion-select>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['unite'].hasError('required') && produitForm.controls['unite'].touched">* l'unite de mésure du produit est obligatoir!</div>    
+      
+      <ion-item>
+        <ion-label floating>Prix unitaire<span class="error-box">*</span></ion-label>
+        <ion-input type="number" formControlName="prix_unitaire"></ion-input>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['prix_unitaire'].hasError('required') && produitForm.controls['prix_unitaire'].touched">* le prix unitaire du produit est obligatoir!</div>    
+      
+      <br>
+
+        <ion-row>
+          <ion-col>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!produitForm.valid" block>Sauvegarder</button>
+          </ion-col>
+          <ion-col>
+            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+          </ion-col>
+        </ion-row>        
+      </form>
+      
+      <br><br><br>
+  </div>
+
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+    <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+    <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+    <!--ion-fab-list side="top">
+      <button ion-fab mini *ngIf="produits.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
+      <button ion-fab mini *ngIf="produits.length > 0" (click)="exportExcel()"><ion-icon name="logo-windows"></ion-icon></button>
+      <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button> 
+    </ion-fab-list-->
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'detail'" >
+      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+      <!--ion-fab-list side="top">
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(produit)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(produit.data.code_produit)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(produit.data.code_produit)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
+        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="produitproduit(produit.data.num_aggrement, produit.data.nom_produit, produit.data.code_produit)" color="my_primary"><strong>OP</strong></button>
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(produit)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      </ion-fab-list-->
+    </ion-fab> 
+
 </ion-content>

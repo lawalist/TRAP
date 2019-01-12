@@ -5,17 +5,435 @@
   Ionic pages and navigation.
 -->
 <ion-header>
-
   <ion-navbar color="trap_theme">
-      <button ion-button menuToggle end>
-          <ion-icon name="menu"></ion-icon>
-      </button>
-    <ion-title>gestion-op</ion-title>
+    <ion-buttons *ngIf="action == 'liste'" left>
+        <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'ajouter' || action == 'modifier'" left>
+        <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'detail'" left>
+        <button ion-button icon-only color="royal" (click)="fermerDetail()"><ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'liste'"  start>
+  
+        <button ion-button *ngIf="rechercher" icon-only>
+            <ion-spinner></ion-spinner>
+        </button>
+  
+        <button ion-button icon-only>
+          <ion-badge color="fuma-green" item-right>{{ops.length}}</ion-badge>
+        </button>
+  
+        <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+            <ion-icon name="sync"></ion-icon>
+        </button>
+  
+      </ion-buttons>
+  
+      <ion-title *ngIf="action == 'liste'">ops</ion-title>
+      <ion-title *ngIf="action == 'ajouter'">Ajouter op</ion-title>
+      <ion-title *ngIf="action == 'modifier'">Modifier op</ion-title>
+      <ion-title *ngIf="action == 'detail'">Détail op</ion-title>
   </ion-navbar>
-
 </ion-header>
 
 
 <ion-content padding>
+
+  <ion-refresher *ngIf="action == 'liste'" (ionRefresh)="doRefresh($event)">
+      <ion-refresher-content
+        pullingIcon="arrow-dropdown"
+        pullingText="Tirer pour actualiser"
+        refreshingSpinner="circles"
+        refreshingText="Actualisation...">
+      </ion-refresher-content>
+    </ion-refresher>
+  <div  *ngIf="action == 'liste'">
+    
+    
+      <ion-list>
+        <ion-item>
+          <ion-label floating>Style affichage</ion-label>
+          <ion-select [(ngModel)]="selectedStyle" cancelText="Annuler" okText="Ok" >
+            <ion-option value="" selected disabled>Selectionnez le style de la liste</ion-option>
+            <ion-option value="liste" >Liste</ion-option>
+            <ion-option value="tableau" >Tableau</ion-option>
+          </ion-select>
+        </ion-item>
+  
+        <ion-item>
+        <ion-label floating>Type de recherche</ion-label>
+        <ion-select [(ngModel)]="typeRecherche" (ionChange)="typeRechercheChange()" cancelText="Annuler" okText="Ok" >
+          <ion-option value="aggrement" >Par numéro d'aggrement</ion-option>
+          <ion-option value="code" >Par code op</ion-option>
+          <ion-option value="nom" >Par nom op</ion-option>
+          <ion-option value="site" >Par site</ion-option>
+          <ion-option value="village" >Par village</ion-option>
+        </ion-select>
+      </ion-item>
+  
+        <ion-item>
+          <ion-searchbar *ngIf="typeRecherche == 'nom'" placeholder="Rechercher par nom op..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'code'" placeholder="Rechercher par code op..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'aggrement'" placeholder="Rechercher par num. aggrément op..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'site'" placeholder="Rechercher par site..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'village'" placeholder="Rechercher par village..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+        </ion-item>
+      </ion-list>
+  
+      <br >
+      <ion-list class="info-card" *ngIf="ops.length > 0 && selectedStyle === 'liste'">
+        <ion-list-header>
+            <ion-item class="message">
+                <h2  class="fond-gris blanc"><strong>Liste des ops <span *ngIf="nom_union && nom_union != ''">de l'union {{nom_union}}</span> </strong></h2>
+       </ion-item>
+         </ion-list-header>
+        <ion-item-sliding *ngFor="let op of ops">
+          <ion-item (click)="detail(op.doc, selectedSource)" >
+            <!--ion-row>
+              <ion-col-->
+                  <h6><strong>Numéro d'aggrément:</strong> {{op.doc.data.num_aggrement}}</h6>
+                  <h6><strong>Code op:</strong> {{op.doc.data.code_op}}</h6>
+                  <h6><strong>Nom op:</strong> {{op.doc.data.nom_op}}</h6>
+              <!--/ion-col>
+              <ion-col class="aligneDate"-->
+                <p><strong>Date:</strong> {{op.doc.data.today | date: 'dd-MM-yyyy'}}</p>
+              <!--/ion-col>
+            </ion-row-->
+          </ion-item> 
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(op.doc._id)">
+              <ion-icon name="share"></ion-icon>   
+            </button>
+          </ion-item-options-->
+      </ion-item-sliding> 
+      </ion-list>
+  
+  
+    <ion-card class="info-card" *ngIf="ops.length > 0 && selectedStyle === 'tableau'">
+      <ion-card-header>
+          <ion-item class="message">
+              <h2  class="fond-gris blanc"><strong>Liste des ops <span *ngIf="nom_union && nom_union != ''">de l'union {{nom_union}}</span></strong></h2>
+      </ion-item>
+      </ion-card-header> 
+      <ion-scroll scrollX="true" scrollY="true" id="op_tableau" style="height: 80vh"> 
+      <!--ion-card-header  style="width: 100vw">
+        <h2><strong>Liste des ops</strong></h2>
+      </ion-card-header--> 
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+          <th style="min-width: 150px" >
+            <strong>Numéro aggrément</strong> 
+          </th>
+          <th>
+            <strong>Nom op</strong>
+          </th>
+          <th  >
+            <strong>Code op</strong>
+          </th>
+          <th  >
+            <strong>Pour union</strong>
+          </th>
+          <th  >
+            <strong>Nom union</strong>
+          </th>
+          <th  >
+            <strong>Code union</strong>
+          </th>
+          <th  >
+            <strong>Pays</strong>
+          </th>
+          <th  >
+            <strong>Région</strong>
+          </th>
+          <th  >
+            <strong>Departement</strong>
+          </th>
+          <th  >
+            <strong>Commune/Site</strong>
+          </th>
+          <th  >
+            <strong>Village</strong>
+          </th>
+          </tr>
+        </thead>
+        <!--hr style="width: 375%"-->
+        <tbody>
+          <tr *ngFor="let op of ops" (click)="detail(op.doc)">
+            <td  >
+              {{op.doc.data.num_aggrement}}
+            </td>
+            <td  >
+              {{op.doc.data.nom_op}}
+            </td>
+            <td  >
+              {{op.doc.data.code_op}}
+            </td>
+            <td  >
+              {{op.doc.data.pour_union}}
+            </td>
+            <td  >
+              {{op.doc.data.nom_union}}
+            </td>
+            <td  >
+              {{op.doc.data.code_union}}
+            </td>
+            <td  >
+              {{op.doc.data.pays_nom}}
+            </td>          
+            <td  >
+              {{op.doc.data.region_nom}}
+            </td>
+            <td  >
+              {{op.doc.data.departement_nom}}
+            </td>
+            <td  >
+              {{op.doc.data.commune_nom}}
+            </td>
+            <td  >
+              {{op.doc.data.village_nom}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ion-scroll>
+  </ion-card>
+  
+  <div *ngIf="ops.length > 0">
+    <br><br><br><br>
+  </div>
+  
+    <ion-list *ngIf="!ops.length > 0">
+      <ion-item>
+        <div class="message">La liste est vide!</div>
+      </ion-item> 
+    </ion-list> 
+</div>
+
+
+<div *ngIf="action == 'detail'">
+    <ion-card class="info-card" (dblclick)="editer(op)"> 
+      <ion-card-header>
+          <ion-item class="message">
+              <h2  class="fond-gris blanc">
+        <strong>Information op: {{op.data.num_aggrement}}</strong>
+        </h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro aggrément:</strong></ion-col> <ion-col class='meta-value'> {{op.data.num_aggrement}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Code:</strong></ion-col> <ion-col class='meta-value'> {{op.data.code_op}}</ion-col> </ion-row>
+          <ion-row *ngIf="op.data.ancien_code_op"> <ion-col class='meta-key'><strong>Ancien code:</strong></ion-col> <ion-col class='meta-value'> {{op.data.ancien_code_op}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom:</strong></ion-col> <ion-col class='meta-value'> {{op.data.nom_op}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Pour union ?:</strong></ion-col> <ion-col class='meta-value'> {{op.data.pour_union}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.pour_union == 'oui'"> <ion-col class='meta-key'><strong>Nom union:</strong></ion-col> <ion-col class='meta-value'> {{op.data.nom_union}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.pour_union == 'oui'"> <ion-col class='meta-key'><strong>Code union:</strong></ion-col> <ion-col class='meta-value'> {{op.data.code_union}} </ion-col> </ion-row>
+          <!--ion-row> <ion-col class='meta-key'><strong>Nombre d'OP:</strong></ion-col> <ion-col class='meta-value'> {{op.data.num_OP}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nombre de membres:</strong></ion-col> <ion-col class='meta-value'> {{op.data.num_membre}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nombre hommes:</strong></ion-col> <ion-col class='meta-value'> {{op.data.num_hommes}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nombre femmes:</strong></ion-col> <ion-col class='meta-value'> {{op.data.num_femmes}}</ion-col> </ion-row-->
+          <ion-row> <ion-col class='meta-key'><strong>Date enregistrement:</strong></ion-col> <ion-col class='meta-value'> {{op.data.today | date: 'dd-MM-yyyy'}}</ion-col> </ion-row>
+          <ion-row *ngIf="op.data.pays != 'AUTRE' && !op.data.pays_nom"> <ion-col class='meta-key'><strong>Pays:</strong></ion-col> <ion-col class='meta-value'> {{op.data.pays}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.pays != 'AUTRE' && op.data.pays_nom"> <ion-col class='meta-key'><strong>Pays:</strong></ion-col> <ion-col class='meta-value'> {{op.data.pays_nom}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.pays == 'AUTRE'"> <ion-col class='meta-key'><strong>Pays:</strong></ion-col> <ion-col class='meta-value'> {{op.data.pays_autre}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.region != 'AUTRE' && !op.data.region_nom"> <ion-col class='meta-key'><strong>Région:</strong></ion-col> <ion-col class='meta-value'> {{op.data.region}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.region != 'AUTRE' && op.data.region_nom"> <ion-col class='meta-key'><strong>Région:</strong></ion-col> <ion-col class='meta-value'> {{op.data.region_nom}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.region == 'AUTRE'"> <ion-col class='meta-key'><strong>Région:</strong></ion-col> <ion-col class='meta-value'> {{op.data.region_autre}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.departement != 'AUTRE' && !op.data.departement_nom"> <ion-col class='meta-key'><strong>Departement:</strong></ion-col> <ion-col class='meta-value'> {{op.data.departement}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.departement != 'AUTRE' && op.data.departement_nom"> <ion-col class='meta-key'><strong>Departement:</strong></ion-col> <ion-col class='meta-value'> {{op.data.departement_nom}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.departement == 'AUTRE'"> <ion-col class='meta-key'><strong>Departement:</strong></ion-col> <ion-col class='meta-value'> {{op.data.departement_autre}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.commune != 'AUTRE' && !op.data.commune_nom"> <ion-col class='meta-key'><strong>Commune:</strong></ion-col> <ion-col class='meta-value'> {{op.data.commune}}</ion-col> </ion-row>
+          <ion-row *ngIf="op.data.commune != 'AUTRE' && op.data.commune_nom"> <ion-col class='meta-key'><strong>Commune:</strong></ion-col> <ion-col class='meta-value'> {{op.data.commune_nom}}</ion-col> </ion-row>
+          <ion-row *ngIf="op.data.commune == 'AUTRE'"> <ion-col class='meta-key'><strong>Commune:</strong></ion-col> <ion-col class='meta-value'> {{op.data.commune_autre}}</ion-col> </ion-row>
+          <ion-row *ngIf="op.data.village != 'AUTRE' && !op.data.village_nom"> <ion-col class='meta-key'><strong>Village:</strong></ion-col> <ion-col class='meta-value'> {{op.data.village}}</ion-col> </ion-row>
+          <ion-row *ngIf="op.data.village != 'AUTRE' && op.data.village_nom"> <ion-col class='meta-key'><strong>Village:</strong></ion-col> <ion-col class='meta-value'> {{op.data.village_nom}}</ion-col> </ion-row>
+          <ion-row *ngIf="op.data.village == 'AUTRE'"> <ion-col class='meta-key'><strong>Village:</strong></ion-col> <ion-col class='meta-value'> {{op.data.village_autre}}</ion-col> </ion-row>
+          <!--ion-row> <ion-col class='meta-key'><strong>deviceid:</strong></ion-col> <ion-col class='meta-value'> {{op.data.deviceid}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>imei:</strong></ion-col> <ion-col class='meta-value'> {{op.data.imei}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>phonenumber:</strong></ion-col> <ion-col class='meta-value'> {{op.data.phonenumber}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>start:</strong></ion-col> <ion-col class='meta-value'> {{op.data.start | date: 'dd-MM-yyyy'}} à {{op.data.start | date: 'HH:mm:ss'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>end:</strong></ion-col> <ion-col class='meta-value'> {{op.data.end | date: 'dd-MM-yyyy'}} à {{op.data.end | date: 'HH:mm:ss'}}</ion-col> </ion-row-->
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(op, true)"> 
+      <ion-card-header>
+          <ion-item class="message">
+              <h2  class="fond-gris blanc">
+                <strong>Plus d'informations</strong>
+              </h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Id:</strong></ion-col> <ion-col class='meta-value'> {{op._id }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>No révision:</strong></ion-col> <ion-col class='meta-value'> {{op._rev }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date création:</strong></ion-col> <ion-col class='meta-value'> {{op.data.created_at | date: 'dd-MM-yyyy'}} à {{op.data.created_at | date: 'HH:mm:ss:ms'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Créateur:</strong></ion-col> <ion-col class='meta-value'> {{op.data.created_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{op.data.deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{op.data.imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{op.data.phonenumber}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date dernière mise à jour:</strong></ion-col> <ion-col class='meta-value'> {{op.data.updatet_at | date: 'dd-MM-yyyy'}}  à {{op.data.updatet_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Dernière mise à jour par:</strong></ion-col> <ion-col class='meta-value'> {{op.data.updated_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{op.data.update_deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{op.data.update_imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{op.data.update_phonenumber}} </ion-col> </ion-row>
+          <ion-row *ngIf="op.data.deleted"> <ion-col class='meta-key'><strong>Date suppression:</strong></ion-col> <ion-col class='meta-value'> {{op.data.deleted_at | date: 'dd-MM-yyyy'}}  à {{op.data.deleted_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row *ngIf="op.data.deleted"> <ion-col class='meta-key'><strong>Supprimé par:</strong></ion-col> <ion-col class='meta-value'> {{op.data.deleted_by}} </ion-col> </ion-row>
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+    <br><br><br>
+  </div>
+
+
+  
+<div *ngIf="action == 'ajouter' || action == 'modifier'">
+  
+    <form [formGroup]="opForm" (ngSubmit) = "validAction()">
+
+      <ion-item>
+        <ion-label floating>Date <span class="error-box">*</span></ion-label>
+        <ion-datetime disabled="true" displayFormat="DD/MM/YYYY" formControlName="today" cancelText="Annuler" doneText="Valider"></ion-datetime>
+      </ion-item>
+
+      <ion-row>
+        <ion-col>
+          <ion-item>
+              <ion-label stacked>Selectionnez le pays <span class="error-box">*</span></ion-label>
+              <ion-select formControlName="pays" [(ngModel)]="selectedPays" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedPays, 'pays')" >
+                <ion-option value="" selected disabled>Selectionnez le le pays</ion-option>
+                <ion-option *ngFor="let p of pays" [value]=p.id >{{p.nom}}</ion-option>
+              </ion-select>
+            </ion-item>
+            <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['pays'].hasError('required') && opForm.controls['pays'].touched">* le pays est obligatoir!</div>
+        </ion-col>
+
+        <ion-col>
+            <ion-item>
+                <ion-label stacked>Selectionnez le region <span class="error-box">*</span></ion-label>
+                <ion-select [disabled]="!selectedPays || selectedPays == ''" formControlName="region" [(ngModel)]="selectedRegion" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedRegion, 'region')" >
+                  <ion-option value="" selected disabled>Selectionnez le region</ion-option>
+                  <ion-option *ngFor="let r of regions" [value]=r.id >{{r.nom}}</ion-option>
+                </ion-select>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['region'].hasError('required') && opForm.controls['region'].touched">* le region est obligatoir!</div>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col>
+            <ion-item>
+                <ion-label stacked>Selectionnez le departement</ion-label>
+                <ion-select [disabled]="!selectedRegion || selectedRegion == ''" formControlName="departement" [(ngModel)]="selectedDepartement" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedDepartement, 'departement')" >
+                  <ion-option value="" selected disabled>Selectionnez le departement</ion-option>
+                  <ion-option *ngFor="let d of departements" [value]=d.id >{{d.nom}}</ion-option>
+                </ion-select>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['departement'].hasError('required') && opForm.controls['departement'].touched">* le departement est obligatoir!</div>
+        </ion-col>
+
+        <ion-col>
+            <ion-item>
+                <ion-label stacked>Selectionnez le commune</ion-label>
+                <ion-select [disabled]="!selectedDepartement || selectedDepartement == ''" formControlName="commune" [(ngModel)]="selectedCommune" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedCommune, 'commune')" >
+                  <ion-option value="" selected disabled>Selectionnez le commune</ion-option>
+                  <ion-option *ngFor="let c of communes" [value]=c.id >{{c.nom}}</ion-option>
+                </ion-select>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['commune'].hasError('required') && opForm.controls['commune'].touched">* le commune est obligatoir!</div>
+        </ion-col>
+      </ion-row> 
+
+      <ion-item>
+        <ion-label stacked>Selectionnez le village</ion-label>
+        <ion-select [disabled]="!selectedCommune || selectedCommune == ''" formControlName="village" [(ngModel)]="selectedVillage" cancelText="Annuler" okText="Ok" (ionChange)="chargerSousLocalite(selectedVillage, 'village')" >
+          <ion-option value="" selected disabled>Selectionnez le village</ion-option>
+          <ion-option *ngFor="let villag of villages" [value]=villag.id >{{villag.nom}}</ion-option>
+        </ion-select>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['village'].hasError('required') && opForm.controls['village'].touched">* le village est obligatoir!</div>
+      
+      <ion-item>
+        <ion-label floating>Numéro d'aggrément <span class="error-box">*</span></ion-label>
+        <ion-input type="text" formControlName="num_aggrement" ></ion-input>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['num_aggrement'].hasError('required') && opForm.controls['num_aggrement'].touched">* le numéro d'aggrément est obligatoir!</div>
+ 
+      <ion-item>
+        <ion-label floating>Nom de l'op <span class="error-box">*</span></ion-label>
+        <ion-input type="text" formControlName="nom_op" [(ngModel)]="nom_op" (keyup)="genererCodeop()" ></ion-input>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['nom_op'].hasError('required') && opForm.controls['nom_op'].touched">* le nom de l'op des est obligatoir!</div>
+      
+      <ion-item>
+        <ion-label floating>Code de l'op <span class="error-box">*</span></ion-label>
+        <ion-input type="text" formControlName="code_op" [(ngModel)]="code_op" disabled></ion-input>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['code_op'].hasError('required') && opForm.controls['code_op'].touched">* le code de l'op des est obligatoir!</div>
+      
+      <ion-item>
+        <ion-label stacked>Est rattachée à une union ? <span class="error-box">*</span></ion-label>
+        <ion-select formControlName="pour_union" [(ngModel)]="pour_union" [disabled]="id_union && id_union != ''" cancelText="Annuler" okText="Ok" (ionChange)="pourop(pour_union)" >
+          <ion-option value="oui">Oui</ion-option>
+          <ion-option value="non">Non</ion-option>
+        </ion-select>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['pour_union'].hasError('required') && opForm.controls['pour_union'].touched">* Ce champ est obligatoir!</div>
+
+      <ion-item [hidden] = "pour_union == 'non'">
+        <ion-label stacked>Selectionnez l'union <span class="error-box">*</span></ion-label>
+        <ion-select formControlName="id_union" [(ngModel)]="selectedUnion" [disabled]="id_union && id_union != ''" cancelText="Annuler" okText="Ok">
+          <ion-option value="" selected disabled>Selectionnez l'union</ion-option>
+          <ion-option *ngFor="let u of unions" [value]=u.doc._id >{{u.doc.data.code_union}} - {{u.doc.data.nom_union}}</ion-option>
+        </ion-select>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="opForm.controls['id_union'].hasError('required') && opForm.controls['id_union'].touched">* le union est obligatoir!</div>
+
+
+        <br>
+
+        <ion-row>
+          <ion-col>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!opForm.valid" block>Sauvegarder</button>
+          </ion-col>
+          <ion-col>
+            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+          </ion-col>
+        </ion-row>
+
+        
+      </form>
+      
+
+  </div>
+
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+    <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+    <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+    <!--ion-fab-list side="top">
+      <button ion-fab mini *ngIf="ops.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
+      <button ion-fab mini *ngIf="ops.length > 0" (click)="exportExcel()"><ion-icon name="logo-windows"></ion-icon></button>
+      <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button> 
+    </ion-fab-list-->
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'detail'" >
+      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+      <!--ion-fab-list side="top">
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(op)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(op.data.code_op)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(op.data.code_op)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
+        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="centreop(op.data.num_aggrement, op.data.nom_op, op.data.code_op)" color="my_primary"><strong>OP</strong></button>
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(op)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      </ion-fab-list-->
+    </ion-fab> 
 
 </ion-content>

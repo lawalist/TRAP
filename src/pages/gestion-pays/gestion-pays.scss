@@ -6,4 +6,14 @@ page-gestion-pays {
     .error-border {
         color: red;
     }
+
+    .message{
+        background:map-get($colors, fuma-green-dark);
+        color:map-get($colors, fuma-green-light);
+        width:100%
+    } 
+
+    .blanc{
+        color: white !important;
+    }
 }

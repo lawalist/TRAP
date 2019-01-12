@@ -16,6 +16,10 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { Http } from '@angular/http';
 import { HttpModule } from '@angular/http';
+import { DatePicker } from '@ionic-native/date-picker';
+import { Camera } from '@ionic-native/camera';
+import { ImagePicker } from '@ionic-native/image-picker';
+import { IonicImageViewerModule } from 'ionic-img-viewer';
 
 @NgModule({
   declarations: [
@@ -25,7 +29,8 @@ import { HttpModule } from '@angular/http';
     BrowserModule,
     HttpModule,
     IonicStorageModule.forRoot(),
-    IonicModule.forRoot(MyApp)
+    IonicModule.forRoot(MyApp),
+    IonicImageViewerModule
   ],
   bootstrap: [IonicApp],
   entryComponents: [
@@ -38,7 +43,7 @@ import { HttpModule } from '@angular/http';
     Device,
     File,
     Printer,
-    Sim,
+    Sim, Camera, DatePicker, ImagePicker,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })

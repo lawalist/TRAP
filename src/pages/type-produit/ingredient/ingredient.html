@@ -1,0 +1,152 @@
+<!--
+  Generated template for the ingredientPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="trap_theme">
+      <ion-buttons left>
+        <button ion-button icon-only color="royal" (click)="annuler()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+      </ion-buttons> 
+    <ion-title>ingredient</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+  <form [formGroup]="ingredientForm" novalidate (ngSubmit)="actionForm()">
+    
+    <ion-item>
+      <ion-label floating>Type <span class="error-box">*</span></ion-label>
+      <ion-select [disabled]=detail formControlName="type" (ionChange)="getTypeCultyre(ingredientForm.value.type)" cancelText="Annuler" okText="Ok">
+          <ion-option value="culture">Culture</ion-option>
+          <!--ion-option value="boolean">Booléen</ion-option>
+          <ion-option value="date">Date</ion-option-->
+          <ion-option value="quantitatif">Quantitatif</ion-option>
+          <!--ion-option value="text" selected>Text</ion-option>
+          <ion-option value="textarea" selected>Text long</ion-option>
+          <ion-option value="choix" selected>Choix simple</ion-option>
+          <ion-option value="choix_multiple" selected>Choix multiple</ion-option-->
+      </ion-select>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['type'].hasError('required') && ingredientForm.controls['type'].touched">* le type de l'ingredient est obligatoir!</div>    
+
+    <ion-row *ngIf="ingredientForm.value.type">
+      <ion-col>
+        <ion-item>
+          <ion-label floating>Code ingrédient <span class="error-box">*</span></ion-label>
+          <ion-input [disabled]=detail type="text" formControlName="code"></ion-input>
+        </ion-item>
+        <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['code'].hasError('required') && ingredientForm.controls['code'].touched">* le code de l'ingredient est obligatoir et doit comporter au plus 50 caractères (letrres + nombre + _ + -)!</div>    
+      </ion-col>
+      <ion-col>
+        <ion-item *ngIf="ingredientForm.value.type && ingredientForm.value.type != 'culture'">
+          <ion-label floating>Nom <span class="error-box">*</span></ion-label>
+          <ion-input [disabled]=detail type="text" formControlName="nom"></ion-input>
+        </ion-item>
+
+        <ion-item *ngIf="ingredientForm.value.type && ingredientForm.value.type == 'culture'">
+          <ion-label floating>Nom <span class="error-box">*</span></ion-label>
+          <ion-select [disabled]=detail formControlName="nom" cancelText="Annuler" (ionChange)="getVariete(ingredientForm.value.nom)" okText="Ok">
+            <ion-option *ngFor="let c of cultures" [value]=c.doc.data.nom>{{c.doc.data.nom}}</ion-option>
+          </ion-select>
+        </ion-item>
+        <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['nom'].hasError('required') && ingredientForm.controls['nom'].touched">* le nom de l'ingredient est obligatoir!</div>      
+      </ion-col>
+    </ion-row>
+
+    <ion-row *ngIf="ingredientForm.value.type && ingredientForm.value.type == 'culture'">
+      <ion-col>
+        <ion-item>
+          <ion-label floating>Variete</ion-label>
+          <ion-select [disabled]=detail formControlName="variete" cancelText="Annuler" okText="Ok">
+            <ion-option *ngFor="let v of varietes" [value]=v.doc.data.denomination>{{v.doc.data.denomination}}</ion-option>
+          </ion-select>
+        </ion-item>
+        <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['variete'].hasError('required') && ingredientForm.controls['variete'].touched">* la variete de l'ingredient est obligatoir!</div>    
+      </ion-col>
+      <ion-col>
+        <ion-item>
+          <ion-label floating>Quantite par défaut</ion-label>
+          <ion-input [disabled]=detail type="number" formControlName="quantite"></ion-input>
+        </ion-item>
+        <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['quantite'].hasError('required') && ingredientForm.controls['quantite'].touched">* Veuillez indiquer la quantite par défaut de l'ingredient!</div>      
+      </ion-col>
+    </ion-row>
+
+    <ion-item *ngIf="ingredientForm.value.type && (ingredientForm.value.type == 'choix' || ingredientForm.value.type == 'choix_multiple')">
+      <ion-label floating>Liste des choix séparés par des virgules (,) <span class="error-box">*</span></ion-label>
+      <ion-input [disabled]=detail type="text" formControlName="choix"></ion-input>
+    </ion-item>
+
+    <ion-item *ngIf="ingredientForm.value.type && ingredientForm.value.type == 'quantitatif'">
+      <ion-label floating>Quantite par défaut</ion-label>
+      <ion-input [disabled]=detail type="number" formControlName="quantite"></ion-input>
+    </ion-item>
+    <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['quantite'].hasError('required') && ingredientForm.controls['quantite'].touched">* Veuillez indiquer la quantite par défaut de l'ingredient!</div>      
+
+
+    <ion-item *ngIf="ingredientForm.value.type && ingredientForm.value.type != 'culture' && ingredientForm.value.type != 'quantitatif'">
+        <ion-label floating>Valeur par défaut</ion-label>
+        <ion-input [disabled]=detail type="text" formControlName="quantite"></ion-input>
+      </ion-item>
+      <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['quantite'].hasError('required') && ingredientForm.controls['quantite'].touched">* Veuillez indiquer la quantite par défaut de l'ingredient!</div>      
+
+      
+    <ion-row *ngIf="ingredientForm.value.type">
+      <ion-col>
+        <ion-item>
+          <ion-label stacked>Unite de mésure <span class="error-box">*</span></ion-label>
+          <ion-select [disabled]=detail formControlName="unite" cancelText="Annuler" okText="Ok">
+              <ion-option value="">Aucune</ion-option>
+              <!--ion-option value="ha">Hectare (ha)</ion-option>
+              <ion-option value="m">Mètre (m)</ion-option>
+              <ion-option value="m²">Mètre carrée (m²)</ion-option>
+              <ion-option value="km">Kilomètre (km)</ion-option-->
+              <ion-option value="g">Gramme (g)</ion-option>
+              <ion-option value="kg">Kilogramme (kg)</ion-option>
+              <ion-option value="l">Litre (l)</ion-option>
+              <ion-option value="ml">Millilitre (ml)</ion-option>
+              <ion-option value="sachet">Sachet (sachet)</ion-option>
+              <ion-option value="tia">Tia (tia)</ion-option>
+              <ion-option value="u">Unité (u)</ion-option>
+              <!--ion-option value="%">Pourcentage (%)</ion-option>
+              <ion-option value="FCFA">FCFA</ion-option>
+              <ion-option value="£">Euro (£)</ion-option>
+              <ion-option value="$">Dollar ($)</ion-option-->
+          </ion-select>
+        </ion-item>
+        <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['unite'].hasError('required') && ingredientForm.controls['unite'].touched">* l'unite de mésure de l'ingredient est obligatoir!</div>    
+      </ion-col>
+      <ion-col>
+        <ion-item>
+          <ion-label stacked>Est obligatoire ? <span class="error-box">*</span></ion-label>
+          <ion-select [disabled]=detail formControlName="est_obligatoire" cancelText="Annuler" okText="Ok">
+            <ion-option value="oui">Oui</ion-option>
+            <ion-option value="non">Non</ion-option>
+          </ion-select>
+        </ion-item>
+        <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['est_obligatoire'].hasError('required') && ingredientForm.controls['est_obligatoire'].touched">* Veuillez indiquer sui l'ingredient est obligatoir ou non!</div>      
+      </ion-col>
+    </ion-row>
+
+    <ion-item *ngIf="ingredientForm.value.type">
+      <ion-label floating>Description</ion-label>
+      <ion-textarea [disabled]=detail formControlName="description" row="6"></ion-textarea>
+    </ion-item>
+  
+  <br>
+  <ion-row *ngIf="!detail">
+    <ion-col>
+      <button ion-button type="submit" color="my_secondary" [disabled]="!ingredientForm.valid" block>Sauvegarder</button>
+    </ion-col>
+    <ion-col>
+      <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
+    </ion-col>
+  </ion-row>
+</form>
+
+</ion-content>

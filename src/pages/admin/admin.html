@@ -7,9 +7,12 @@
 <ion-header>
 
   <ion-navbar color="trap_theme">
-    <button ion-button menuToggle end>
+      <ion-buttons left>
+          <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+        </ion-buttons>
+    <!--button ion-button menuToggle end>
         <ion-icon name="menu"></ion-icon>
-    </button>
+    </button-->
     <ion-title>admin</ion-title>
   </ion-navbar>
 
@@ -17,6 +20,11 @@
 
 
 <ion-content padding>
+
+  <ion-card (click)="infoDB()">
+    <ion-item style="text-align: center">Informations de connexion au serveur
+    </ion-item>
+  </ion-card>
 
   <ion-card (click)="gestionPays()">
     <ion-item style="text-align: center">Geston des pays
@@ -40,6 +48,11 @@
 
   <ion-card (click)="gestionVillages()">
     <ion-item style="text-align: center">Gestion des villages
+    </ion-item>
+  </ion-card>
+
+  <ion-card *ngIf="user && user.roles && global.estManager(user.roles)" (click)="reset()">
+    <ion-item style="text-align: center"  color="delete">Réinitialiser la base de données
     </ion-item>
   </ion-card>
 

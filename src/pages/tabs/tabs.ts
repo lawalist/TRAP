@@ -40,32 +40,32 @@ export class TabsPage {
     }).catch((err) => this.database.createSimpleDocReturn(global.pays));
     
     //ajouter region
-    this.database.getDocById('region').then((c) => {
+    this.database.checkExists('region').then((c) => {
       if(!c){
         this.database.createSimpleDocReturn(global.region)
         }
-    }).catch((err) => this.database.createSimpleDocReturn(global.region));
+    })//.catch((err) => this.database.createSimpleDocReturn(global.region));
     
     //ajouter departement
-    this.database.getDocById('departement').then((c) => {
+    this.database.checkExists('departement').then((c) => {
       if(!c){
         this.database.createSimpleDocReturn(global.departement)
         }
-    }).catch((err) => this.database.createSimpleDocReturn(global.departement));
+    })//.catch((err) => this.database.createSimpleDocReturn(global.departement));
     
     //ajouter commune
-    this.database.getDocById('commune').then((c) => {
+    this.database.checkExists('commune').then((c) => {
       if(!c){
         this.database.createSimpleDocReturn(global.commune)
         }
-    }).catch((err) => this.database.createSimpleDocReturn(global.commune));
+    })//.catch((err) => this.database.createSimpleDocReturn(global.commune));
     
     //ajouter village
-    this.database.getDocById('village').then((c) => {
+    this.database.checkExists('village').then((c) => {
       if(!c){
         this.database.createSimpleDocReturn(global.village)
         }
-    }).catch((err) => this.database.createSimpleDocReturn(global.village));
+    })//.catch((err) => this.database.createSimpleDocReturn(global.village));
   }
 
 

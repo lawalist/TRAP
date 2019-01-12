@@ -1,0 +1,410 @@
+<!--
+  Generated template for the ProduitGatePage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-navbar color="trap_theme">
+    <ion-buttons *ngIf="action == 'liste'" left>
+        <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'ajouter' || action == 'modifier'" left>
+        <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'detail'" left>
+        <button ion-button icon-only color="royal" (click)="fermerDetail()"><ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'liste'"  start>
+  
+        <button ion-button *ngIf="rechercher" icon-only>
+            <ion-spinner></ion-spinner>
+        </button>
+   
+        <button ion-button icon-only>
+          <ion-badge color="fuma-green" item-right>{{gates.length}}</ion-badge>
+        </button>
+  
+        <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+            <ion-icon name="sync"></ion-icon>
+        </button>
+  
+      </ion-buttons>
+  
+      <ion-title *ngIf="action == 'liste'">Pertes</ion-title>
+      <ion-title *ngIf="action == 'ajouter'">Ajouter perte</ion-title>
+      <ion-title *ngIf="action == 'modifier'">Modifier perte</ion-title>
+      <ion-title *ngIf="action == 'detail'">Détail perte</ion-title>
+
+    <!--button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
+        <ion-icon name="menu"></ion-icon>
+    </button-->
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <ion-refresher *ngIf="action == 'liste'" (ionRefresh)="doRefresh($event)">
+      <ion-refresher-content
+        pullingIcon="arrow-dropdown"
+        pullingText="Tirer pour actualiser"
+        refreshingSpinner="circles"
+        refreshingText="Actualisation...">
+      </ion-refresher-content>
+    </ion-refresher>
+  <div  *ngIf="action  == 'liste'">
+  
+      <ion-list>
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-label floating>Selectionnez le produit</ion-label>
+              <ion-select [(ngModel)]="id_produit_selected" (ionChange)="getAllGates(id_produit_selected)" cancelText="Annuler" okText="Ok" >
+                <ion-option *ngFor="let p of produits" [value]=p.doc._id >{{p.doc.data.code}} - {{p.doc.data.nom}}</ion-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+          <ion-col>
+            <ion-item>
+                <ion-label floating>Style affichage</ion-label>
+                <ion-select [(ngModel)]="selectedStyle" cancelText="Annuler" okText="Ok" >
+                  <ion-option value="" selected disabled>Selectionnez le style de la liste</ion-option>
+                  <ion-option value="liste" >Liste</ion-option>
+                  <ion-option value="tableau" >Tableau</ion-option>
+                </ion-select>
+              </ion-item>
+          </ion-col>
+        </ion-row>
+        
+  
+        <ion-item>
+        <ion-label floating>Type de recherche</ion-label>
+        <ion-select [(ngModel)]="typeRecherche" (ionChange)="typeRechercheChange()" cancelText="Annuler" okText="Ok" >
+          <ion-option value="code" >Par code produit</ion-option>
+          <ion-option value="nom" >Par nom produit</ion-option>
+        </ion-select>
+      </ion-item>
+  
+        <ion-item>
+          <ion-searchbar *ngIf="typeRecherche == 'nom'" placeholder="Rechercher par nom produit..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'code'" placeholder="Rechercher par code produit..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+        </ion-item>
+      </ion-list>
+  
+      <br >
+      <ion-list class="info-card" *ngIf="gates.length > 0 && selectedStyle === 'liste'">
+        <ion-list-header>
+          <ion-item class="message">
+            <h2  class="fond-gris blanc"><strong>Pertes <span *ngIf="nom_centre && nom_centre != ''">du centre {{nom_centre}}</span> </strong></h2>
+          </ion-item>
+        </ion-list-header>
+        <ion-item-sliding *ngFor="let gate of gates">
+          <ion-item (click)="detail(gate.doc, selectedSource)" >
+            <!--ion-row>
+              <ion-col-->
+                  <h6><strong>Type produit:</strong> {{gate.doc.data.type_produit}}</h6>
+                  <h6><strong>Code produit:</strong> {{gate.doc.data.code_produit}}</h6>
+                  <h6><strong>Nom produit:</strong> {{gate.doc.data.nom_produit}} ({{gate.doc.data.unite}})</h6>
+              <!--/ion-col>
+              <ion-col class="aligneDate"-->
+                <p><strong>Date:</strong> {{gate.doc.data.today | date: 'dd-MM-yyyy'}}</p>
+              <!--/ion-col>
+            </ion-row-->
+          </ion-item> 
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(gate.doc._id)">
+              <ion-icon name="share"></ion-icon>   
+            </button>
+          </ion-item-options-->
+      </ion-item-sliding> 
+      </ion-list>
+  
+  
+    <ion-card class="info-card" *ngIf="gates.length > 0 && selectedStyle === 'tableau'">
+      <ion-card-header>
+        <ion-item class="message">
+          <h2 class="fond-gris blanc"><strong>Pertes <span *ngIf="nom_centre && nom_centre != ''">du centre {{nom_centre}}</span></strong></h2>
+        </ion-item>
+      </ion-card-header> 
+      <ion-scroll scrollX="true" scrollY="true" id="gate_tableau" style="height: 80vh"> 
+      <!--ion-card-header  style="width: 100vw">
+        <h2><strong>Liste des gates</strong></h2>
+      </ion-card-header--> 
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+          <th  >
+            <strong>Nom centre</strong>
+          </th>
+          <th  >
+            <strong>Code centre</strong>
+          </th>
+          <th>
+            <strong>Type produit</strong>
+          </th>
+          <th  >
+            <strong>Code produit</strong>
+          </th>
+          <th>
+            <strong>Nom produit</strong>
+          </th>
+          <th>
+            <strong>Unité de mésure</strong>
+          </th>
+          <th>
+            <strong>Prix unitaire</strong>
+          </th>
+          <th>
+            <strong>Quantié</strong>
+          </th>
+          <th>
+            <strong>Pertes</strong>
+          </th>
+          <th>
+            <strong>Nouveau stock</strong>
+          </th>
+          <th>
+            <strong>Ancien stock</strong>
+          </th>
+          </tr>
+        </thead>
+        <!--hr style="width: 375%"-->
+        <tbody>
+          <tr *ngFor="let gate of gates" (click)="detail(gate.doc)">
+            <td  >
+              {{gate.doc.data.nom_centre}}
+            </td>
+            <td  >
+              {{gate.doc.data.code_centre}}
+            </td>
+            <td  >
+              {{gate.doc.data.type_produit}}
+            </td>
+            <td  >
+              {{gate.doc.data.code_produit}}
+            </td>
+            <td  >
+              {{gate.doc.data.nom_produit}}
+            </td>
+            <td  >
+              {{gate.doc.data.unite}}
+            </td>
+            <td  >
+              {{gate.doc.data.prix_unitaire}}
+            </td>
+            <td  >
+              {{gate.doc.data.quantite_gate}}
+            </td>
+            <td  >
+              {{gate.doc.data.perte}}
+            </td>
+            <td  >
+              {{gate.doc.data.nouveau_stock}}
+            </td>
+            <td  >
+              {{gate.doc.data.ancien_stock}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ion-scroll>
+  </ion-card>
+  
+  <div *ngIf="gates.length > 0">
+    <br><br><br><br>
+  </div>
+  
+    <ion-list *ngIf="!gates.length > 0">
+      <ion-item>
+        <div class="message">La liste est vide!</div>
+      </ion-item> 
+    </ion-list> 
+</div>
+
+
+<div *ngIf="action == 'detail'">
+    <ion-card class="info-card" (dblclick)="editer(gate)"> 
+      <ion-card-header>
+        <ion-item class="message">
+            <h2 class="fond-gris blanc"><strong>Information perte produit: {{gate.data.nom_produit}}</strong></h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Date:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.date | date: 'dd-MM-yyyy'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom centre:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.nom_centre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Code centre:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.code_centre}} </ion-col> </ion-row> 
+          <ion-row> <ion-col class='meta-key'><strong>Type produit:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.type_produit}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Code produit:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.code_produit}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom produit:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.nom_produit}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Unité de mésure:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.unite}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Prix unitaire (FCFA):</strong></ion-col> <ion-col class='meta-value'> {{gate.data.prix_unitaire}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Quantié gâtée:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.quantite_gate}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Perte en F:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.perte}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nouveau stock:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.nouveau_stock}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Ancien stock:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.ancien_stock}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Anciènne quantié gâtée:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.anciene_quantite_gate}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date enregistrement:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.today | date: 'dd-MM-yyyy'}} </ion-col> </ion-row>
+          
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(gate, true)"> 
+      <ion-card-header>
+        <ion-item class="message">
+            <h2 class="fond-gris blanc"><strong>Plus d'informations</strong></h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Id:</strong></ion-col> <ion-col class='meta-value'> {{gate._id }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Id stock:</strong></ion-col> <ion-col class='meta-value'> {{gate.id_stock }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>No révision:</strong></ion-col> <ion-col class='meta-value'> {{gate._rev }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date création:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.created_at | date: 'dd-MM-yyyy'}} à {{gate.data.created_at | date: 'HH:mm:ss:ms'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Créateur:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.created_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.phonenumber}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date dernière mise à jour:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.updatet_at | date: 'dd-MM-yyyy'}}  à {{gate.data.updatet_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Dernière mise à jour par:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.updated_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.update_deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.update_imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.update_phonenumber}} </ion-col> </ion-row>
+          <ion-row *ngIf="gate.data.deleted"> <ion-col class='meta-key'><strong>Date suppression:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.deleted_at | date: 'dd-MM-yyyy'}}  à {{gate.data.deleted_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row *ngIf="gate.data.deleted"> <ion-col class='meta-key'><strong>Supprimé par:</strong></ion-col> <ion-col class='meta-value'> {{gate.data.deleted_by}} </ion-col> </ion-row>
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+
+    <br><br><br>
+  </div>
+
+
+  
+<div *ngIf="action == 'ajouter' || action == 'modifier'">
+  
+    <form [formGroup]="gateForm" (ngSubmit) = "validAction()">
+
+          <ion-item>
+            <ion-label floating>Date <span class="error-box">*</span></ion-label>
+            <ion-datetime displayFormat="DD/MM/YYYY" formControlName="date" cancelText="Annuler" doneText="Valider"></ion-datetime>
+          </ion-item>
+
+          
+          <ion-row>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Selectionnez le produit <span class="error-box">*</span></ion-label>
+                <ion-select formControlName="id_produit" (ionChange)="getProduit(gateForm.value.id_produit)" cancelText="Annuler" okText="Ok">
+                    <ion-option *ngFor="let t of produits" [value]=t.doc._id >{{t.doc.data.code}} - {{t.doc.data.nom}}</ion-option>
+                  </ion-select>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['id_produit'].hasError('required') && gateForm.controls['id_produit'].touched">* le produit est obligatoir!</div>
+            </ion-col>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Type produit <span class="error-box">*</span></ion-label>
+                <ion-input type="text" formControlName="type_produit" disabled></ion-input>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['type_produit'].hasError('required') && gateForm.controls['type_produit'].touched">* le type du prduit des est obligatoir!</div>    
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Code centre <span class="error-box">*</span></ion-label>
+                <ion-input type="text" formControlName="code_centre" disabled></ion-input>
+              </ion-item> 
+              <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['code_centre'].hasError('required') && gateForm.controls['code_centre'].touched">* le code du centre est obligatoir!</div>    
+            </ion-col>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Nom centre <span class="error-box">*</span></ion-label>
+                <ion-input type="text" formControlName="nom_centre" disabled></ion-input>
+              </ion-item> 
+              <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['nom_centre'].hasError('required') && gateForm.controls['nom_centre'].touched">* le nom du centre est obligatoir!</div>    
+            </ion-col>
+          </ion-row>
+
+          <ion-item>
+            <ion-label floating>Quantié gâtée en {{gateForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
+            <ion-input type="number" formControlName="quantite_gate" (ionChange)="getNouvelleQuantite(gateForm.value.quantite_gate)" ></ion-input>
+          </ion-item> 
+          <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['quantite_gate'].hasError('required') && gateForm.controls['quantite_gate'].touched">* la quantité gâtées est obligatoir!</div>    
+      
+          <ion-row>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Prix unitaire (F) <span class="error-box">*</span></ion-label>
+                <ion-input type="number" formControlName="prix_unitaire" disabled></ion-input>
+              </ion-item> 
+              <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['prix_unitaire'].hasError('required') && gateForm.controls['prix_unitaire'].touched">* le prix unitaire est obligatoir!</div>    
+            </ion-col>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Perte (F) <span class="error-box">*</span></ion-label>
+                <ion-input type="number" formControlName="perte" disabled></ion-input>
+              </ion-item> 
+              <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['perte'].hasError('required') && gateForm.controls['perte'].touched">* la perte est obligatoir!</div>    
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Anciènne quantié disponible en {{gateForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
+                <ion-input type="number" formControlName="ancien_stock" disabled></ion-input>
+              </ion-item> 
+              <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['ancien_stock'].hasError('required') && gateForm.controls['ancien_stock'].touched">* le nom du centre est obligatoir!</div>    
+            </ion-col>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Nouvelle quantié disponible en {{gateForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
+                <ion-input type="number" formControlName="nouveau_stock" disabled></ion-input>
+              </ion-item> 
+              <div style="padding-left: 15px;" class="error-box" *ngIf="gateForm.controls['nouveau_stock'].hasError('required') && gateForm.controls['nouveau_stock'].touched">* le nom du centre est obligatoir!</div>    
+            </ion-col>
+          </ion-row>
+ 
+        <br>
+        <ion-row>
+          <ion-col>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!gateForm.valid" block>Sauvegarder</button>
+          </ion-col>
+          <ion-col>
+            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+          </ion-col>
+        </ion-row>        
+      </form>
+      
+      <br><br><br>
+  </div>
+
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+    <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+    <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+    <!--ion-fab-list side="top">
+      <button ion-fab mini *ngIf="gates.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
+      <button ion-fab mini *ngIf="gates.length > 0" (click)="exportExcel()"><ion-icon name="logo-windows"></ion-icon></button>
+      <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button> 
+    </ion-fab-list-->
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'detail'" >
+      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+      <!--ion-fab-list side="top">
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(gate)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(gate.data.code_gate)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(gate.data.code_gate)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
+        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="gategate(gate.data.num_aggrement, gate.data.nom_gate, gate.data.code_gate)" color="my_primary"><strong>OP</strong></button>
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(gate)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      </ion-fab-list-->
+    </ion-fab> 
+
+</ion-content>
+

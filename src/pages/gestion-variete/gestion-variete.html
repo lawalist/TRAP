@@ -118,9 +118,11 @@
       <!--ion-list *ngIf="selectedStyle === 'liste'" [virtualScroll]="varietes" [headerFn]="myHeaderFn"-->
       
         <ion-list-header>
-          <h2  class="fond-gris"><strong>Les variétés <span *ngIf="selectedCulture && selectedStyle == 'liste'">
+            <ion-item class="message">
+              <h2  class="fond-gris blanc"><strong>Les variétés <span *ngIf="selectedCulture && selectedStyle == 'liste'">
             de {{culture}}
           </span></strong></h2>
+          </ion-item>
         </ion-list-header>
 
         <!--ion-item-divider *virtualHeader="let header" class="message">
@@ -140,9 +142,11 @@
 
   <ion-card class="info-card" *ngIf="varietes.length > 0 && selectedStyle === 'tableau'">
     <ion-card-header>
-      <h2 class="fond-gris"><strong>Les variétés <span *ngIf="selectedCulture && selectedStyle == 'tableau'">
+        <ion-item class="message">
+            <h2  class="fond-gris blanc"><strong>Les variétés <span *ngIf="selectedCulture && selectedStyle == 'tableau'">
         de {{culture}}
       </span></strong></h2>
+      </ion-item>
     </ion-card-header> 
     <ion-scroll scrollX="true" scrollY="true" id="tableau" style="height: 80vh"> 
       <table class="table table-striped table-bordered">
@@ -386,8 +390,10 @@
 <div *ngIf="detailVariete">
     <ion-card class="info-card" (dblclick)="editer(variete, true)"> 
       <ion-card-header>
-        <h2 class="fond-gris"><strong>Détail variete: {{variete.data.denomination}}</strong></h2>
-      </ion-card-header>
+          <ion-item class="message">
+              <h2  class="fond-gris blanc"><strong>Détail variete: {{variete.data.denomination}}</strong></h2>
+      </ion-item>
+       </ion-card-header>
       <ion-card-content>
         <ion-grid>
           <!--ion-row><h5 class="sans-fond-gris"><strong>Caractères généraux</strong></h5> </ion-row-->
@@ -434,7 +440,9 @@
 
     <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(variete, true)"> 
       <ion-card-header>
-        <h2 class="fond-gris"><strong>Plus d'informations</strong></h2>
+          <ion-item class="message">
+              <h2  class="fond-gris blanc"><strong>Plus d'informations</strong></h2>
+          </ion-item>
       </ion-card-header>
       <ion-card-content>
         <ion-grid>
@@ -455,7 +463,7 @@
         </ion-grid>
       </ion-card-content> 
     </ion-card>
-
+    <br><br><br>
   </div>
 
 

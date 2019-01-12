@@ -7,6 +7,10 @@ page-gestion-variete {
         color: red;
     }
 
+    .blanc{
+        color: white !important;
+    }
+
     .message{
         background:map-get($colors, fuma-green-dark);
         color:map-get($colors, fuma-green-light);

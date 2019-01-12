@@ -1,0 +1,269 @@
+<!--
+  Generated template for the StockPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  
+  <ion-navbar color="trap_theme">
+    <ion-buttons *ngIf="action == 'liste' || id_stock" left>
+        <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'detail' && !id_stock" left>
+        <button ion-button icon-only color="royal" (click)="fermerDetail()"><ion-icon name="arrow-back"></ion-icon></button>
+      </ion-buttons> 
+      <ion-buttons *ngIf="action == 'liste'"  start>
+        <button ion-button *ngIf="rechercher" icon-only>
+            <ion-spinner></ion-spinner>
+        </button>
+   
+        <button ion-button icon-only>
+          <ion-badge color="fuma-green" item-right>{{stocks.length}}</ion-badge>
+        </button>
+  
+        <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+            <ion-icon name="sync"></ion-icon>
+        </button>
+  
+      </ion-buttons>
+  
+      <ion-title *ngIf="action == 'liste'">Stocks</ion-title>
+      <ion-title *ngIf="action == 'detail'">Détail stock</ion-title>
+
+      <button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
+        <ion-icon name="menu"></ion-icon>
+    </button>
+  </ion-navbar>
+
+
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <ion-refresher *ngIf="action == 'liste'" (ionRefresh)="doRefresh($event)">
+      <ion-refresher-content
+        pullingIcon="arrow-dropdown"
+        pullingText="Tirer pour actualiser"
+        refreshingSpinner="circles"
+        refreshingText="Actualisation...">
+      </ion-refresher-content>
+    </ion-refresher>
+  <div  *ngIf="action  == 'liste'">
+    
+    
+      <ion-list>
+        <ion-item>
+          <ion-label floating>Style affichage</ion-label>
+          <ion-select [(ngModel)]="selectedStyle" cancelText="Annuler" okText="Ok" >
+            <ion-option value="" selected disabled>Selectionnez le style de la liste</ion-option>
+            <ion-option value="liste" >Liste</ion-option>
+            <ion-option value="tableau" >Tableau</ion-option>
+          </ion-select>
+        </ion-item>
+  
+        <ion-item>
+        <ion-label floating>Type de recherche</ion-label>
+        <ion-select [(ngModel)]="typeRecherche" (ionChange)="typeRechercheChange()" cancelText="Annuler" okText="Ok" >
+          <ion-option value="code" >Par code centre</ion-option>
+          <ion-option value="nom" >Par nom centre</ion-option>
+          <ion-option value="type-produit" >Par type produit</ion-option>
+        </ion-select>
+      </ion-item>
+  
+        <ion-item>
+          <ion-searchbar *ngIf="typeRecherche == 'nom'" placeholder="Rechercher par nom centre..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'code'" placeholder="Rechercher par code centre..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          <ion-searchbar *ngIf="typeRecherche == 'type-produit'" placeholder="Rechercher par type produit..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+        </ion-item>
+      </ion-list>
+  
+      <br >
+      <ion-list class="info-card" *ngIf="stocks.length > 0 && selectedStyle === 'liste'">
+        <ion-list-header>
+          <ion-item class="message">
+            <h2  class="fond-gris blanc"><strong>Liste des stocks <span *ngIf="nom_centre && nom_centre != ''">du centre de transformation {{nom_centre}}</span> </strong></h2>
+          </ion-item>
+         </ion-list-header>
+        <ion-item-sliding *ngFor="let stock of stocks">
+          <ion-item (click)="detail(stock.doc, selectedSource)" >
+            <h6><strong>Type produit:</strong> {{stock.doc.data.type_produit}}</h6>
+            <h6><strong>Code produit:</strong> {{stock.doc.data.code_produit}}</h6>
+            <h6><strong>Nom produit:</strong> {{stock.doc.data.nom_produit}}</h6>
+          </ion-item> 
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(stock.doc._id)">
+              <ion-icon name="share"></ion-icon>   
+            </button>
+          </ion-item-options-->
+      </ion-item-sliding> 
+      </ion-list>
+  
+  
+    <ion-card class="info-card" *ngIf="stocks.length > 0 && selectedStyle === 'tableau'">
+      <ion-card-header>
+        <ion-item class="message">
+          <h2 class="fond-gris blanc"><strong>Liste des stocks <span *ngIf="nom_centre && nom_centre != ''">de la centre {{nom_centre}}</span></strong></h2>
+        </ion-item>
+      </ion-card-header> 
+      <ion-scroll scrollX="true" scrollY="true" id="stock_tableau" style="height: 80vh"> 
+      <!--ion-card-header  style="width: 100vw">
+        <h2><strong>Liste des stocks</strong></h2>
+      </ion-card-header--> 
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+          <th>
+            <strong>Type produit</strong>
+          </th>
+          <th  >
+            <strong>Code produit</strong>
+          </th>
+          <th>
+            <strong>Nom produit</strong>
+          </th>
+          <th>
+            <strong>Unité de mésure produit</strong>
+          </th>
+          <th  >
+            <strong>Code centre</strong>
+          </th>
+          <th  >
+            <strong>Nom centre</strong>
+          </th>
+          <th  >
+            <strong>Quantité produite</strong>
+          </th>
+          <th  >
+            <strong>Quantité disponible</strong>
+          </th>
+          <th  >
+            <strong>Quantité gâtée</strong>
+          </th>
+          </tr>
+        </thead>
+        <!--hr style="width: 375%"-->
+        <tbody>
+          <tr *ngFor="let stock of stocks" (click)="detail(stock.doc)">
+            <td  >
+              {{stock.doc.data.type_produit}}
+            </td>
+            <td  >
+              {{stock.doc.data.code_produit}}
+            </td>
+            <td  >
+              {{stock.doc.data.nom_produit}}
+            </td>
+            <td  >
+              {{stock.doc.data.unite_produit}}
+            </td>
+            <td  >
+              {{stock.doc.data.code_centre}}
+            </td>
+            <td  >
+              {{stock.doc.data.nom_centre}}
+            </td>
+            <td  >
+              {{stock.doc.data.quantite_produite}}
+            </td>
+            <td  >
+              {{stock.doc.data.quantite_disponible}}
+            </td>
+            <td  >
+              {{stock.doc.data.quantite_gate}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ion-scroll>
+  </ion-card>
+  
+  <div *ngIf="stocks.length > 0">
+    <br><br><br><br>
+  </div>
+  
+    <ion-list *ngIf="!stocks.length > 0">
+      <ion-item>
+        <div class="message">La liste est vide!</div>
+      </ion-item> 
+    </ion-list> 
+</div>
+
+
+<div *ngIf="action == 'detail'">
+    <ion-card class="info-card" (dblclick)="editer(stock)"> 
+      <ion-card-header>
+        <ion-item class="message">
+            <h2 class="fond-gris blanc"><strong>Information stock produit: {{stock.data.nom_produit}}</strong></h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Type produit:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.type_produit}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Code produit:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.code_produit}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom produit:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.nom_produit}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Unité de mésure:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.unite_produit}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Code centre:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.code_centre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom centre:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.nom_centre}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Quantité produite:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.quantite_produite}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Quantité disponible:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.quantite_disponible}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Quantité gâtée:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.quantite_gate}} </ion-col> </ion-row>
+          <!--ion-row> <ion-col class='meta-key'><strong>Date enregistrement:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.today | date: 'dd-MM-yyyy'}}</ion-col> </ion-row-->
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+    <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(stock, true)"> 
+      <ion-card-header>
+        <ion-item class="message">
+            <h2 class="fond-gris blanc"><strong>Plus d'informations</strong></h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row> <ion-col class='meta-key'><strong>Id:</strong></ion-col> <ion-col class='meta-value'> {{stock._id }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>No révision:</strong></ion-col> <ion-col class='meta-value'> {{stock._rev }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date création:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.created_at | date: 'dd-MM-yyyy'}} à {{stock.data.created_at | date: 'HH:mm:ss:ms'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Créateur:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.created_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.phonenumber}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date dernière mise à jour:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.updatet_at | date: 'dd-MM-yyyy'}}  à {{stock.data.updatet_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Dernière mise à jour par:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.updated_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.update_deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.update_imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.update_phonenumber}} </ion-col> </ion-row>
+          <ion-row *ngIf="stock.data.deleted"> <ion-col class='meta-key'><strong>Date suppression:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.deleted_at | date: 'dd-MM-yyyy'}}  à {{stock.data.deleted_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row *ngIf="stock.data.deleted"> <ion-col class='meta-key'><strong>Supprimé par:</strong></ion-col> <ion-col class='meta-value'> {{stock.data.deleted_by}} </ion-col> </ion-row>
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+
+    <br><br><br>
+  </div>
+
+  
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+    <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+    <!--ion-fab-list side="top">
+      <button ion-fab mini *ngIf="produits.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
+      <button ion-fab mini *ngIf="produits.length > 0" (click)="exportExcel()"><ion-icon name="logo-windows"></ion-icon></button>
+      <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button> 
+    </ion-fab-list-->
+  </ion-fab>
+
+  <ion-fab bottom right *ngIf="action == 'detail'" >
+      <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(stock)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+      <!--ion-fab-list side="top">
+        
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(gate.data.code_gate)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
+        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(gate.data.code_gate)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
+        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="gategate(gate.data.num_aggrement, gate.data.nom_gate, gate.data.code_gate)" color="my_primary"><strong>OP</strong></button>
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(gate)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      </ion-fab-list-->
+    </ion-fab> 
+
+</ion-content>
+

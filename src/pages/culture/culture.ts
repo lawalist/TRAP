@@ -407,7 +407,7 @@ generateId(){
 }
 
 varietes(culture){
-  let model = this.modelCtl.create('GestionVarietePage', {'culture': culture});
+  let model = this.modelCtl.create('GestionVarietePage', {'culture': culture}, {enableBackdropDismiss: false});
   model.present();
 }
 

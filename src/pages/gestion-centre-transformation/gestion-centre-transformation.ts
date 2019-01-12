@@ -67,6 +67,11 @@ export class GestionCentreTransformationPage {
   nom_union: string;
   id_union: string;
 
+  selectedOP: any;
+  pour_op: string = 'oui';
+  code_op: string;
+  nom_op: string;
+  id_op: string;
 
   constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     if(navParams.data.id_union){
@@ -74,6 +79,11 @@ export class GestionCentreTransformationPage {
       this.code_union = this.navParams.data.code_union;
       this.nom_union = this.navParams.data.nom_union;
       this.selectedUnion = this.id_union;
+    }else if(navParams.data.id_op){
+      this.id_op = this.navParams.data.id_op
+      this.code_op = this.navParams.data.code_op;
+      this.nom_op = this.navParams.data.nom_op;
+      this.selectedOP = this.id_op;
     }
   }
 
@@ -106,9 +116,53 @@ export class GestionCentreTransformationPage {
           //role: 'destructive',
           icon: 'redo',
           handler: () => {
-            //this.centrecentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+            this.membresCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
           }
         },{
+          text: 'Produits',
+          role: 'destructive',
+          icon: 'redo',
+          cssClass: 'myActionSheetBtnStyle',
+          handler: () => {
+            this.produitsCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+          }
+        },{
+          text: 'Productions',
+          role: 'destructive',
+          icon: 'redo',
+          cssClass: 'myActionSheetBtnStyle',
+          handler: () => {
+            this.productionCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+          }
+        },
+        {
+          text: 'Etat du stock',
+          role: 'destructive',
+          icon: 'redo',
+          cssClass: 'myActionSheetBtnStyle',
+          handler: () => {
+            this.inventaireProduitsCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+          }
+        },
+        {
+          text: 'Ventes',
+          role: 'destructive',
+          icon: 'redo',
+          cssClass: 'myActionSheetBtnStyle',
+          handler: () => {
+            this.ventesCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+          }
+        },
+        {
+          text: 'Pertes',
+          role: 'destructive',
+          icon: 'redo',
+          cssClass: 'myActionSheetBtnStyle',
+          handler: () => {
+            this.pertesProduitsCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+          }
+        },
+        {
           text: 'Supprimer',
           role: 'destructive',
           icon: 'trash',
@@ -171,8 +225,34 @@ export class GestionCentreTransformationPage {
     actionSheet.present();
   }
 
-  centrecentre(id_centre, nom_centre, code_centre){
-    this.navCtrl.push('GestionCentreTransformationPage', {'id_centre': id_centre, "nom_centre": nom_centre, "code_centre": code_centre});
+  membresCentre(id_centre, nom_centre, code_centre){
+    let model = this.modelCtl.create('MembrePage', {'id_centre': id_centre, "nom_centre": nom_centre, "code_centre": code_centre}, {enableBackdropDismiss: false});
+    model.present();
+  }
+
+  produitsCentre(id_centre, nom_centre, code_centre){
+    let model = this.modelCtl.create('GestionProduitPage', {'id_centre': id_centre, "nom_centre": nom_centre, "code_centre": code_centre}, {enableBackdropDismiss: false});
+    model.present();
+  }
+
+  productionCentre(id_centre, nom_centre, code_centre){
+    let model = this.modelCtl.create('GestionProductionPage', {'id_centre': id_centre, "nom_centre": nom_centre, "code_centre": code_centre}, {enableBackdropDismiss: false});
+    model.present();
+  }
+
+  inventaireProduitsCentre(id_centre, nom_centre, code_centre){
+    let model = this.modelCtl.create('StockPage', {'id_centre': id_centre, "nom_centre": nom_centre, "code_centre": code_centre}, {enableBackdropDismiss: false});
+    model.present();
+  }
+
+  pertesProduitsCentre(id_centre, nom_centre, code_centre){
+    let model = this.modelCtl.create('ProduitGatePage', {'id_centre': id_centre, "nom_centre": nom_centre, "code_centre": code_centre}, {enableBackdropDismiss: false});
+    model.present();
+  }
+
+  ventesCentre(id_centre, nom_centre, code_centre){
+    let model = this.modelCtl.create('GestionVentePage', {'id_centre': id_centre, "nom_centre": nom_centre, "code_centre": code_centre}, {enableBackdropDismiss: false});
+    model.present();
   }
 
   initForm(){
@@ -185,6 +265,7 @@ export class GestionCentreTransformationPage {
       type:['centre'],
       nom_centre: ['', Validators.required], 
       code_centre: ['', Validators.required], 
+      type_centre: ['groupement', Validators.required], 
       num_aggrement: ['', Validators.required],
       pour_union: ['oui', Validators.required],
       id_union: [''],
@@ -194,11 +275,11 @@ export class GestionCentreTransformationPage {
       pays_nom: [''],
       region: ['', Validators.required],
       region_nom: [''],
-      departement: ['', Validators.required],
+      departement: [''],
       departement_nom: [''],
-      commune: ['', Validators.required],
+      commune: [''],
       commune_nom: [''],
-      village: ['', Validators.required],
+      village: [''],
       village_nom: [''],
       today: [today, Validators.required],
       deviceid: [''],
@@ -218,6 +299,7 @@ export class GestionCentreTransformationPage {
       nom_centre: [centre.data.nom_centre, Validators.required], 
       code_centre: [centre.data.code_centre, Validators.required], 
       num_aggrement: [centre.data.num_aggrement, Validators.required],
+      type_centre: [centre.data.type_centre, Validators.required],
       pour_union: [centre.data._id, Validators.required],
       id_union: [centre.data.id_union],
       nom_union: [centre.data.nom_union],
@@ -226,11 +308,11 @@ export class GestionCentreTransformationPage {
       pays_nom: [centre.data.pays_nom],
       region: [centre.data.region, Validators.required],
       region_nom: [centre.data.region_nom],
-      departement: [centre.data.departement, Validators.required],
+      departement: [centre.data.departement],
       departement_nom: [centre.data.departement_nom],
-      commune: [centre.data.commune, Validators.required],
+      commune: [centre.data.commune],
       commune_nom: [centre.data.commune_nom],
-      village: [centre.data.village, Validators.required],
+      village: [centre.data.village],
       village_nom: [centre.data.village_nom],
       today: [centre.data.today, Validators.required],
     });
@@ -741,6 +823,7 @@ export class GestionCentreTransformationPage {
         this.centre.data.nom_centre = centre.nom_centre;
         this.centre.data.code_centre = centre.code_centre;
         this.centre.data.num_aggrement = centre.num_aggrement;
+        this.centre.data.type_centre = centre.type_centre;
         this.centre.data.pour_union = centre.pour_union;
         this.centre.data.id_union = centre.id_union;
         this.centre.data.nom_union = centre.nom_union;
@@ -1065,6 +1148,14 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
     this.servicePouchdb.syncAvecToast();
   }
 
+  replicationDepuisServeur(){
+    this.servicePouchdb.replicationDepuisServeur();
+  }
+
+  replicationVersServeur(){
+    this.servicePouchdb.replicationVersServeur();
+  }
+
   option(){
     this.menuCtl.enable(true, 'options');
     this.menuCtl.enable(false, 'connexion');
@@ -1251,6 +1342,71 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
 
 
   supprimer(centre){
+    let e: any = {};
+    let alert = this.alertCtl.create({
+      title: 'Suppression centre',
+      message: 'Etes vous sûr de vouloir supprimer ce centre ?',
+      inputs: [
+        {
+          type: 'checkbox',
+          label: 'Supprimer définitivement!',
+          value: 'oui',
+          checked: false
+          }
+      ],
+      buttons:[
+        {
+          text: 'Non',
+          handler: () => console.log('suppression annulée')
+  
+        },
+        {
+          text: 'Oui',
+          handler: (data) => {
+            if(data.toString() === 'oui'){
+              this.servicePouchdb.deleteReturn(centre).then((res) => {
+                //let e: any = {};
+                //e.doc = essai;
+                this.centres.forEach((es, i) => {
+                  if(es.doc._id === centre._id){
+                    this.centres.splice(i, 1);
+                  }
+                  
+                });
+    
+                this.action = 'liste';
+                //this.navCtrl.pop();
+              }, err => {
+                console.log(err)
+              }) ;
+            }else{
+              this.servicePouchdb.deleteDocReturn(centre).then((res) => {
+                //let e: any = {};
+                //e.doc = essai;
+                this.centres.forEach((es, i) => {
+                  if(es.doc._id === centre._id){
+                    this.centres.splice(i, 1);
+                  }
+                  
+                });
+    
+                this.action = 'liste';
+                //this.navCtrl.pop();
+              }, err => {
+                console.log(err)
+              }) ;
+            }
+            
+          }
+        }
+      ]
+    });
+  
+    alert.present();
+  }
+  
+/*
+  supprimer(centre){
     let alert = this.alertCtl.create({
       title: 'Suppression centre',
       message: 'Etes vous sûr de vouloir supprimer cette centre ?',
@@ -1280,5 +1436,5 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
     alert.present();
   }
 
-
+*/
 }

@@ -86,7 +86,9 @@
       <br >
       <ion-list class="info-card" *ngIf="federations.length > 0 && selectedStyle === 'liste'">
         <ion-list-header>
-          <h2  class="fond-gris"><strong>Liste des fédérations</strong></h2>
+            <ion-item class="message">
+                <h2  class="fond-gris blanc"><strong>Liste des fédérations</strong></h2>
+                </ion-item>
         </ion-list-header>
         <ion-item-sliding *ngFor="let federation of federations">
           <ion-item (click)="detail(federation.doc, selectedSource)" >
@@ -112,7 +114,9 @@
   
     <ion-card class="info-card" *ngIf="federations.length > 0 && selectedStyle === 'tableau'">
       <ion-card-header>
-        <h2 class="fond-gris"><strong>Liste des fédérations</strong></h2>
+          <ion-item class="message">
+              <h2  class="fond-gris blanc"><strong>Liste des fédérations</strong></h2>
+              </ion-item>
       </ion-card-header> 
       <ion-scroll scrollX="true" scrollY="true" id="federation_tableau" style="height: 80vh"> 
       <!--ion-card-header  style="width: 100vw">
@@ -196,7 +200,11 @@
 <div *ngIf="action == 'detail'">
     <ion-card class="info-card" (dblclick)="editer(federation)"> 
       <ion-card-header>
-        <strong>Information federation: {{federation.data.num_aggrement}}</strong>
+          <ion-item class="message">
+              <h2  class="fond-gris blanc">
+                <strong>Information federation: {{federation.data.num_aggrement}}</strong>
+        </h2>
+        </ion-item>
       </ion-card-header>
       <ion-card-content>
         <ion-grid>
@@ -235,7 +243,11 @@
 
     <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(federation, true)"> 
       <ion-card-header>
-        <strong>Plus d'informations</strong>
+          <ion-item class="message">
+              <h2  class="fond-gris blanc">
+                <strong>Plus d'informations</strong>
+            </h2>
+        </ion-item>
       </ion-card-header>
       <ion-card-content>
         <ion-grid>
@@ -256,6 +268,7 @@
         </ion-grid>
       </ion-card-content> 
     </ion-card>
+    <br><br><br>
   </div>
 
 
@@ -345,9 +358,16 @@
       <div style="padding-left: 15px;" class="error-box" *ngIf="federationForm.controls['code_federation'].hasError('required') && federationForm.controls['code_federation'].touched">* le code de l'federation des est obligatoir!</div>
 
         <br>
-        <button ion-button type="submit" color="my_secondary" [disabled]="!federationForm.valid" block>Sauvegarder</button>
+
+        <ion-row>
+          <ion-col>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!federationForm.valid" block>Sauvegarder</button>
+          </ion-col>
+          <ion-col>
+            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+          </ion-col>
+        </ion-row>
       </form>
-      <button ion-button color="my_primary" block (click)="annuler()">Fermer</button>
 
   </div>
 

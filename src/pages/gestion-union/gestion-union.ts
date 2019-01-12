@@ -101,6 +101,13 @@ export class GestionUnionPage {
             this.editer(this.union)
           }
         },{
+          text: 'OP',
+          //role: 'destructive',
+          icon: 'redo',
+          handler: () => {
+            this.OPUnion(this.union._id, this.union.data.nom_union, this.union.data.code_union);
+          }
+        },{
           text: 'Centres de transformation',
           //role: 'destructive',
           icon: 'redo',
@@ -171,7 +178,13 @@ export class GestionUnionPage {
   }
 
   centreUnion(id_union, nom_union, code_union){
-    let model = this.modelCtl.create('GestionCentreTransformationPage', {'id_union': id_union, "nom_union": nom_union, "code_union": code_union})
+    let model = this.modelCtl.create('GestionCentreTransformationPage', {'id_union': id_union, "nom_union": nom_union, "code_union": code_union}, {enableBackdropDismiss: false})
+    model.present();
+    //this.navCtrl.push('GestionCentreTransformationPage', {'id_union': id_union, "nom_union": nom_union, "code_union": code_union});
+  }
+
+  OPUnion(id_union, nom_union, code_union){
+    let model = this.modelCtl.create('GestionOpPage', {'id_union': id_union, "nom_union": nom_union, "code_union": code_union}, {enableBackdropDismiss: false})
     model.present();
     //this.navCtrl.push('GestionCentreTransformationPage', {'id_union': id_union, "nom_union": nom_union, "code_union": code_union});
   }
@@ -195,11 +208,11 @@ export class GestionUnionPage {
       pays_nom: [''],
       region: ['', Validators.required],
       region_nom: [''],
-      departement: ['', Validators.required],
+      departement: [''],
       departement_nom: [''],
-      commune: ['', Validators.required],
+      commune: [''],
       commune_nom: [''],
-      village: ['', Validators.required],
+      village: [''],
       village_nom: [''],
       today: [today, Validators.required],
       deviceid: [''],
@@ -227,11 +240,11 @@ export class GestionUnionPage {
       pays_nom: [union.data.pays_nom],
       region: [union.data.region, Validators.required],
       region_nom: [union.data.region_nom],
-      departement: [union.data.departement, Validators.required],
+      departement: [union.data.departement],
       departement_nom: [union.data.departement_nom],
-      commune: [union.data.commune, Validators.required],
+      commune: [union.data.commune],
       commune_nom: [union.data.commune_nom],
-      village: [union.data.village, Validators.required],
+      village: [union.data.village],
       village_nom: [union.data.village_nom],
       today: [union.data.today, Validators.required],
     });
@@ -760,7 +773,7 @@ export class GestionUnionPage {
         this.union.data.update_phonenumber = this.phonenumber;
         this.union.data.update_imei = this.imei;
 
-        this.union
+        //this.union
         this.servicePouchdb.updateDocReturn(this.union).then((res) => {
           this.union._rev = res.rev;
           //this.union = this.grandeUnion
@@ -1251,6 +1264,71 @@ updateCentreAssocies(id_union, nom_union, code_union) {
   }
 
 
+  
+  supprimer(union){
+    let e: any = {};
+    let alert = this.alertCtl.create({
+      title: 'Suppression union',
+      message: 'Etes vous sûr de vouloir supprimer cette union ?',
+      inputs: [
+        {
+          type: 'checkbox',
+          label: 'Supprimer définitivement!',
+          value: 'oui',
+          checked: false
+          }
+      ],
+      buttons:[
+        {
+          text: 'Non',
+          handler: () => console.log('suppression annulée')
+  
+        },
+        {
+          text: 'Oui',
+          handler: (data) => {
+            if(data.toString() === 'oui'){
+              this.servicePouchdb.deleteReturn(union).then((res) => {
+                //let e: any = {};
+                //e.doc = essai;
+                this.unions.forEach((es, i) => {
+                  if(es.doc._id === union._id){
+                    this.unions.splice(i, 1);
+                  }
+                  
+                });
+    
+                this.action = 'liste';
+                //this.navCtrl.pop();
+              }, err => {
+                console.log(err)
+              }) ;
+            }else{
+              this.servicePouchdb.deleteDocReturn(union).then((res) => {
+                //let e: any = {};
+                //e.doc = essai;
+                this.unions.forEach((es, i) => {
+                  if(es.doc._id === union._id){
+                    this.unions.splice(i, 1);
+                  }
+                  
+                });
+    
+                this.action = 'liste';
+                //this.navCtrl.pop();
+              }, err => {
+                console.log(err)
+              }) ;
+            }
+            
+          }
+        }
+      ]
+    });
+  
+    alert.present();
+  }
+/*
   supprimer(union){
     let alert = this.alertCtl.create({
       title: 'Suppression union',
@@ -1280,6 +1358,6 @@ updateCentreAssocies(id_union, nom_union, code_union) {
 
     alert.present();
   }
-
+*/
 
 }

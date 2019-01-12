@@ -32,7 +32,11 @@
             <ion-searchbar placeholder="Rechercher village..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
           </ion-item>
     <ion-list *ngIf="allVillage.length && liste">
-
+      <ion-list-header>
+        <ion-item class="message">
+          <h2  class="fond-gris blanc"><strong>Liste des villages</strong></h2>
+        </ion-item>
+      </ion-list-header>
       <ion-item-sliding *ngFor="let village of allVillage">
         <ion-item>
           <h6><strong>Commune:</strong> {{village.nom_commune}} ({{village.id_commune}})</h6>
@@ -102,7 +106,7 @@
     <br>
     <button ion-button type="submit" color="my_secondary" [disabled]="!villageForm.valid" block>Sauvegarder</button>
   </form>
-  <button ion-button color="my_primary" block (click)="annuler()">Annuler</button>
+  <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
   </div>
 
   <ion-fab bottom right *ngIf="liste" bottom>

@@ -6,11 +6,12 @@ import { Observable } from 'rxjs/Rx';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Storage } from '@ionic/storage';
 import { global } from '../global-variables/variable';
+import PouchDB from  'pouchdb';
 
 //pouchDB made available to compiler through  @types/pouchdb (npm install @types/pouchdb --save --save-exact)
 //import PouchDB from 'pouchdb'
 declare var require: any;
-import PouchDB from 'pouchdb';
+
 //import * as cordovaSqlitePlugin from 'pouchdb-adapter-cordova-sqlite';
 //import * as pouchdbAuthentication from 'pouchdb-authentication';
 
@@ -42,7 +43,7 @@ import PouchDB from 'pouchdb';
 export class PouchdbProvider {
 
     //declare private variables not available to template
-    private isInstantiated: boolean;
+    private isInstantiated: boolean = false;
     private database: any;
     private listener: EventEmitter<any> = new EventEmitter();
     // private remoteDetails: any;
@@ -51,7 +52,7 @@ export class PouchdbProvider {
     remoteSaved: any;
     loading: any;
     pouchOpts = {
-        //skip_setup: true
+        skip_setup: true
     };
 
     //my array
@@ -76,7 +77,7 @@ export class PouchdbProvider {
         //createWriteStream('output.txt');
 
         //le pour appreil autres que les mobiles
-        this.database = new PouchDB("trap-db"/*, {adapter: 'cordova-sqlite'}*/);
+        //this.database = new PouchDB("tt-trap-db"/*, {adapter: 'cordova-sqlite'}*/);
         if(!this.platform.is('android') && !this.platform.is('ios')){
           this.batch_size = 100;
           this.batches_limit = 10
@@ -84,10 +85,11 @@ export class PouchdbProvider {
 
         if (!this.isInstantiated) { 
 
-            
+          this.database = new PouchDB('trap-db');
+       
             //this.database.info().then(console.log.bind(console))
             
-            this.storage.get('info_db').then((info_db) => {
+            this.storage.get('TRAP_info_db').then((info_db) => {
               if(info_db){
                 global.info_db.ip = info_db.ip.toString();
                 global.info_db.nom_db =  info_db.nom_db.toString();
@@ -596,7 +598,14 @@ public syncIinfoDB(ip, nom) {
   //this.remoteSaved = null;
   this.remoteSaved = new PouchDB('http://'+ ip +'/'+ nom, this.pouchOpts);
   global.remoteSaved = this.remoteSaved;
-  this.testConnexion()
+  //
+  
+  
+  //this.testConnexion()
+
+
+
+
     console.log('setting up db sync')
     //default connection
     // if (!remote) {
@@ -625,10 +634,10 @@ public syncIinfoDB(ip, nom) {
         live: true,
         retry: true,
         continuous: true,
-        batch_size: this.batch_size,
-        batches_limit: this.batches_limit,
-        filter: 'filtrerDoc/myfilter',
-        query_params: {roles: this.roles, codes_unions: this.codes_unions}
+        //batch_size: this.batch_size,
+        //batches_limit: this.batches_limit,
+        //filter: 'filtrerDoc/myfilter',
+        //query_params: {roles: this.roles, codes_unions: this.codes_unions}
     }).on('change', function (info) {
         //alert(info)
         //console.log('change', info)
@@ -767,7 +776,7 @@ public syncIinfoDB(ip, nom) {
 public replicationDepuisServeur() {
     console.log('setting up db sync')
     let t: boolean = false;
-    if(global.info_user && global.info_user.roles){
+    /*if(global.info_user && global.info_user.roles){
       this.roles = global.info_user.roles
     }else{
       this.roles = []
@@ -777,7 +786,7 @@ public replicationDepuisServeur() {
       this.codes_unions = global.info_user.codes_unions
     }else{
       this.codes_unions = []
-    }
+    }*/
     //this.affichierMsg('Synchronisation en cours...');
     let toast = this.toastCtl.create({
       message: 'Replication depuis le serveur en cours...',
@@ -813,7 +822,7 @@ public replicationDepuisServeur() {
     }
     
     //let remoteDatabase = new PouchDB(remoteSaved, optionsSaved);
-    this.remoteSaved = new PouchDB('http://'+ global.info_db.ip +'/'+ global.info_db.nom_db, this.pouchOpts);
+    this.remoteSaved = new PouchDB('http://'+ global.info_db.ip +'/'+ global.info_db.nom_db);
     global.remoteSaved = this.remoteSaved;
     //console.log('remoteDB', remoteDatabase)
     //alert(global.info_db.ip+'   '+global.info_db.nom_db + '  '+this.remoteSaved)
@@ -824,10 +833,10 @@ public replicationDepuisServeur() {
         //retry: true,
         //continuous: true
         timeout: 60000,
-        batch_size: this.batch_size,
-        batches_limit: this.batches_limit,
-        filter: 'filtrerDoc/myfilter',
-        query_params: {roles: this.roles, codes_unions: this.codes_unions}
+        //batch_size: this.batch_size,
+        //batches_limit: this.batches_limit,
+        //filter: 'filtrerDoc/myfilter',
+        //query_params: {roles: this.roles, codes_unions: this.codes_unions}
     }).on('change',  (info) => {
         //alert(info)
         //console.log('change', info)
@@ -928,10 +937,10 @@ public replicationVersServeur() {
         //retry: true,
         //continuous: true
         timeout: 60000,
-        batch_size: this.batch_size,
-        batches_limit: this.batches_limit,
-        filter: 'filtrerDoc/myfilter',
-        query_params: {roles: this.roles, codes_unions: this.codes_unions}
+        //batch_size: this.batch_size,
+        //batches_limit: this.batches_limit,
+        //filter: 'filtrerDoc/myfilter',
+        //query_params: {roles: this.roles, codes_unions: this.codes_unions}
     }).on('change',  (info) => {
         //alert(info)
         //console.log('change', info)
@@ -1508,12 +1517,12 @@ getProgress(pending){
   
       this.database.destroy().then(() => {
         console.log("database removed");
-        this.logout('oui');
+        //this.logout('oui');
         this.isInstantiated = false;
-        this.storage.remove('info_user').catch((err) => console.log(err));
-        this.storage.remove('info_connexion').catch((err) => console.log(err));
-        this.storage.remove('confLocaliteEnquete').catch((err) => console.log(err));
-        this.storage.remove('info_db').catch((err) => console.log(err));
+        this.storage.remove('TRAP_info_user').catch((err) => console.log(err));
+        this.storage.remove('TRAP_info_connexion').catch((err) => console.log(err));
+        this.storage.remove('TRAP_conf_localite_enquete').catch((err) => console.log(err));
+        this.storage.remove('TRAP_info_db').catch((err) => console.log(err));
         let toast = this.toastCtl.create({
           message:'Base de données bien réinitialiser',
           position: 'top',
@@ -1640,8 +1649,8 @@ getProgress(pending){
         //this.db.destroy().then(() => {
         //  console.log("base de données supprimée");
         //});
-        this.storage.remove('info_user').catch((err) => console.log(err));
-        this.storage.remove('info_connexion').catch((err) => console.log(err));
+        this.storage.remove('TRAP_info_user').catch((err) => console.log(err));
+        this.storage.remove('TRAP_info_connexion').catch((err) => console.log(err));
         global.info_connexion = null;
         global.info_user = null;
         if(destroy == 'oui'){
@@ -1654,8 +1663,8 @@ getProgress(pending){
         if(destroy == 'oui'){
           this.loading.dismiss();
         }
-        //this.storage.remove('info_user').catch((err) => console.log(err));
-        //this.storage.remove('info_connexion').catch((err) => console.log(err));
+        //this.storage.remove('TRAP_info_user').catch((err) => console.log(err));
+        //this.storage.remove('TRAP_info_connexion').catch((err) => console.log(err));
         this.affichierMsg('Une erreur s\'est produite lors de la déconnexion. \n Veuillez réessayer plus tard!')
         this.events.publish('user:login');
         return 'echec';

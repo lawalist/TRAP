@@ -1,0 +1,452 @@
+<!--
+  Generated template for the TypeProduitPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+
+<ion-header>
+
+  <ion-navbar color="trap_theme">
+    <ion-buttons *ngIf="!ajoutForm && !modifierFrom && !detailTypeProduit" left>
+      <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="ajoutForm || modifierFrom" left>
+      <button ion-button icon-only color="royal" (click)="annuler()"> <ion-icon name="arrow-back"></ion-icon></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="detailTypeProduit" left>
+      <button ion-button icon-only color="royal" (click)="fermerDetail()"><ion-icon name="arrow-back"></ion-icon></button>
+    </ion-buttons> 
+    <ion-buttons *ngIf="!ajoutForm && !detailTypeProduit && !modifierFrom"  start>
+
+      <button ion-button *ngIf="rechercher" icon-only>
+          <ion-spinner></ion-spinner>
+      </button>
+
+      <button ion-button icon-only>
+        <ion-badge color="fuma-green" item-right>{{typeProduits.length}}</ion-badge>
+      </button>
+
+      <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+          <ion-icon name="sync"></ion-icon>
+      </button>
+
+    </ion-buttons>
+
+    <ion-title *ngIf="!ajoutForm && !detailTypeProduit">types produits</ion-title>
+    <ion-title *ngIf="ajoutForm && !modifierFrom">ajouter type produit</ion-title>
+    <ion-title *ngIf="ajoutForm && modifierFrom">modifier type produit</ion-title>
+    <ion-title *ngIf="detailTypeProduit">detail type produit</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <div *ngIf="!ajoutForm && !detailTypeProduit">
+
+        <ion-list>
+          <ion-row>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Choisir la limite</ion-label>
+                <ion-select [(ngModel)]="selectedLimit" (ionChange)="choixLimit()" cancelText="Annuler" okText="Ok" >
+                  <ion-option value="" selected disabled>Selectionnez la limite</ion-option>
+                  <ion-option *ngFor="let limit of limits" [value]=limit>{{limit}}</ion-option>
+                </ion-select>
+              </ion-item>
+            </ion-col>
+            <ion-col>
+              <ion-item>
+                <ion-label floating>Style affichage</ion-label>
+                <ion-select [(ngModel)]="selectedStyle" cancelText="Annuler" okText="Ok" >
+                  <ion-option value="" selected disabled>Selectionnez le style de la liste</ion-option>
+                  <ion-option value="liste">Liste</ion-option>
+                  <ion-option value="tableau">Tableau</ion-option>
+                </ion-select>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+          <ion-item>
+            <ion-searchbar placeholder="Rechercher par nom..." [showCancelButton]="shouldShowCancel" (ionInput)="getItems($event)"></ion-searchbar>
+          </ion-item>
+        </ion-list>
+        <br >
+          <ion-list class="info-card" *ngIf="typeProduits.length > 0 && selectedStyle === 'liste'">
+          <!--ion-list *ngIf="selectedStyle === 'liste'" [virtualScroll]="typeProduits" [headerFn]="myHeaderFn"-->
+          
+            <ion-list-header>
+              <ion-item class="message">
+                <h2  class="fond-gris blanc" item-left><strong>Types produits </strong></h2>
+              </ion-item>
+            </ion-list-header>
+    
+            <!--ion-item-divider *virtualHeader="let header" class="message">
+              <strong style="width: 100%" >typeProduits {{selectedAnnee}}: {{header}}</strong>
+            </ion-item-divider-->
+        <!--ion-item-sliding *ngFor="let c of typeProduits; let i = index"-->
+    
+          <ion-item *ngFor="let c of typeProduits; let i = index" (click)="detail(c.doc)"> 
+          <!--ion-item *virtualItem="let ess" (click)="detail(ess.doc)" --> 
+            <!--h6><strong>Code typeProduit:</strong> {{ess.doc.data.code_typeProduit}}</h6-->
+            <!--h6><strong>Code:</strong> {{c.doc.data.code}}</h6-->
+            <h6><strong>Nom:</strong> {{c.doc.data.nom}}</h6>
+            <h6><strong>Culture de base:</strong> {{c.doc.data.culture}}</h6>
+            <h6><strong>Date:</strong>: {{c.doc.data.today | date: 'dd-MM-yyyy'}}</h6>
+          
+
+          </ion-item>
+          <!--ion-item-options side="right"> 
+              <button ion-button icon-only color="my_primary" (click)="partager(c.doc._id)">
+                <ion-icon name="share"></ion-icon>
+              </button>
+            </ion-item-options>
+        </ion-item-sliding-->
+        </ion-list>
+    
+      <ion-card class="info-card" *ngIf="typeProduits.length > 0 && selectedStyle === 'tableau'">
+        <ion-card-header>
+          <ion-item class="message">
+            <h2 class="fond-gris blanc"><strong>Types produits</strong></h2>
+          </ion-item>
+        </ion-card-header> 
+        <ion-scroll scrollX="true" scrollY="true" id="tableau" style="height: 80vh"> 
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+              <th style="min-width: 100px" >
+                <strong>Code</strong> 
+              </th>
+              <th >
+                <strong>nom</strong> 
+              </th>
+              <th >
+                <strong>Origine</strong> 
+              </th>
+
+              <th >
+                <strong>Culture</strong> 
+              </th>
+              <th>
+                <strong>Description</strong>
+              </th>
+              </tr>
+            </thead>
+            <!--hr style="width: 375%"-->
+            <tbody>
+                <tr *ngFor="let c of typeProduits" (click)="detail(c.doc)">
+                  <td  >
+                    {{c.doc.data.code}}
+                  </td>
+                  <td  >
+                    {{c.doc.data.nom}}
+                  </td>
+                  
+                  <td  >
+                    {{c.doc.data.origine}}
+                  </td>
+                  <td  >
+                    {{c.doc.data.culture}}
+                  </td>
+                  <td  >
+                    {{c.doc.data.description}}
+                  </td>       
+                </tr>
+            </tbody>
+          </table>
+        </ion-scroll>
+      </ion-card>
+    
+      <div *ngIf="typeProduits.length > 0">
+        <br><br><br><br>
+      </div>
+        <ion-list *ngIf="!typeProduits.length > 0">
+          <ion-item>
+            <div class="message">La liste est vide!</div>
+          </ion-item>    
+        </ion-list>
+<br><br><br>
+</div>
+
+
+
+
+<div *ngIf="detailTypeProduit">
+    <ion-card class="info-card" (dblclick)="editer(typeProduit, true)"> 
+      <ion-card-header>
+        <ion-item class="message">
+          <h2 class="fond-gris blanc"><strong>Détail type produit: {{typeProduit.data.nom}}</strong></h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <!--ion-row><h5 class="sans-fond-gris"><strong>Caractères généraux</strong></h5> </ion-row-->
+          <ion-row> <ion-col class='meta-key'><strong>Code:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.code}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Nom:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.nom}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Origine:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.origine}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Culture:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.culture}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Description:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.description}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date enregistrement:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.today | date: 'dd-MM-yyyy'}}</ion-col> </ion-row>
+                
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+
+    <ion-card class="info-card" (dblclick)="editer(typeProduit, true)"> 
+        <ion-card-header>
+          <ion-item class="message">
+              <h2 class="fond-gris blanc"><strong>Formule / Ingrédients</strong></h2>
+          </ion-item>
+        </ion-card-header>
+        <ion-card-content>
+
+            <ion-scroll scrollX="true" scrollY="true" id="ingredients_tableau" *ngIf="typeProduit.data.ingredients.length > 0" style="height: 50vh"> 
+                <!--ion-card-header  style="width: 100vw">
+                  <h2><strong>Liste des productions</strong></h2>
+                </ion-card-header--> 
+                <table class="table table-striped table-bordered">
+                  <thead>
+                    <tr>
+                    <th>
+                      <strong>Type</strong>
+                    </th>
+                    <th>
+                        <strong>Variété</strong>
+                      </th>
+                    <th  >
+                      <strong>Code</strong>
+                    </th>
+                    <th>
+                      <strong>Nom</strong>
+                    </th>
+                    <th>
+                      <strong>Unité de mésure</strong>
+                    </th>
+                    <th>
+                      <strong>Valeur par défaut</strong>
+                    </th>
+                    <th  >
+                      <strong>Coût par défaut</strong>
+                    </th>
+                    </tr>
+                  </thead>
+                  <!--hr style="width: 375%"-->
+                  <tbody>
+                    <tr *ngFor="let i of typeProduit.data.ingredients; let ind=index">
+                      <td  >
+                        {{i.type}}
+                      </td>
+                      <td  >
+                          {{i.variete}}
+                      </td>
+                      <td  >
+                        {{i.code}}
+                      </td>
+                      <td  >
+                        {{i.nom}}
+                      </td>
+                      <td  >
+                        {{i.unite}}
+                      </td>
+                      <td  >
+                        {{i.quantite}}
+                      </td>
+                      <td  >
+                        {{i.cout}}
+                      </td>
+    
+                    </tr>
+                  </tbody>
+                </table>
+              </ion-scroll>
+    
+
+          <ion-grid *ngIf="!typeProduit.data.ingredients.length > 0">
+            <!--ion-list *ngIf="typeProduit.data.ingredients.length > 0">
+              <div *ngFor="let i of typeProduit.data.ingredients; let ind=index">
+                <ion-item (click)="detailIngredient(i)" class="item-color">
+                  <!--ion-row><h5 class="sans-fond-gris"><strong>Caractères généraux</strong></h5> </ion-row->
+                  <ion-row> <ion-col class='meta-key'><strong>Type:</strong></ion-col> <ion-col class='meta-value'> {{i.type}} </ion-col> </ion-row>
+                  <ion-row> <ion-col class='meta-key'><strong>Code:</strong></ion-col> <ion-col class='meta-value'> {{i.code}} </ion-col> </ion-row>
+                  <ion-row> <ion-col class='meta-key'><strong>Nom:</strong></ion-col> <ion-col class='meta-value'> {{i.nom}} </ion-col> </ion-row>
+                </ion-item>
+                <hr style="width: 100%">
+              </div>
+            </ion-list-->
+
+            <ion-list >
+              <ion-item>
+                <div class="message">La liste est vide!</div>
+              </ion-item>    
+            </ion-list>
+
+          </ion-grid>
+        </ion-card-content> 
+      </ion-card>
+  
+    <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(typeProduit, true)"> 
+      <ion-card-header>
+        <ion-item class="message">
+          <h2 class="fond-gris blanc"><strong>Plus d'informations</strong></h2>
+        </ion-item>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row><ion-col class='meta-key'><strong>Id:</strong></ion-col> <ion-col class='meta-value'>{{typeProduit._id}} </ion-col>   </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>No révision:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit._rev }} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date création:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.created_at | date: 'dd-MM-yyyy'}} à {{typeProduit.data.created_at | date: 'HH:mm:ss:ms'}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Créateur:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.created_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.phonenumber}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Date dernière mise à jour:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.updatet_at | date: 'dd-MM-yyyy'}}  à {{typeProduit.data.updatet_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Dernière mise à jour par:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.updated_by}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>ID appareil:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.update_deviceid}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Imei:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.update_imei}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Numéro téléphone:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.update_phonenumber}} </ion-col> </ion-row>
+          <ion-row *ngIf="typeProduit.data.deleted"> <ion-col class='meta-key'><strong>Date suppression:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.deleted_at | date: 'dd-MM-yyyy'}}  à {{typeProduit.data.deleted_at | date: 'HH:mm:ss:ms'}}</ion-col> </ion-row>
+          <ion-row *ngIf="typeProduit.data.deleted"> <ion-col class='meta-key'><strong>Supprimé par:</strong></ion-col> <ion-col class='meta-value'> {{typeProduit.data.deleted_by}} </ion-col> </ion-row>
+        </ion-grid>
+      </ion-card-content> 
+    </ion-card>
+  <br><br><br>
+  </div>
+  
+  <div *ngIf="ajoutForm || modifierFrom">
+  
+    <form [formGroup]="typeProduitForm" novalidate (ngSubmit)="actionForm()">
+        <!-- we will place our fields here -->
+        <ion-item>
+          <ion-label floating>Date d'ajout <span class="error-box">*</span></ion-label>
+          <ion-datetime displayFormat="DD/MM/YYYY" formControlName="today" [(ngModel)]="today" cancelText="Annuler" doneText="Valider" disabled></ion-datetime>
+          <!--ion-datetime ion-datepicker  (ionChanged)="setDate($event);" [value]="dateAjout" full="true" calendar="true" locale="fr-FR" clear class="ScheduleDate" displayFormat="DD/MM/YYYY" formControlName="today" [(ngModel)]="today" cancelText="Annuler" okText="Valider" disabled></ion-datetime-->
+        </ion-item>
+
+        <ion-item>
+          <ion-label floating>Nom <span class="error-box">*</span></ion-label>
+          <ion-input type="text" formControlName="nom"></ion-input>
+        </ion-item>
+        <div style="padding-left: 15px;" class="error-box" *ngIf="typeProduitForm.controls['nom'].hasError('required') && typeProduitForm.controls['nom'].touched">* le nom est obligatoir!</div>
+          
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-label floating>Origine</ion-label>
+              <!--ion-input type="text" formControlName="nom"></ion-input-->
+              <ion-select formControlName="origine" cancelText="Annuler" okText="Ok">
+                <ion-option value="INRAN">INRAN</ion-option>
+                <ion-option value="ICRISAT">ICRISAT</ion-option>
+                <ion-option value="locale">Locale</ion-option>
+              </ion-select>
+            </ion-item>
+            <div style="padding-left: 15px;" class="error-box" *ngIf="typeProduitForm.controls['origine'].hasError('required') && typeProduitForm.controls['origine'].touched">* l'origine est obligatoir!</div>
+          </ion-col>
+          <ion-col>
+            <ion-item>
+              <ion-label floating>Culture de base</ion-label>
+              <!--ion-input type="text" formControlName="nom"></ion-input-->
+              <ion-select formControlName="culture" cancelText="Annuler" okText="Ok">
+                <ion-option *ngFor="let c of cultures" [value]=c.doc.data.nom>{{c.doc.data.nom}}</ion-option>
+              </ion-select>
+            </ion-item>
+            <div style="padding-left: 15px;" class="error-box" *ngIf="typeProduitForm.controls['culture'].hasError('required') && typeProduitForm.controls['culture'].touched">* la culture est obligatoir!</div>    
+          </ion-col>
+        </ion-row>
+         
+        <ion-item>
+          <ion-label floating>Description</ion-label>
+          <ion-textarea formControlName="description" row="6"></ion-textarea>
+        </ion-item>
+
+        <ion-card class="info-card">
+          <ion-card-header>
+              <ion-list>
+                  <ion-item class="message">
+                    <h2 item-left class="fond-gris blanc">Formule / Ingrédients</h2>
+                  </ion-item>
+                </ion-list>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-list *ngIf="ingredients.length > 0">
+              <div *ngFor="let i of ingredients; let ind=index">
+                  <ion-item-sliding >
+                      <ion-item (dblclick)="editerIngredient(i, ind, ingredients)" class="item-color"> 
+                        <h6><strong>Type:</strong> {{i.type}}</h6>
+                        <h6><strong>Code:</strong> {{i.code}}</h6>
+                        <h6><strong>Nom:</strong> {{i.nom}} <span *ngIf="i.unite && i.unite != ''">({{i.unite}})</span> </h6>              
+                      </ion-item>
+        
+                      <!--ion-item-options side="right">
+                        <button ion-button icon-only color="my_primary" (click)="editerIngredient(i, ind, ingredients)">
+                          <ion-icon name="create"></ion-icon>
+                        </button>
+                      </ion-item-options-->
+        
+                      <ion-item-options side="right">
+                        <button ion-button icon-only color="delete" (click)="deleteIngredient(i, ind)">
+                          <ion-icon name="trash"></ion-icon>
+                        </button>
+                      </ion-item-options>
+                    </ion-item-sliding>
+                    <hr style="width: 100%">
+              </div>
+              
+            </ion-list>
+
+            <ion-list *ngIf="!ingredients.length > 0">
+              <ion-item>
+                <div class="message">La liste est vide!</div>
+              </ion-item>    
+            </ion-list>
+
+            <div class="margin-20">
+                <a (click)="addIngredient(ingredients)" style="cursor: default">
+                  Ajouter ingrédient <ion-icon name="add"></ion-icon>
+                </a>
+              </div>
+          </ion-card-content>
+        </ion-card>
+      <br>
+      <ion-row>
+        <ion-col>
+          <button ion-button type="submit" color="my_secondary" [disabled]="!typeProduitForm.valid" block>Sauvegarder</button>
+        </ion-col>
+        <ion-col>
+          <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+        </ion-col>
+      </ion-row>
+    </form>
+    <br><br><br>
+  </div>
+  
+  <ion-fab bottom right *ngIf="!ajoutForm &&!detailTypeProduit && selectedStyle != 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)" bottom>
+      <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+          <!--button ion-fab mini (click)="fusionnertypeProduits()" color="my_primary">FUS</button-->
+    </ion-fab>
+    
+  
+  
+    <ion-fab bottom right *ngIf="!ajoutForm &&!detailTypeProduit && selectedStyle == 'tableau'">
+        <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+      <!--button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
+      <ion-fab-list side="top"> 
+        <button ion-fab mini *ngIf="typeProduits.length > 0" (click)="onPrint()" color="my_primary"><ion-icon name="print"></ion-icon></button>
+        <button ion-fab mini *ngIf="typeProduits.length > 0" (click)="exportExcel()" color="my_primary"><ion-icon name="logo-windows"></ion-icon></button>
+        <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
+        
+      </ion-fab-list-->
+    </ion-fab>
+  
+    <ion-fab bottom right *ngIf="detailTypeProduit">
+        <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+      <!--button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
+      <ion-fab-list side="top">
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(typeProduit)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+        <!--button ion-fab mini (click)="varietes(typeProduit)" color="my_primary" ><strong>VR</strong></button->
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(typeProduit)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      </ion-fab-list-->
+    </ion-fab>
+  
+</ion-content>
+

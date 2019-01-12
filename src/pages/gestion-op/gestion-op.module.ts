@@ -9,5 +9,6 @@ import { GestionOpPage } from './gestion-op';
   imports: [
     IonicPageModule.forChild(GestionOpPage),
   ],
+  exports: [GestionOpPage]
 })
 export class GestionOpPageModule {}

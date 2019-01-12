@@ -945,7 +945,73 @@ updateInfoUnion(id_federation, nom, code) {
 
   }
 
+  
+supprimer(federation){
+  let e: any = {};
+  let alert = this.alertCtl.create({
+    title: 'Suppression federation',
+    message: 'Etes vous sûr de vouloir supprimer cette federation ?',
+    inputs: [
+      {
+        type: 'checkbox',
+        label: 'Supprimer définitivement!',
+        value: 'oui',
+        checked: false
+        }
+    ],
+    buttons:[
+      {
+        text: 'Non',
+        handler: () => console.log('suppression annulée')
 
+      },
+      {
+        text: 'Oui',
+        handler: (data) => {
+          if(data.toString() === 'oui'){
+            this.servicePouchdb.deleteReturn(federation).then((res) => {
+              //let e: any = {};
+              //e.doc = essai;
+              this.federations.forEach((es, i) => {
+                if(es.doc._id === federation._id){
+                  this.federations.splice(i, 1);
+                }
+                
+              });
+  
+              this.action = 'liste';
+              //this.navCtrl.pop();
+            }, err => {
+              console.log(err)
+            }) ;
+          }else{
+            this.servicePouchdb.deleteDocReturn(federation).then((res) => {
+              //let e: any = {};
+              //e.doc = essai;
+              this.federations.forEach((es, i) => {
+                if(es.doc._id === federation._id){
+                  this.federations.splice(i, 1);
+                }
+                
+              });
+  
+              this.action = 'liste';
+              //this.navCtrl.pop();
+            }, err => {
+              console.log(err)
+            }) ;
+          }
+          
+        }
+      }
+    ]
+  });
+
+  alert.present();
+}
+
+
+  /*
   supprimer(federation){
     let alert = this.alertCtl.create({
       title: 'Suppression fédération',
@@ -975,7 +1041,7 @@ updateInfoUnion(id_federation, nom, code) {
 
     alert.present();
   }
-
+*/
   unionFederation(id_federation, nom_federation, code_federation){
     let modal = this.modelCtl.create('GestionUnionPage', {'id_federation': id_federation, "nom_federation": nom_federation, "code_federation": code_federation});
     modal.present();
