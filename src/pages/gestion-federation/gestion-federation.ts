@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, LoadingController, ActionSheetController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
+import { IonicPage, NavController, PopoverController, NavParams, LoadingController, ActionSheetController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
 import { Validators, FormBuilder, FormGroup } from '@angular/forms';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 import { global } from '../../global-variables/variable';
@@ -8,6 +8,7 @@ import { Sim } from '@ionic-native/sim';
 import { File } from '@ionic-native/file';
 import * as FileSaver from 'file-saver';
 import { Printer, PrintOptions } from '@ionic-native/printer';
+import { RelationFederationComponent } from '../../components/relation-federation/relation-federation';
 declare var cordova: any;
 
 /**
@@ -27,7 +28,7 @@ export class GestionFederationPage {
   federationForm: any;
   user: any = global.info_user;
   global:any = global;
-  estManger: boolean = false;
+  estManager: boolean = false;
   estAdmin: boolean = false;
   federations: any = [];
   allFederations: any = [];
@@ -62,7 +63,7 @@ export class GestionFederationPage {
   copiefederation: any;
 
 
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
+  constructor(public navCtrl: NavController, public popoverController: PopoverController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     
   }
 
@@ -76,6 +77,20 @@ export class GestionFederationPage {
     this.code_federation = '';
   }
 
+  openRelationFederation(ev: any) {
+    let popover = this.popoverController.create(RelationFederationComponent);
+    popover.present({ev: ev});
+  
+    popover.onWillDismiss((res) => {
+      if(res == 'Unions'){
+        this.unionFederation(this.federation._id, this.federation.data.nom_federation, this.federation.data.code_federation);
+      }else if(res == 'Centres de transformation'){
+        this.centreFederation(this.federation._id, this.federation.data.nom_federation, this.federation.data.code_federation);
+      }
+    })
+  }
+  
+
   actions() {
     const actionSheet = this.actionSheetCtrl.create({
       title: 'Actions',
@@ -88,13 +103,20 @@ export class GestionFederationPage {
             this.editer(this.federation)
           }
         },{
-          text: 'Unions',
+          text: 'Unions', 
           //role: 'destructive',
           icon: 'redo',
           handler: () => {
             this.unionFederation(this.federation._id, this.federation.data.nom_federation, this.federation.data.code_federation);
           }
         },{
+            text: 'Centres de transformation',
+            //role: 'destructive',
+            icon: 'redo',
+            handler: () => {
+                this.centreFederation(this.federation._id, this.federation.data.nom_federation, this.federation.data.code_federation);
+            }
+          },{
           text: 'Supprimer',
           role: 'destructive',
           icon: 'trash',
@@ -157,7 +179,11 @@ export class GestionFederationPage {
     actionSheet.present();
   }
 
-
+  centreFederation(id_federation, nom_federation, code_federation){
+      let model = this.modelCtl.create('GestionCentreTransformationPage', {'id_federation': id_federation, "nom_federation": nom_federation, "code_federation": code_federation}, {enableBackdropDismiss: false})
+      model.present();
+      //this.navCtrl.push('GestionCentreTransformationPage', {'id_union': id_union, "nom_union": nom_union, "code_union": code_union});
+  }
   initForm(){
     let maDate = new Date();
     let today = this.createDate(maDate.getDate(), maDate.getMonth(), maDate.getFullYear());
@@ -251,17 +277,17 @@ export class GestionFederationPage {
       }).catch((err) => refresher.complete());
   }
 
-  estMangerConnecter(user){
+  estManagerConnecter(user){
     //alert('entree')
     if(user && user.roles){
       //alert('ok')
-      this.estManger = global.estManager(user.roles);
+      this.estManager = global.estManager(user.roles);
     }
   }
 
   estAdminConnecter(user){
     if(user && user.roles){
-      this.estManger = global.estAdmin(user.roles);
+      this.estManager = global.estAdmin(user.roles);
     }
   }
 
@@ -592,6 +618,19 @@ export class GestionFederationPage {
     return res;
   }
 
+  generateId(){
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    var randomArray=[]
+    for(let i=0;i<24;i++){
+      var rand = Math.floor(Math.random()*62)
+      randomArray.push(numbers[rand])
+    }
+    
+    var randomString=randomArray.join("");
+    var Id= /*+pays+'-'+region+'-'+department+'-'+commune +'-' +village+ */''+randomString 
+    return Id;
+  }
+
   validAction(){
     let date = new Date();
     let federation = this.federationForm.value;
@@ -647,7 +686,7 @@ export class GestionFederationPage {
       federation.imei = this.imei;
 
       if(this.action == 'ajouter'){
-        let id = this.servicePouchdb.generateId('federation', federation.pays, federation.region);
+        let id = 'federation:'+this.generateId();
         federation.end = date.toJSON();
 
         let federationFinal: any = {};
@@ -704,18 +743,19 @@ export class GestionFederationPage {
           //this.federation = this.grandefederation
 
           if(this.federation.data.code_federation !== this.copiefederation.data.code_federation || this.federation.data.nom_federation !== this.copiefederation.data.nom_federation){
-            this.updateInfoUnion(this.federation._id, this.federation.data.nom_federation, this.federation.data.code_federation);
-          }else{
+            this.updateInfoUnion(this.federation);
+            this.updateInfoOps(this.federation);
+            this.updateInfoCentre(this.federation);
+          }
 
           let toast = this.toastCtl.create({
-            message: 'federation bien sauvegardée!',
+            message: 'Fédération bien sauvegardée!',
             position: 'top',
             duration: 1000
           });
           this.action  = 'detail';
           toast.present();
           this.reinitVar()
-        }
       });
 
     }
@@ -757,24 +797,24 @@ export class GestionFederationPage {
 
 
 
-updateInfoUnion(id_federation, nom, code) {
-  let loadin = this.loadinCtl.create({
+updateInfoUnion(federation) {
+  /*let loadin = this.loadinCtl.create({
     content: 'Application des modification aux unions associées en cours....'
   });
 
-  loadin.present();
+  loadin.present();*/
   //modification du code federation dans op
   this.servicePouchdb.getPlageDocsRapide('union','union:\uffff').then((unions) => {
     unions.forEach((u) => {
         //return this.getPhoto(membre)
-        if(u.doc.data.pour_federation == 'oui' && u.doc.data.id_federation == id_federation){
-              u.doc.data.nom_federation = nom;
-              u.doc.data.code_federation = code;
+        if(u.doc.data.pour_federation == 'oui' && u.doc.data.id_federation && u.doc.data.id_federation == federation._id){
+              u.doc.data.nom_federation = federation.data.nom_federation;
+              u.doc.data.code_federation = federation.data.code_federation;
               this.servicePouchdb.updateDoc(u.doc);
               //mbrs.push(mbr);
             }
       });
-      loadin.dismiss();
+      /*loadin.dismiss();
       let toast = this.toastCtl.create({
         message: 'federation bien sauvegardée!',
         position: 'top',
@@ -782,14 +822,49 @@ updateInfoUnion(id_federation, nom, code) {
       });
 
       this.action  = 'detail';
-      toast.present();
+      toast.present();*/
   }).catch((err) => {
-      console.log('Pas d\'unions associé')
+      console.log(err)
   })
   
         
 }
 
+
+updateInfoOps(federation) {
+
+  this.servicePouchdb.getPlageDocsRapide('op','op:\uffff').then((ops) => {
+    ops.forEach((o) => {
+        //return this.getPhoto(membre)
+        if(o.doc.data.id_federation && o.doc.data.id_federation == federation._id){
+              o.doc.data.nom_federation = federation.data.nom_federation;
+              o.doc.data.code_federation = federation.data.code_federation;
+              this.servicePouchdb.updateDoc(o.doc);
+              //mbrs.push(mbr);
+            }
+      });
+  }).catch((err) => {
+      console.log(err)
+  })
+}
+
+
+updateInfoCentre(federation) {
+
+  this.servicePouchdb.getPlageDocsRapide('centre','centre:\uffff').then((centres) => {
+    centres.forEach((c) => {
+        //return this.getPhoto(membre)
+        if(c.doc.data.id_federation && c.doc.data.id_federation == federation._id){
+              c.doc.data.nom_federation = federation.data.nom_federation;
+              c.doc.data.code_federation = federation.data.code_federation;
+              this.servicePouchdb.updateDoc(c.doc);
+              //mbrs.push(mbr);
+            }
+      });
+  }).catch((err) => {
+      console.log(err)
+  })
+}
 
 
   sync(){
@@ -870,17 +945,20 @@ updateInfoUnion(id_federation, nom, code) {
       //this.navCtrl.push('AjouterfederationPage', {'confLocaliteEnquete': confLocaliteEnquete});    
   }
 
-  editer(federation){
-    this.chargerPays();
-    this.chargerSousLocalite(federation.data.pays, 'pays')
-    this.chargerSousLocalite(federation.data.region, 'region')
-    this.chargerSousLocalite(federation.data.departement, 'departement')
-    this.chargerSousLocalite(federation.data.commune, 'commune')
-    this.editForm(federation);
-    this.getInfoSimEmei();
-    this.action = 'modifier';
-    this.copiefederation = this.clone(federation);
-      //this.navCtrl.push('AjouterfederationPage', {'confLocaliteEnquete': confLocaliteEnquete});    
+  editer(federation, dbclick: boolean = false){
+    if(!dbclick || (dbclick && this.user && this.user.roles && global.estManager(this.user.roles))){
+
+      this.chargerPays();
+      this.chargerSousLocalite(federation.data.pays, 'pays')
+      this.chargerSousLocalite(federation.data.region, 'region')
+      this.chargerSousLocalite(federation.data.departement, 'departement')
+      this.chargerSousLocalite(federation.data.commune, 'commune')
+      this.editForm(federation);
+      this.getInfoSimEmei();
+      this.action = 'modifier';
+      this.copiefederation = this.clone(federation);
+        
+    }//this.navCtrl.push('AjouterfederationPage', {'confLocaliteEnquete': confLocaliteEnquete});    
   }
 
   modifier(){

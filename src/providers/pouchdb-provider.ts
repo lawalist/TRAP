@@ -7,35 +7,19 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Storage } from '@ionic/storage';
 import { global } from '../global-variables/variable';
 import PouchDB from  'pouchdb';
+//var PouchDB = require('pouchdb').default;
 
 //pouchDB made available to compiler through  @types/pouchdb (npm install @types/pouchdb --save --save-exact)
 //import PouchDB from 'pouchdb'
 declare var require: any;
-
-//import * as cordovaSqlitePlugin from 'pouchdb-adapter-cordova-sqlite';
 //import * as pouchdbAuthentication from 'pouchdb-authentication';
-
-//import * as pouchdbQuickSearch from 'pouchdb-quick-search';
-
-//import * as pouchdbdesign from 'pouchdb-design';
-//PouchDB.plugin(require('pouchdb-adapter-cordova-sqlite'));
-
 //PouchDB.plugin(pouchdbAuthentication);
-//PouchDB.plugin(require('pouchdb-design'));
-//PouchDB.plugin(require('relational-pouch'));
-//PouchDB.plugin(require('pouchdb-full-sync'));
-//PouchDB.plugin(require('pouchdb-load'));
-//var replicationStream = require('pouchdb-replication-stream');
-//var fs = require('fs');
 
-//import fs from 'fs';
-//import * as fs from 'fs';
-//PouchDB.plugin(replicationStream.plugin);
-//PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
-//PouchDB.plugin(pouchdbQuickSearch); 
+import PouchDBAuth  from 'pouchdb-authentication';
+import PouchdbFind from 'pouchdb-find';
+PouchDB.plugin(PouchDBAuth);
+PouchDB.plugin(PouchdbFind);
 
-//var GQL = require('GQL')
-//PouchDB.plugin({ gql: GQL });
 
 
 
@@ -52,13 +36,16 @@ export class PouchdbProvider {
     remoteSaved: any;
     loading: any;
     pouchOpts = {
-        skip_setup: true
+      skip_setup: true
     };
 
     //my array
     data: any;
     roles: any = [];
-    codes_unions: any = [];
+    codes_federations: any =[];
+    codes_unions:any= [];
+    codes_ops: any=[];
+    codes_centres:any= [];
     batch_size = 100;
     batches_limit = 10;
     //wr: createWriteStream
@@ -66,81 +53,107 @@ export class PouchdbProvider {
 
  
     constructor(public http: Http, private sanitizer: DomSanitizer, public platform: Platform, public toastCtl: ToastController, public pl: Platform, public events: Events, public loadingCtrl: LoadingController, public storage: Storage) {
-      //PouchDB.plugin(cordovaSqlitePlugin);
-        //PouchDB.plugin(pouchdbFind);
-        //this.remoteDetails = this.http.get('assets/app-config.json').subscribe(res => this.remoteDetails = (res.json()))
-        //setup db to connect to single database
-        //this.remoteSaved = new PouchDB("http://"+ global.info_db.ip +"/"+global.info_db.nom_db);//, this.pouchOpts);//base production
-        //this.remoteSaved = new PouchDB("http://192.168.43.53:5984/fuma_frn_app");//, this.pouchOpts); prod local
-        //this.remoteSaved = new PouchDB("http://127.0.0.1:5984/app_fuma")
-  //  var wr = fs.createWriteStream('output.txt')
-        //createWriteStream('output.txt');
-
-        //le pour appreil autres que les mobiles
-        //this.database = new PouchDB("tt-trap-db"/*, {adapter: 'cordova-sqlite'}*/);
-        if(!this.platform.is('android') && !this.platform.is('ios')){
-          this.batch_size = 100;
-          this.batches_limit = 10
+      
+      this.database = new PouchDB('trap-local-db');
+      //this.creatDocByTypeIndex();
+  
+      //this.database.info().then(console.log.bind(console))
+      
+      this.storage.get('TRAP_info_db').then((info_db) => {
+        if(info_db){
+          global.info_db.ip = info_db.ip.toString();
+          global.info_db.nom_db =  info_db.nom_db.toString();
+          //alert("http://"+ info_db.ip +"/"+info_db.nom_db)
+          this.remoteSaved = new PouchDB('http://'+ info_db.ip.toString() +'/'+ info_db.nom_db.toString(), this.pouchOpts);
+          global.remoteSaved = this.remoteSaved;
+          this.isInstantiated = true;
+      
+        }else{
+          if(global.info_db && global.info_db.ip){
+            this.remoteSaved = new PouchDB('http://'+ global.info_db.ip +'/'+ global.info_db.nom_db, this.pouchOpts);
+            global.remoteSaved = this.remoteSaved;
+          }
         }
-
-        if (!this.isInstantiated) { 
-
-          this.database = new PouchDB('trap-db');
-       
-            //this.database.info().then(console.log.bind(console))
-            
-            this.storage.get('TRAP_info_db').then((info_db) => {
-              if(info_db){
-                global.info_db.ip = info_db.ip.toString();
-                global.info_db.nom_db =  info_db.nom_db.toString();
-                //alert("http://"+ info_db.ip +"/"+info_db.nom_db)
-                this.remoteSaved = new PouchDB('http://'+ info_db.ip.toString() +'/'+ info_db.nom_db.toString(), this.pouchOpts);
-                global.remoteSaved = this.remoteSaved;
-                //this.database = new PouchDB('app-database');
-                //this.sync()
-              //this.database = new PouchDB("trap-db"/*, {adapter: 'cordova-sqlite'}*/);////base production
-                //alert(this.database.adapter);
-                //this.database = new PouchDB("moriben-frn-app-db");////base production moriben
-                //this.sync()
-                /*this.database.changes({
-                    live: true,
-                    include_docs: true 
-                }).on('change', change => {
-                    console.log('db changed') 
-                    this.listener.emit(change);
-                });*/
-                this.isInstantiated = true;
-            
-              }else{
-                if(global.info_db && global.info_db.ip){
-                  this.remoteSaved = new PouchDB('http://'+ global.info_db.ip +'/'+ global.info_db.nom_db, this.pouchOpts);
-                  global.remoteSaved = this.remoteSaved;
-                }
-                
-                //this.database = new PouchDB("trap-db"/*, {adapter: 'cordova-sqlite'}**/);
-                //alert(this.database.adapter);
-                //this.database = new PouchDB("moriben-frn-app-db");////base production moriben
-                //this.database = new PouchDB('app-database');
-              }
-            }).catch((err) => {
-              if(global.info_db && global.info_db.ip){
-                  this.remoteSaved = new PouchDB('http://'+ global.info_db.ip +'/'+ global.info_db.nom_db, this.pouchOpts);
-                  global.remoteSaved = this.remoteSaved;
-              }
-              //this.database = new PouchDB("trap-db"/*, {adapter: 'cordova-sqlite'}*/);
-              //alert(this.database.adapter);
-              //this.database = new PouchDB("fuma-frn-app-db");
-              //this.database = new PouchDB("moriben-frn-app-db");////base production moriben
-              //this.database = new PouchDB('app-database');
-            });
-
-            //this.sync();
-            //this.database.sync()
-        //}else{
-            //this.sync();
-        //
-      }
+      }).catch((err) => {
+        if(global.info_db && global.info_db.ip){
+            this.remoteSaved = new PouchDB('http://'+ global.info_db.ip +'/'+ global.info_db.nom_db, this.pouchOpts);
+            global.remoteSaved = this.remoteSaved;
+        }
+      });
     }
+
+
+    creatDocByTypeIndex(){
+      this.database.createIndex({
+        index: {
+          fields: ['data.type', 'data.deleted']
+        }
+      }).then((res) => {
+        console.log('creatDocByTypeIndex: '+JSON.stringify(res));
+      }).catch((err) => {
+        console.log('creatDocByTypeIndex err: '+JSON.stringify(err));
+      });
+    }
+
+    getDocByType(type, deleted = false){
+      
+      return this.database.find( {
+        selector: {
+          'data.type': type,
+          'data.deleted': deleted,
+        }
+      });
+
+      /*return new Promise ( resolve => {
+
+        this.database.createIndex({
+          index: {
+            fields: ['data.type', 'data.deleted']
+          }
+        }).then((res) => {
+
+          resolve(this.database.find( {
+            selector: {
+              "data.type": type,
+              "data.deleted": deleted,
+            }}))
+          //console.log('creatDocByTypeIndex: '+JSON.stringify(res));
+        }).catch((err) => {
+          console.log('creatDocByTypeIndex err: '+JSON.stringify(err));
+        });
+
+      } );*/
+
+
+      
+    }
+/*
+    getDocByTypeAndRelatedDocId(type, deleted = false, related_doc_id_name, related_doc_id_value){
+      
+      return new Promise ( resolve => {
+
+        this.database.createIndex({
+          index: {
+            fields: ['data.type', 'data.deleted', 'data.'+related_doc_id_name]
+          }
+        }).then((res) => {
+          let options: any = {
+            selector: {
+              "data.type": type,
+              "data.deleted": deleted,
+            }};
+
+            options["data."+related_doc_id_name] = {'$eq': related_doc_id_value} ;
+            console.log(related_doc_id_value)
+          resolve(this.database.find(options))
+          //console.log('creatDocByTypeIndex: '+JSON.stringify(res));
+        }).catch((err) => {
+          console.log('creatDocByTypeIndex err: '+JSON.stringify(err));
+        });
+
+      } );
+    }*/
+
 
     replication(server){
       let toast = this.toastCtl.create({
@@ -223,10 +236,10 @@ export class PouchdbProvider {
         auth: {
           username: username,
           password: paswd
-        },
+        }/*,
         ajax: {
           timeout: 4800000,
-        }
+        }*/
       });
 
       this.database.replicate.to(remote, {
@@ -338,10 +351,10 @@ export class PouchdbProvider {
       auth: {
         username: 'admin',
         password: 'admin'
-      },
+      }/*,
       ajax: {
         timeout: 4800000,
-      }
+      }*/
     });
     //let i = parseInt(doc._rev.substring(0, doc._rev.indexOf('-')))
     if(!newDoc._rev || newDoc._rev !== ''){
@@ -485,17 +498,35 @@ public getMembreAttachment(id,filename) {
 
     public sync(remote ?: string, options: any = {}) {
 
-    if(global.info_user && global.info_user.roles){
-      this.roles = global.info_user.roles
-    }else{
-      this.roles = []
-    }
+      if(global.info_user && global.info_user.roles){
+        this.roles = global.info_user.roles
+      }else{
+        this.roles = []
+      }
+    
+      if(global.info_user && global.info_user.codes_federations){
+        this.codes_federations = global.info_user.codes_federations
+      }else{
+        this.codes_federations = []
+      }
   
-    if(global.info_user && global.info_user.codes_unions){
-      this.codes_unions = global.info_user.codes_unions
-    }else{
-      this.codes_unions = []
-    }
+      if(global.info_user && global.info_user.codes_unions){
+        this.codes_unions = global.info_user.codes_unions
+      }else{
+        this.codes_unions = []
+      }
+  
+      if(global.info_user && global.info_user.codes_ops){
+        this.codes_ops = global.info_user.codes_ops
+      }else{
+        this.codes_ops = []
+      }
+  
+      if(global.info_user && global.info_user.codes_centres){
+        this.codes_centres = global.info_user.codes_centres
+      }else{
+        this.codes_centres = []
+      }
     console.log('setting up db sync')
     //default connection
     // if (!remote) {
@@ -528,8 +559,8 @@ public getMembreAttachment(id,filename) {
         continuous: true,
         batch_size: this.batch_size,
         batches_limit: this.batches_limit,
-        filter: 'filtrerDoc/myfilter',
-        query_params: {roles: this.roles, codes_unions: this.codes_unions}
+        filter: 'filtrerDocByCodeCentre/myfilter',
+        query_params: {roles: this.roles, codes_federations: this.codes_federations, codes_unions: this.codes_unions, codes_ops: this.codes_ops, codes_centres: this.codes_centres}
     }).on('change', function (info) {
         //alert(info)
         console.log('change', info)
@@ -583,17 +614,36 @@ getAllDoc(){
 
 public syncIinfoDB(ip, nom) {
   this.isInstantiated = false;
-  if(global.info_user && global.info_user.roles){
-      this.roles = global.info_user.roles
-    }else{
-      this.roles = []
-    }
   
-    if(global.info_user && global.info_user.codes_unions){
-      this.codes_unions = global.info_user.codes_unions
-    }else{
-      this.codes_unions = []
-    }
+  if(global.info_user && global.info_user.roles){
+    this.roles = global.info_user.roles
+  }else{
+    this.roles = []
+  }
+
+  if(global.info_user && global.info_user.codes_federations){
+    this.codes_federations = global.info_user.codes_federations
+  }else{
+    this.codes_federations = []
+  }
+
+  if(global.info_user && global.info_user.codes_unions){
+    this.codes_unions = global.info_user.codes_unions
+  }else{
+    this.codes_unions = []
+  }
+
+  if(global.info_user && global.info_user.codes_ops){
+    this.codes_ops = global.info_user.codes_ops
+  }else{
+    this.codes_ops = []
+  }
+
+  if(global.info_user && global.info_user.codes_centres){
+    this.codes_centres = global.info_user.codes_centres
+  }else{
+    this.codes_centres = []
+  }
   //alert("http://"+ ip +"/"+nom)
   //this.remoteSaved = null;
   this.remoteSaved = new PouchDB('http://'+ ip +'/'+ nom, this.pouchOpts);
@@ -634,10 +684,10 @@ public syncIinfoDB(ip, nom) {
         live: true,
         retry: true,
         continuous: true,
-        //batch_size: this.batch_size,
-        //batches_limit: this.batches_limit,
-        //filter: 'filtrerDoc/myfilter',
-        //query_params: {roles: this.roles, codes_unions: this.codes_unions}
+        batch_size: this.batch_size,
+        batches_limit: this.batches_limit,
+        filter: 'filtrerDocByCodeCentre/myfilter',
+        query_params: {roles: this.roles, codes_federations: this.codes_federations, codes_unions: this.codes_unions, codes_ops: this.codes_ops, codes_centres: this.codes_centres}
     }).on('change', function (info) {
         //alert(info)
         //console.log('change', info)
@@ -676,17 +726,36 @@ public syncIinfoDB(ip, nom) {
   public syncAvecToast(metode: any = '') {
     console.log('setting up db sync')
     let t: boolean = false;
-    if(global.info_user && global.info_user.roles){
-      this.roles = global.info_user.roles
-    }else{
-      this.roles = []
-    }
-  
-    if(global.info_user && global.info_user.codes_unions){
-      this.codes_unions = global.info_user.codes_unions
-    }else{
-      this.codes_unions = []
-    }
+    
+  if(global.info_user && global.info_user.roles){
+    this.roles = global.info_user.roles
+  }else{
+    this.roles = []
+  }
+
+  if(global.info_user && global.info_user.codes_federations){
+    this.codes_federations = global.info_user.codes_federations
+  }else{
+    this.codes_federations = []
+  }
+
+  if(global.info_user && global.info_user.codes_unions){
+    this.codes_unions = global.info_user.codes_unions
+  }else{
+    this.codes_unions = []
+  }
+
+  if(global.info_user && global.info_user.codes_ops){
+    this.codes_ops = global.info_user.codes_ops
+  }else{
+    this.codes_ops = []
+  }
+
+  if(global.info_user && global.info_user.codes_centres){
+    this.codes_centres = global.info_user.codes_centres
+  }else{
+    this.codes_centres = []
+  }
     //this.affichierMsg('Synchronisation en cours...');
     let toast = this.toastCtl.create({
       message: 'Synchronisation en cours...',
@@ -734,8 +803,8 @@ public syncIinfoDB(ip, nom) {
         timeout: 60000,
         batch_size: this.batch_size,
         batches_limit: this.batches_limit,
-        filter: 'filtrerDoc/myfilter',
-        query_params: {roles: this.roles, codes_unions: this.codes_unions}
+        filter: 'filtrerDocByCodeCentre/myfilter',
+        query_params: {roles: this.roles, codes_federations: this.codes_federations, codes_unions: this.codes_unions, codes_ops: this.codes_ops, codes_centres: this.codes_centres}
     }).on('change',  (info) => {
         //alert(info)
         //console.log('change', info)
@@ -776,17 +845,35 @@ public syncIinfoDB(ip, nom) {
 public replicationDepuisServeur() {
     console.log('setting up db sync')
     let t: boolean = false;
-    /*if(global.info_user && global.info_user.roles){
+    if(global.info_user && global.info_user.roles){
       this.roles = global.info_user.roles
     }else{
       this.roles = []
     }
   
+    if(global.info_user && global.info_user.codes_federations){
+      this.codes_federations = global.info_user.codes_federations
+    }else{
+      this.codes_federations = []
+    }
+
     if(global.info_user && global.info_user.codes_unions){
       this.codes_unions = global.info_user.codes_unions
     }else{
       this.codes_unions = []
-    }*/
+    }
+
+    if(global.info_user && global.info_user.codes_ops){
+      this.codes_ops = global.info_user.codes_ops
+    }else{
+      this.codes_ops = []
+    }
+
+    if(global.info_user && global.info_user.codes_centres){
+      this.codes_centres = global.info_user.codes_centres
+    }else{
+      this.codes_centres = []
+    }
     //this.affichierMsg('Synchronisation en cours...');
     let toast = this.toastCtl.create({
       message: 'Replication depuis le serveur en cours...',
@@ -800,19 +887,7 @@ public replicationDepuisServeur() {
         toast.present();
         t = true
         toast.onDidDismiss(() => t = false)
-   // }
-    //default connection
-    // if (!remote) {
-    //     remote = this.remoteDetails['remote-couch-url']
-    //     options = {
-    //         "auth.username": this.remoteDetails.username,
-    //         "auth.password": this.remoteDetails.password
-    //     }
-    // }
 
-    
-    //var remoteSaved = "http://fumagaskiya-db.stats4sd.org/test"
-    //var remoteSaved = "http://127.0.0.1:5984/app_fuma"
     var optionsSaved = {
       skip_setup: true
        // "auth.username": "fumagaskiya-app",
@@ -833,10 +908,10 @@ public replicationDepuisServeur() {
         //retry: true,
         //continuous: true
         timeout: 60000,
-        //batch_size: this.batch_size,
-        //batches_limit: this.batches_limit,
-        //filter: 'filtrerDoc/myfilter',
-        //query_params: {roles: this.roles, codes_unions: this.codes_unions}
+        batch_size: this.batch_size,
+        batches_limit: this.batches_limit,
+        filter: 'filtrerDocByCodeCentre/myfilter',
+        query_params: {roles: this.roles, codes_federations: this.codes_federations, codes_unions: this.codes_unions, codes_ops: this.codes_ops, codes_centres: this.codes_centres}
     }).on('change',  (info) => {
         //alert(info)
         //console.log('change', info)
@@ -885,10 +960,28 @@ public replicationVersServeur() {
       this.roles = []
     }
   
+    if(global.info_user && global.info_user.codes_federations){
+      this.codes_federations = global.info_user.codes_federations
+    }else{
+      this.codes_federations = []
+    }
+
     if(global.info_user && global.info_user.codes_unions){
       this.codes_unions = global.info_user.codes_unions
     }else{
       this.codes_unions = []
+    }
+
+    if(global.info_user && global.info_user.codes_ops){
+      this.codes_ops = global.info_user.codes_ops
+    }else{
+      this.codes_ops = []
+    }
+
+    if(global.info_user && global.info_user.codes_centres){
+      this.codes_centres = global.info_user.codes_centres
+    }else{
+      this.codes_centres = []
     }
     //this.affichierMsg('Synchronisation en cours...');
     let toast = this.toastCtl.create({
@@ -923,7 +1016,7 @@ public replicationVersServeur() {
       //"auth.username": "admin",
       //"auth.password": "admin"
     }
-
+ 
  
     //let remoteDatabase = new PouchDB(remoteSaved, optionsSaved);
     this.remoteSaved = new PouchDB('http://'+ global.info_db.ip +'/'+ global.info_db.nom_db, this.pouchOpts);
@@ -937,10 +1030,10 @@ public replicationVersServeur() {
         //retry: true,
         //continuous: true
         timeout: 60000,
-        //batch_size: this.batch_size,
-        //batches_limit: this.batches_limit,
-        //filter: 'filtrerDoc/myfilter',
-        //query_params: {roles: this.roles, codes_unions: this.codes_unions}
+        batch_size: this.batch_size,
+        batches_limit: this.batches_limit,
+        filter: 'filtrerDocByCodeCentre/myfilter',
+        query_params: {roles: this.roles, codes_federations: this.codes_federations, codes_unions: this.codes_unions, codes_ops: this.codes_ops, codes_centres: this.codes_centres}
     }).on('change',  (info) => {
         //alert(info)
         //console.log('change', info)
@@ -1458,7 +1551,7 @@ getProgress(pending){
 
 
   handleChange(change){
-    let changeDoc = null;
+    /*let changeDoc = null;
     let changeIndex = null;
 
     this.data.forEach((doc, index) => {
@@ -1481,7 +1574,7 @@ getProgress(pending){
       else{
         this.data.push(change.doc);
       }
-    }
+    }*/
   }
 
   generateId(operation, pays, region/*, departement, commune, village*/){
@@ -1560,7 +1653,7 @@ getProgress(pending){
     var randomString=randomArray.join("");
     var Id= ':'+operation+':'+randomString;
     return Id
-  }
+  } 
 
 
   /**************************************************
@@ -1609,8 +1702,9 @@ getProgress(pending){
       }
     };
     this.showLoader('Authentification...');
+    
     //this.remote.login(username, mdpass, ajaxOpts).then((err, response) =
-    this.remoteSaved.login(username, mdpass, ajaxOpts, (err, response) => {
+    this.remoteSaved.logIn(username, mdpass, ajaxOpts, (err, response) => {
       if (err) {
         this.loading.dismiss();
         if (err.name === 'unauthorized') {
@@ -1786,12 +1880,12 @@ getProgress(pending){
 
 
   getAllUsers(username, pass){
-    var users_db = new PouchDB('http://'+ global.info_db.ip+'/_users'/*, {
+    var users_db = new PouchDB('http://'+ global.info_db.ip+'/_users', {
       auth: {
-        username: username,
-        password: pass
+        username: global.info_connexion.email,
+        password: global.info_connexion.mdpass
       }
-    }*/);
+    });
 
     //si non vide
     let data: any;
@@ -1808,9 +1902,9 @@ getProgress(pending){
         data = [];
         let d:any = result
         d.rows.map((row) => {
-          if(row.doc.db === 'frna'){
+          //if(row.doc.db === 'frna'){
             data.push(row.doc);
-          }
+          //}
         });
         resolve(data);
       }).catch((err) => console.log(err));
@@ -1818,28 +1912,28 @@ getProgress(pending){
   }
 
    managerUpdateUser(username, pass, user){
-    var users_db = new PouchDB('http://'+ global.info_db.ip+'/_users'/*, {
+    var users_db = new PouchDB('http://'+ global.info_db.ip+'/_users', {
       auth: {
-        username: username,
-        password: pass
+        username: global.info_connexion.email,
+        password: global.info_connexion.mdpass
       }
-    }*/);
+    });
 
     return users_db.put(user);//.catch((err) => alert('Erreur lors de l\'enreistrement. \nVeuillez reéssayer plus tard!'));
    }
 
    managerDeleteUser(username, pass, user){
-    var users_db = new PouchDB('http://'+ global.info_db.ip+'/_users'/*, {
+    var users_db = new PouchDB('http://'+ global.info_db.ip+'/_users', {
       auth: {
-        username: username,
-        password: pass
+        username: global.info_connexion.email,
+        password: global.info_connexion.mdpass
       }
-    }*/);
+    });
 
     return users_db.remove(user);//.catch((err) => alert('Erreur lors de l\'enreistrement. \nVeuillez reéssayer plus tard!'));
    }
 
-   managerGetAllUnions(){
+  managerGetAllUnions(){
 
     //si non vide
     let data: any;
@@ -1870,6 +1964,105 @@ getProgress(pending){
       }).catch((err) => alert(err));
     } );
   }
+
+  
+
+  managerGetAllCentres(){
+
+    //si non vide
+    let data: any;
+    if(data){
+      return data
+    }
+ 
+    
+    return new Promise ( resolve => {
+      this.database.allDocs({
+        include_docs: true,
+        startkey: 'centre',
+        endkey: 'centre:\uffff'
+      }).then((result) => {
+        //data = result.rows;
+        data = [];
+        let doc = result.rows.map((row) => {
+          if(!row.doc.data.deleted){
+            data.push(row);
+          }
+            
+        });
+
+        
+        resolve(data);
+
+       // this.database.changes({live: true, since: 'now', include_docs: true}).on('change', (change) => this.handleChange(change));
+      }).catch((err) => alert(err));
+    } );
+  }
+
+  managerGetAllOps(){
+
+    //si non vide
+    let data: any;
+    if(data){
+      return data
+    }
+ 
+    
+    return new Promise ( resolve => {
+      this.database.allDocs({
+        include_docs: true,
+        startkey: 'fuma:op',
+        endkey: 'fuma:op:\uffff'
+      }).then((result) => {
+        //data = result.rows;
+        data = [];
+        let doc = result.rows.map((row) => {
+          if(!row.doc.data.deleted && row.doc.data.type == 'op'){
+            data.push(row);
+          }
+            
+        });
+
+        
+        resolve(data);
+
+       // this.database.changes({live: true, since: 'now', include_docs: true}).on('change', (change) => this.handleChange(change));
+      }).catch((err) => alert(err));
+    } );
+  }
+
+  managerGetAllProtocoles(){
+
+    //si non vide
+    let data: any;
+    if(data){
+      return data
+    }
+ 
+    
+    return new Promise ( resolve => {
+      this.database.allDocs({
+        include_docs: true,
+        startkey: 'fuma:protocole',
+        endkey: 'fuma:protocole:\uffff'
+      }).then((result) => {
+        //data = result.rows;
+        data = [];
+        let doc = result.rows.map((row) => {
+          if(!row.doc.data.deleted && row.doc.data.type == 'protocole'){
+            data.push(row);
+          }
+            
+        });
+
+        
+        resolve(data);
+
+       // this.database.changes({live: true, since: 'now', include_docs: true}).on('change', (change) => this.handleChange(change));
+      }).catch((err) => alert(err));
+    } );
+  }
+
 
 
 

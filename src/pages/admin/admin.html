@@ -13,7 +13,7 @@
     <!--button ion-button menuToggle end>
         <ion-icon name="menu"></ion-icon>
     </button-->
-    <ion-title>admin</ion-title>
+    <ion-title>Admin</ion-title>
   </ion-navbar>
 
 </ion-header>
@@ -26,34 +26,66 @@
     </ion-item>
   </ion-card>
 
-  <ion-card (click)="gestionPays()">
+  <ion-card *ngIf="user && user.roles && global.estAdmin(user.roles)" (click)="sync()">
+    <ion-item style="text-align: center">Synchronisation de la BD
+    </ion-item>
+  </ion-card>
+
+  <ion-card *ngIf="user && user.roles && global.estAnimataire(user.roles)" (click)="gestionPays()">
     <ion-item style="text-align: center">Geston des pays
     </ion-item>
   </ion-card>
  
-  <ion-card (click)="gestionRegions()">
+  <ion-card *ngIf="user && user.roles && global.estAnimataire(user.roles)" (click)="gestionRegions()">
     <ion-item style="text-align: center">Gestion des régions
     </ion-item>
   </ion-card>
 
-  <ion-card (click)="gestionDepartements()" >
+  <ion-card *ngIf="user && user.roles && global.estAnimataire(user.roles)" (click)="gestionDepartements()" >
     <ion-item style="text-align: center">Gestion des departments
     </ion-item>
   </ion-card>
 
-  <ion-card (click)="gestionCommunes()">
+  <ion-card *ngIf="user && user.roles && global.estAnimataire(user.roles)" (click)="gestionCommunes()">
     <ion-item style="text-align: center">Gestion des communes
     </ion-item>
   </ion-card>
 
-  <ion-card (click)="gestionVillages()">
+  <ion-card *ngIf="user && user.roles && global.estAnimataire(user.roles)" (click)="gestionVillages()">
     <ion-item style="text-align: center">Gestion des villages
     </ion-item>
   </ion-card>
 
-  <ion-card *ngIf="user && user.roles && global.estManager(user.roles)" (click)="reset()">
-    <ion-item style="text-align: center"  color="delete">Réinitialiser la base de données
+
+  
+  <ion-card *ngIf="user && user.roles && global.estAdmin(user.roles)" (click)="ajouterDesignDoc()">
+    <ion-item style="text-align: center">Ajouter Serveur Design Doc
     </ion-item>
   </ion-card>
+  
+  <ion-card *ngIf="user && user.roles && global.estManager(user.roles)" (click)="ajouterLoalDesignDoc()">
+    <ion-item style="text-align: center">Ajouter/Mise à jour local Design Doc
+    </ion-item>
+  </ion-card>
+
+  <ion-card *ngIf="user && user.roles && global.estAdmin(user.roles)" (click)="compacteLoacalDB()">
+      <ion-item style="text-align: center">Compresser la base de données locale
+      </ion-item>
+    </ion-card>
+  
+    <ion-card *ngIf="user && user.roles && global.estAdmin(user.roles)" (click)="compacteRemoteDB()">
+      <ion-item style="text-align: center">Compresseer la base donnnées serveur
+      </ion-item>
+    </ion-card>
+  
+    <ion-card *ngIf="user && user.roles && global.estManager(user.roles)" (click)="viderCorbeille()">
+      <ion-item style="text-align: center"  color="delete">Vider corbeille
+      </ion-item>
+    </ion-card>
+
+    <ion-card *ngIf="user && user.roles && global.estManager(user.roles)" (click)="reset()">
+        <ion-item style="text-align: center"  color="delete">Réinitialiser la base de données
+        </ion-item>
+      </ion-card>
 
 </ion-content>

@@ -25,7 +25,7 @@
           <ion-badge color="fuma-green" item-right>{{productions.length}}</ion-badge>
         </button>
   
-        <button ion-button icon-only color="royal" (click) = "replicationDepuisServeur()" >
+        <!--button ion-button icon-only color="royal" (click) = "replicationDepuisServeur()" >
           <ion-icon name="arrow-round-down"></ion-icon>
        </button>
  
@@ -33,8 +33,16 @@
           <ion-icon name="arrow-round-up"></ion-icon>
        </button>
        
-        <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+        <button ion-button icon-only color="royal" *ngIf="aProfile  && !id_centre" (click) = "sync()" >
             <ion-icon name="sync"></ion-icon>
+        </button-->
+
+        <button *ngIf="aProfile && !id_centre" ion-button icon-only color="royal"  (click)="profile()">
+          <ion-icon name="person"></ion-icon>
+        </button>
+  
+        <button *ngIf="!aProfile && !id_centre" ion-button icon-only color="royal" (click)="connexion()">
+          <ion-icon name="unlock"></ion-icon>
         </button>
   
       </ion-buttons>
@@ -44,9 +52,18 @@
       <ion-title *ngIf="action == 'modifier'">Modifier production</ion-title>
       <ion-title *ngIf="action == 'detail'">Détail production</ion-title>
 
-      <button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
+      <!--button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
         <ion-icon name="menu"></ion-icon>
-    </button>
+    </button-->
+
+    <ion-buttons *ngIf="action == 'detail'"  end>
+        <button ion-button icon-only color="royal" (click)="openRelationProduction($event)"><ion-icon name="more"></ion-icon></button>
+      </ion-buttons>
+
+    <ion-buttons *ngIf="!id_centre && action == 'liste'"  end>
+      
+      <button ion-button icon-only color="royal" (click)="option()"><ion-icon name="options"></ion-icon></button>
+    </ion-buttons>
   </ion-navbar>
 
 </ion-header>
@@ -71,7 +88,7 @@
             <ion-item>
               <ion-label floating>Selectionnez le produit</ion-label>
               <ion-select [(ngModel)]="id_produit_selected" (ionChange)="getAllProductions(id_produit_selected)" cancelText="Annuler" okText="Ok" >
-                <ion-option *ngFor="let p of produits" [value]=p.doc._id >{{p.doc.data.nom}}</ion-option>
+                <ion-option *ngFor="let p of produits" [value]=p._id >{{p.data.nom}}</ion-option>
               </ion-select>
             </ion-item>
           </ion-col>
@@ -117,20 +134,20 @@
           </ion-item>
          </ion-list-header>
         <ion-item-sliding *ngFor="let production of productions">
-          <ion-item (click)="detail(production.doc, selectedSource)" >
+          <ion-item (click)="detail(production, selectedSource)" >
             <!--ion-row>
               <ion-col-->
-                  <h6><strong>Type produit:</strong> {{production.doc.data.type_produit}}</h6>
-                  <h6><strong>Code produit:</strong> {{production.doc.data.code_produit}}</h6>
-                  <h6><strong>Nom produit:</strong> {{production.doc.data.nom_produit}} ({{production.doc.data.unite}})</h6>
+                  <h6><strong>Type produit:</strong> {{production.data.type_produit}}</h6>
+                  <h6><strong>Code produit:</strong> {{production.data.code_produit}}</h6>
+                  <h6><strong>Nom produit:</strong> {{production.data.nom_produit}} ({{production.data.unite}})</h6>
               <!--/ion-col>
               <ion-col class="aligneDate"-->
-                <p><strong>Date:</strong> {{production.doc.data.today | date: 'dd-MM-yyyy'}}</p>
+                <p><strong>Date:</strong> {{production.data.today | date: 'dd-MM-yyyy'}}</p>
               <!--/ion-col>
             </ion-row-->
           </ion-item> 
-          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
-            <button ion-button icon-only color="my_primary" (click)="partager(production.doc._id)">
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(production._id)">
               <ion-icon name="share"></ion-icon>   
             </button>
           </ion-item-options-->
@@ -167,19 +184,19 @@
             <strong>Nom produit</strong>
           </th>
           <th>
-            <strong>Unité de mésure</strong>
-          </th>
-          <th>
             <strong>Prix unitaire</strong>
           </th>
-          <ng-container *ngFor="let i of selectedProduitIngredients">
+          <th>
+            <strong>Unité de mésure</strong>
+          </th>
+          <!--ng-container *ngFor="let i of selectedProduitIngredients">
             <th >
               <strong>{{i.nom}}.{{i.unite}}</strong>
             </th>
             <th>
               <strong>Coût.{{i.nom}}.F</strong>
             </th>
-          </ng-container>
+          </ng-container-->
           <!--div *ngFor="let i of selectedProduitIngredients">
             <th >
               <strong>{{i.nom}}.{{i.unite}}</strong>
@@ -219,29 +236,29 @@
         </thead>
         <!--hr style="width: 375%"-->
         <tbody>
-          <tr *ngFor="let production of productions" (click)="detail(production.doc)">
+          <tr *ngFor="let production of productions" (click)="detail(production)">
             <td  >
-              {{production.doc.data.nom_centre}}
+              {{production.data.nom_centre}}
             </td>
             <td  >
-              {{production.doc.data.code_centre}}
+              {{production.data.code_centre}}
             </td>
             <td  >
-              {{production.doc.data.type_produit}}
+              {{production.data.type_produit}}
             </td>
             <td  >
-              {{production.doc.data.code_produit}}
+              {{production.data.code_produit}}
             </td>
             <td  >
-              {{production.doc.data.nom_produit}}
+              {{production.data.nom_produit}}
             </td>
             <td  >
-              {{production.doc.data.unite}}
+              {{production.data.prix_unitaire}}
             </td>
             <td  >
-              {{production.doc.data.prix_unitaire}}
+              {{production.data.unite}}
             </td>
-            <ng-container *ngFor="let k of production.doc.data.ingredients">
+            <!--ng-container *ngFor="let k of production.data.ingredients">
               <td >
                 <strong>{{k.quantite}}</strong>
               </td>
@@ -249,8 +266,8 @@
               <td>
                 <strong>{{k.cout}}</strong>
               </td>
-            </ng-container>
-            <!--div *ngFor="let k of production.doc.data.ingredients">
+            </ng-container-->
+            <!--div *ngFor="let k of production.data.ingredients">
               <td >
                 <strong>{{k.quantite}}</strong>
               </td>
@@ -261,29 +278,29 @@
             </div--> 
 
             <td  >
-              {{production.doc.data.quantite_produite}}
+              {{production.data.quantite_produite}}
             </td>
             <td  >
-              {{production.doc.data.quantite_gate}}
+              {{production.data.quantite_gate}}
             </td>
             <td  >
-              {{production.doc.data.quantite_reelle}}
+              {{production.data.quantite_reelle}}
             </td>
             <td  >
-              {{production.doc.data.montan_production}}
+              {{production.data.montan_production}}
             </td>
             <td  >
-              {{production.doc.data.depense}}
+              {{production.data.depense}}
             </td>
             <td  >
-              {{production.doc.data.perte}}
+              {{production.data.perte}}
             </td>
             
             <td  >
-              {{production.doc.data.nouveau_stock}}
+              {{production.data.nouveau_stock}}
             </td>
             <td  >
-              {{production.doc.data.ancien_stock}}
+              {{production.data.ancien_stock}}
             </td>
             
           </tr>
@@ -318,6 +335,7 @@
           <ion-row> <ion-col class='meta-key'><strong>Type production:</strong></ion-col> <ion-col class='meta-value'> {{production.data.type_produit}}</ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Code produit:</strong></ion-col> <ion-col class='meta-value'> {{production.data.code_produit}}</ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Nom produit:</strong></ion-col> <ion-col class='meta-value'> {{production.data.nom_produit}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Prix unitaire:</strong></ion-col> <ion-col class='meta-value'> {{production.data.prix_unitaire}} </ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Unité de mésure:</strong></ion-col> <ion-col class='meta-value'> {{production.data.unite}} </ion-col> </ion-row>
           <fieldset>
             <legend>Main d'oeuvre interne</legend>
@@ -367,10 +385,15 @@
         <ion-card-content>
 
             <ion-scroll scrollX="true" scrollY="true" id="ingredients_tableau" style="height: 50vh"> 
+              <ion-row>
+                <ion-col col-12>
+                  <div id="show-ingredient-form" class="card card-body bg-light"></div>
+                </ion-col>
+              </ion-row>  
                 <!--ion-card-header  style="width: 100vw">
                   <h2><strong>Liste des productions</strong></h2>
                 </ion-card-header--> 
-                <table class="table table-striped table-bordered">
+                <!--table class="table table-striped table-bordered">
                   <thead>
                     <tr>
                     <th>
@@ -396,7 +419,7 @@
                     </th>
                     </tr>
                   </thead>
-                  <!--hr style="width: 375%"-->
+                  <!--hr style="width: 375%"->
                   <tbody>
                     <tr *ngFor="let i of production.data.ingredients; let ind=index">
                       <td  >
@@ -423,7 +446,7 @@
 
                     </tr>
                   </tbody>
-                </table>
+                </table-->
               </ion-scroll>
 
           <!--ion-grid>
@@ -477,22 +500,18 @@
       </ion-card-content> 
     </ion-card>
 
-    <br><br><br>
+    <br><br><br><br><br><br><br><br><br>
   </div>
 
 
   
 <div *ngIf="action == 'ajouter' || action == 'modifier'">
   
-    <form [formGroup]="productionForm" (ngSubmit) = "validAction()">
+    <form [formGroup]="productionForm">
 
-      <ion-card class="info-card"> 
-          <ion-card-header>
-            <ion-item class="message">
-                <h2 class="fond-gris blanc"><strong>Informations produit</strong></h2>
-            </ion-item>
-          </ion-card-header>
-          <ion-card-content>
+      <ion-stepper #stepper>
+        <ion-step label="Etape 1" description="Informations produit">
+          <h2>Informations produit</h2>
           <ion-item>
             <ion-label floating>Date de la production <span class="error-box">*</span></ion-label>
             <ion-datetime displayFormat="DD/MM/YYYY" formControlName="date_production" cancelText="Annuler" doneText="Valider"></ion-datetime>
@@ -503,7 +522,7 @@
               <ion-item>
                 <ion-label floating>Selectionnez le centre <span class="error-box">*</span></ion-label>
                 <ion-select formControlName="id_centre" [disabled]="id_centre && id_centre != ''" (ionChange)="getProduitsCentre(productionForm.value.id_centre)" cancelText="Annuler" okText="Ok" >
-                    <ion-option *ngFor="let c of centres" [value]=c.doc._id >{{c.doc.data.nom_centre}}</ion-option>
+                    <ion-option *ngFor="let c of centres" [value]=c._id >{{c.data.nom_centre}}</ion-option>
                   </ion-select>
               </ion-item>
               <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['id_centre'].hasError('required') && productionForm.controls['id_centre'].touched">* le centre est obligatoir!</div>
@@ -512,102 +531,74 @@
               <ion-item>
                 <ion-label floating>Selectionnez le produit <span class="error-box">*</span></ion-label>
                 <ion-select formControlName="id_produit" [disabled]="id_produit && id_produit != ''" (ionChange)="getProduit(productionForm.value.id_produit)" cancelText="Annuler" okText="Ok" >
-                    <ion-option *ngFor="let t of produitsCentre" [value]=t.doc._id >{{t.doc.data.nom}}</ion-option>
+                    <ion-option *ngFor="let t of produitsCentre" [value]=t._id >{{t.data.nom}}</ion-option>
                   </ion-select>
               </ion-item>
               <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['id_produit'].hasError('required') && productionForm.controls['id_produit'].touched">* le produit est obligatoir!</div>
             </ion-col>
           </ion-row>
-          
-          <!--ion-row>
-            <ion-col>
-              <ion-item>
-                <ion-label floating>Code produit <span class="error-box">*</span></ion-label>
-                <ion-input type="text" formControlName="code_produit" disabled></ion-input>
-              </ion-item>
-              <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['code_produit'].hasError('required') && productionForm.controls['code_produit'].touched">* le code du prduit des est obligatoir!</div>    
-            </ion-col>
-            <ion-col>
-              <ion-item>
-                <ion-label floating>Nom produit <span class="error-box">*</span></ion-label>
-                <ion-input type="text" formControlName="nom_produit" disabled></ion-input>
-              </ion-item>
-              <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['nom_produit'].hasError('required') && productionForm.controls['nom_produit'].touched">* le nom du prduit des est obligatoir!</div>    
+          <br><br>
+          <button ion-button small ionicStepperNext>Suivant</button>
+        </ion-step>
+        <ion-step label="Etape 2" description="Formule/Ingrédients">
+          <h2>Formule / Ingrédients</h2>
+          <ion-row>
+            <ion-col col-12>
+              <div>
+                <div class="row">
+                  <div class="col-sm-12" hidden="true">
+                    <!--h3 class="text-center text-muted">The Form Builder allows you to build a 
+                    </h3-->
+                    <div id="conf-builder2"></div>
+                  </div>
+      
+      
+                  <!-- JSON Schema -->
+                  <div class="col-sm-12" hidden="true">
+                    <div class="card card-body bg-light jsonviewer">
+                      <pre id="json2"></pre>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- Renders as a Form -->
+                <div class="row">
+                  <div class="col-sm-12">
+                    <div id="formio3" class="card card-body bg-light"></div>
+                  </div>
+                </div>
+      
+                <!-- creates a Submission JSON -->
+                <div class="row" hidden="true">
+                  <div class="col-sm-12">
+                    <div class="card card-body bg-light jsonviewer">
+                      <pre id="subjson2"></pre>
+                    </div>
+                  </div>
+                </div>
+                <div class="clearfix"></div>
+              </div>
+      
             </ion-col>
           </ion-row>
-          <ion-row>
-            <ion-col>
-              <ion-item>
-                <ion-label floating>Code centre <span class="error-box">*</span></ion-label>
-                <ion-input type="text" formControlName="code_centre" disabled></ion-input>
-              </ion-item> 
-              <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['code_centre'].hasError('required') && productionForm.controls['code_centre'].touched">* le code du centre est obligatoir!</div>    
-            </ion-col>
-            <ion-col>
-              <ion-item>
-                <ion-label floating>Nom centre <span class="error-box">*</span></ion-label>
-                <ion-input type="text" formControlName="nom_centre" disabled></ion-input>
-              </ion-item> 
-              <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['nom_centre'].hasError('required') && productionForm.controls['nom_centre'].touched">* le nom du centre est obligatoir!</div>    
-            </ion-col>
-          </ion-row-->
-        </ion-card-content>
-      </ion-card>
+          <br><br>
+          <button ion-button color="light" small ionicStepperPrevious>Précédent</button>
+          <button ion-button small *ngIf="complete" ionicStepperNext>Suivant</button>
+        </ion-step>
 
-      <ion-card class="info-card" *ngIf="productionForm.controls.id_produit.value"> 
-        <ion-card-header>
-          <ion-item class="message">
-              <h2 class="fond-gris blanc"><strong>Formule / Ingrédients</strong></h2>
-          </ion-item>
-        </ion-card-header>
-        <ion-card-content>
-          <fieldset *ngFor="let i of ingredients; let ind = index">
-            <legend>{{i.nom}}</legend>
-            <ion-item *ngIf="i.type == 'culture'">
-              <ion-label floating>Selectionnez la variété <span *ngIf="i.est_obligatoire == 'oui'" class="error-box">*</span></ion-label>
-              <ion-select [ngModelOptions]="{standalone:true}" [(ngModel)]="i.variete" cancelText="Annuler" okText="Ok">
-                <div *ngFor="let v of varietes">
-                  <ion-option *ngIf="v.doc.data.culture == i.nom" [value]=v.doc.data.denomination >{{v.doc.data.denomination}}</ion-option>
-                </div>
-              </ion-select>
-            </ion-item>
-            <ion-row>
-              <ion-col>
-                <ion-item>
-                  <ion-label floating>Quantité en ({{i.unite}})<span *ngIf="i.est_obligatoire == 'oui'" class="error-box">*</span></ion-label>
-                  <ion-input type="number" [(ngModel)]="i.quantite" (keyup)="getDepense()" [ngModelOptions]="{standalone:true}"></ion-input>
-                </ion-item>
-              </ion-col>
-              <ion-col>
-                <ion-item>
-                  <ion-label floating>Cout total en (F) <span *ngIf="i.est_obligatoire == 'oui'" class="error-box">*</span></ion-label>
-                  <ion-input type="number" [(ngModel)]="i.cout" (keyup)="getDepense()" [ngModelOptions]="{standalone:true}"></ion-input>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-          </fieldset>        
-        </ion-card-content>
-      </ion-card>
-     
-      <ion-card class="info-card" *ngIf="productionForm.controls.id_produit.value"> 
-        <ion-card-header>
-          <ion-item class="message">
-              <h2 class="fond-gris blanc"><strong>Informations complementaires</strong></h2>
-          </ion-item>
-        </ion-card-header>
-        <ion-card-content>
+        <ion-step label="Etape 3" description="Informations complementaires">
           <fieldset>
             <legend>Production</legend>
             <ion-row>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Quantité produite en ({{productionForm.value.unite}}) <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="quantite_produite" (keyup)="getQuantiteReelle()"></ion-input>
                 </ion-item>
                 <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['quantite_produite'].hasError('required') && productionForm.controls['quantite_produite'].touched">* la quantité produite est obligatoir!</div>    
               </ion-col>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Quantité gâtée en ({{productionForm.value.unite}}) <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="quantite_gate" (keyup)="getPerte()"></ion-input>
                 </ion-item>
@@ -615,7 +606,7 @@
               </ion-col>
             </ion-row>
 
-            <ion-item>
+            <ion-item class="item-no-border">
               <ion-label floating>Dépense supplémentaires </ion-label>
               <ion-input type="number" formControlName="autre_depense" (keyup)="getDepenseSupplementaire()"></ion-input>
             </ion-item>
@@ -660,13 +651,13 @@
             <!--if type == gratuite-->
             <ion-row *ngIf="productionForm.controls.type_main_doeuvre_interne.value == 'gratuite'">
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Nombre de femmes <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="nombre_femme_interne"></ion-input>
                 </ion-item>
               </ion-col>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Nombre d'hommes <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="nombre_homme_interne"></ion-input>
                 </ion-item>
@@ -675,18 +666,18 @@
             <!--if type == payante-->
             <ion-row *ngIf="productionForm.controls.type_main_doeuvre_interne.value == 'payante'">
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Nombre de femmes <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="nombre_femme_interne" (keyup)="getDepense()"></ion-input>
                 </ion-item>
               </ion-col>
               <ion-col>
-                <ion-item *ngIf="productionForm.controls.mode_paiement_interne.value == 'argent'">
+                <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_interne.value == 'argent'">
                   <ion-label floating>Cout des femmes <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="cout_femme_interne" (keyup)="getDepense()"></ion-input>
                 </ion-item>
 
-                <ion-item *ngIf="productionForm.controls.mode_paiement_interne.value != 'argent'">
+                <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_interne.value != 'argent'">
                   <ion-label floating>Quantité prdouit en {{productionForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="cout_femme_interne" (keyup)="getDepense()"></ion-input>
                 </ion-item>
@@ -694,18 +685,18 @@
             </ion-row>
               <ion-row *ngIf="productionForm.controls.type_main_doeuvre_interne.value == 'payante'">
                 <ion-col>
-                  <ion-item>
+                  <ion-item class="item-no-border">
                     <ion-label floating>Nombre d'hommes <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="nombre_homme_interne" (keyup)="getDepense()"></ion-input>
                   </ion-item>
                 </ion-col>
                 <ion-col>
-                  <ion-item *ngIf="productionForm.controls.mode_paiement_interne.value == 'argent'">
+                  <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_interne.value == 'argent'">
                     <ion-label floating>Cout des hommes <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="cout_homme_interne" (keyup)="getDepense()"></ion-input>
                   </ion-item>
 
-                  <ion-item *ngIf="productionForm.controls.mode_paiement_interne.value != 'argent'">
+                  <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_interne.value != 'argent'">
                     <ion-label floating>Quantité prdouit en {{productionForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="cout_homme_interne" (keyup)="getDepense()"></ion-input>
                   </ion-item>
@@ -753,13 +744,13 @@
             <!--if type == gratuite-->
             <ion-row *ngIf="productionForm.controls.type_main_doeuvre_externe.value == 'gratuite'">
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Nombre de femmes <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="nombre_femme_externe"></ion-input>
                 </ion-item>
               </ion-col>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Nombre d'hommes <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="nombre_homme_externe"></ion-input>
                 </ion-item>
@@ -768,18 +759,18 @@
             <!--if type == payante-->
             <ion-row *ngIf="productionForm.controls.type_main_doeuvre_externe.value == 'payante'">
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Nombre de femmes <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="nombre_femme_externe" (keyup)="getDepense()"></ion-input>
                 </ion-item>
               </ion-col>
               <ion-col>
-                <ion-item *ngIf="productionForm.controls.mode_paiement_externe.value == 'argent'">
+                <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_externe.value == 'argent'">
                   <ion-label floating>Cout des femmes <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="cout_femme_externe" (keyup)="getDepense()"></ion-input>
                 </ion-item>
 
-                <ion-item *ngIf="productionForm.controls.mode_paiement_externe.value != 'argent'">
+                <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_externe.value != 'argent'">
                   <ion-label floating>Quantité prdouit en {{productionForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="cout_femme_externe" (keyup)="getDepense()"></ion-input>
                 </ion-item>
@@ -787,18 +778,18 @@
             </ion-row>
               <ion-row *ngIf="productionForm.controls.type_main_doeuvre_externe.value == 'payante'">
                 <ion-col>
-                  <ion-item>
+                  <ion-item class="item-no-border">
                     <ion-label floating>Nombre d'hommes <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="nombre_homme_externe" (keyup)="getDepense()"></ion-input>
                   </ion-item>
                 </ion-col>
                 <ion-col>
-                  <ion-item *ngIf="productionForm.controls.mode_paiement_externe.value == 'argent'">
+                  <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_externe.value == 'argent'">
                     <ion-label floating>Cout des hommes <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="cout_homme_externe" (keyup)="getDepense()"></ion-input>
                   </ion-item>
 
-                  <ion-item *ngIf="productionForm.controls.mode_paiement_externe.value != 'argent'">
+                  <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_externe.value != 'argent'">
                     <ion-label floating>Quantité prdouit en {{productionForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="cout_homme_externe" (keyup)="getDepense()"></ion-input>
                   </ion-item>
@@ -811,13 +802,14 @@
 
               <ion-row>
                 <ion-col>
-                  <ion-item>
+                  <ion-item class="item-no-border">
                     <ion-label floating>Dépense <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="depense" disabled></ion-input>
+                    <ion-input type="number" formControlName="depense"></ion-input>
+                    <!--ion-input type="number" formControlName="depense" disabled></ion-input-->
                   </ion-item>
                 </ion-col>
                 <ion-col>
-                  <ion-item>
+                  <ion-item class="item-no-border">
                     <ion-label floating>Pertes <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="perte" disabled></ion-input>
                   </ion-item>
@@ -826,51 +818,36 @@
 
               <ion-row>
                 <ion-col>
-                  <ion-item>
+                  <ion-item class="item-no-border">
                     <ion-label floating>Montan production <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="montan_production" disabled></ion-input>
                   </ion-item>
                 </ion-col>
                 <ion-col>
-                  <ion-item>
+                  <ion-item class="item-no-border">
                     <ion-label floating>Bénéfice <span class="error-box">*</span></ion-label>
                     <ion-input type="number" formControlName="benefice" disabled></ion-input>
                   </ion-item>
                 </ion-col>
               </ion-row>
 
-              <ion-item>
+              <ion-item class="item-no-border">
                 <ion-label floating>Quantité réelle ({{productionForm.value.unite}}) <span class="error-box">*</span></ion-label>
                 <ion-input type="number" formControlName="quantite_reelle" disabled></ion-input>
               </ion-item>
               <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['quantite_reelle'].hasError('required') && productionForm.controls['quantite_reelle'].touched">* la quantité réelle est obligatoir!</div>       
             
-            <!--ion-row>
-              <ion-col>
-                <ion-item>
-                  <ion-label floating>Dépense <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="depense" disabled></ion-input>
-                </ion-item>
-              </ion-col>
-              <ion-col>
-                <ion-item>
-                  <ion-label floating>Quantité réelle ({{productionForm.value.unite}}) <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="quantite_reelle" disabled></ion-input>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['quantite_reelle'].hasError('required') && productionForm.controls['quantite_reelle'].touched">* la quantité réelle est obligatoir!</div>       
-              </ion-col>
-            </ion-row-->
           
             <ion-row>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Ancien stock <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="ancien_stock" disabled></ion-input>
                 </ion-item>
                 <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['ancien_stock'].hasError('required') && productionForm.controls['ancien_stock'].touched">* l'ancien stock est obligatoir!</div>        
               </ion-col>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Nouveau stock<span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="nouveau_stock" disabled></ion-input>
                 </ion-item>
@@ -878,29 +855,68 @@
               </ion-col>
             </ion-row>
           </fieldset>
+          <br><br>
+          <button ion-button color="light" small ionicStepperPrevious>Précédent</button> 
+          <button ion-button color="annuler" small (click)="annuler()">Annuler</button>
+          <button ion-button type="submit" color="my_secondary" small (click)="validAction()" [disabled]="!productionForm.valid">Sauvegarder</button>
+        </ion-step>
+      </ion-stepper>
+
+      <!--ion-card class="info-card" *ngIf="productionForm.controls.id_produit.value"> 
+        <ion-card-header>
+          <ion-item class="message">
+              <h2 class="fond-gris blanc"><strong>Formule / Ingrédients</strong></h2>
+          </ion-item>
+        </ion-card-header>
+        <ion-card-content>
+          <fieldset *ngFor="let i of ingredients; let ind = index">
+            <legend>{{i.nom}}</legend>
+            <ion-item *ngIf="i.type == 'culture'">
+              <ion-label floating>Selectionnez la variété <span *ngIf="i.est_obligatoire == 'oui'" class="error-box">*</span></ion-label>
+              <ion-select [ngModelOptions]="{standalone:true}" [(ngModel)]="i.variete" cancelText="Annuler" okText="Ok">
+                <div *ngFor="let v of varietes">
+                  <ion-option *ngIf="v.data.culture == i.nom" [value]=v.data.denomination >{{v.data.denomination}}</ion-option>
+                </div>
+              </ion-select>
+            </ion-item>
+            <ion-row>
+              <ion-col>
+                <ion-item class="item-no-border">
+                  <ion-label floating>Quantité en ({{i.unite}})<span *ngIf="i.est_obligatoire == 'oui'" class="error-box">*</span></ion-label>
+                  <ion-input type="number" [(ngModel)]="i.quantite" (keyup)="getDepense()" [ngModelOptions]="{standalone:true}"></ion-input>
+                </ion-item>
+              </ion-col>
+              <ion-col>
+                <ion-item class="item-no-border">
+                  <ion-label floating>Cout total en (F) <span *ngIf="i.est_obligatoire == 'oui'" class="error-box">*</span></ion-label>
+                  <ion-input type="number" [(ngModel)]="i.cout" (keyup)="getDepense()" [ngModelOptions]="{standalone:true}"></ion-input>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </fieldset>        
         </ion-card-content>
-      </ion-card>
+      </ion-card-->
       
-      <br>
+      <!--br>
 
         <ion-row>
           <ion-col>
-            <button ion-button type="submit" color="my_secondary" [disabled]="!productionForm.valid" block>Sauvegarder</button>
-          </ion-col>
-          <ion-col>
             <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
           </ion-col>
-        </ion-row>        
+          <ion-col>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!productionForm.valid" block>Sauvegarder</button>
+          </ion-col>
+        </ion-row-->        
       </form>
       
       <br><br><br>
   </div>
 
-  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)"  bottom right>
     <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)">
     <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
     <!--ion-fab-list side="top">
       <button ion-fab mini *ngIf="productions.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
@@ -910,14 +926,9 @@
   </ion-fab>
 
   <ion-fab bottom right *ngIf="action == 'detail'" >
-      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
-      <!--ion-fab-list side="top">
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(production)" color="delete" ><ion-icon name="trash"></ion-icon></button>
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(production.data.code_production)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(production.data.code_production)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
-        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="productionproduction(production.data.num_aggrement, production.data.nom_production, production.data.code_production)" color="my_primary"><strong>OP</strong></button>
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(production)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
-      </ion-fab-list-->
+      <!--button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button-->
+      <button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="editer(production)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (click)="supprimer(production)" color="delete" ><ion-icon name="trash"></ion-icon></button>
     </ion-fab> 
 
 </ion-content>

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
+import { IonicPage, NavController, PopoverController, Events, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
 import { Validators, FormBuilder, FormGroup } from '@angular/forms';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 import { global } from '../../global-variables/variable';
@@ -8,6 +8,7 @@ import { Sim } from '@ionic-native/sim';
 import { File } from '@ionic-native/file';
 import * as FileSaver from 'file-saver';
 import { Printer, PrintOptions } from '@ionic-native/printer';
+import { RelationCentreComponent } from '../../components/relation-centre/relation-centre';
 declare var cordova: any;
  
 /**
@@ -27,8 +28,10 @@ export class GestionCentreTransformationPage {
   centreForm: any;
   user: any = global.info_user;
   global:any = global;
-  estManger: boolean = false;
+  //estManager: boolean = false;
   estAdmin: boolean = false;
+  estManager: boolean = false;
+  estAnimataire: boolean = false;
   centres: any = [];
   allCentres: any = [];
   //allCentres1: any = [];
@@ -60,44 +63,89 @@ export class GestionCentreTransformationPage {
   action: string = 'liste';
   centre: any;
   copiecentre: any;
-  unions: any = [];
-  selectedUnion: any;
-  pour_union: string = 'oui';
-  code_union: string;
-  nom_union: string;
-  id_union: string;
-
+  groupements: any = [];
+  selectedGroupement: any;
+  niveau_centre: string;
+  code_groupement_mere: string;
+  nom_groupement_mere: string;
+  id_groupement_mere: string;
+/*
   selectedOP: any;
   pour_op: string = 'oui';
   code_op: string;
   nom_op: string;
-  id_op: string;
+  id_op: string;*/
 
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
+  constructor(public navCtrl: NavController, public popoverController: PopoverController, public events: Events, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     if(navParams.data.id_union){
-      this.id_union = this.navParams.data.id_union;
-      this.code_union = this.navParams.data.code_union;
-      this.nom_union = this.navParams.data.nom_union;
-      this.selectedUnion = this.id_union;
+      this.id_groupement_mere = this.navParams.data.id_union;
+      this.code_groupement_mere = this.navParams.data.code_union;
+      this.nom_groupement_mere = this.navParams.data.nom_union;
+      this.selectedGroupement = this.id_groupement_mere;
+      this.niveau_centre = 'Rattaché à une Union';
     }else if(navParams.data.id_op){
-      this.id_op = this.navParams.data.id_op
-      this.code_op = this.navParams.data.code_op;
-      this.nom_op = this.navParams.data.nom_op;
-      this.selectedOP = this.id_op;
+      this.id_groupement_mere = this.navParams.data.id_op
+      this.code_groupement_mere = this.navParams.data.code_op;
+      this.nom_groupement_mere = this.navParams.data.nom_op;
+      this.selectedGroupement = this.id_groupement_mere;
+      this.niveau_centre = 'Rattaché à une OP';
+    }else if(navParams.data.id_federation){
+        this.id_groupement_mere = this.navParams.data.id_federation
+        this.code_groupement_mere = this.navParams.data.code_federation;
+        this.nom_groupement_mere = this.navParams.data.nom_federation;
+        this.selectedGroupement = this.id_groupement_mere;
+        this.niveau_centre = 'Rattaché à une Fédération';
     }
+
+    events.subscribe('user:login', (user) => {
+      if(user){
+        this.aProfile = true;
+        this.estManagerConnecter(user)
+        this.estAnimataireConnecter(user)
+      }else{
+        this.aProfile = false;
+        this.estManager = false;
+        this.estAnimataire = false;
+        this.user = global.info_user;
+      }
+    });
   }
 
   reinitVar(){
-    this.selectedPays = '';
-    this.selectedRegion = '';
-    this.selectedDepartement = '';
-    this.selectedCommune = '';
-    this.selectedVillage = '';
-    this.selectedUnion = '';
-    this.nom_centre = '';
-    this.code_centre = '';
-    this.pour_union = 'oui';
+    this.selectedPays = null;
+    this.selectedRegion = null;
+    this.selectedDepartement = null;
+    this.selectedCommune = null;
+    this.selectedVillage = null;
+    this.selectedGroupement = null;
+    this.nom_centre = null;
+    this.code_centre = null;
+    this.niveau_centre = null;
   }
+
+  
+openRelationCentre(ev: any) {
+  let popover = this.popoverController.create(RelationCentreComponent);
+  popover.present({ev: ev});
+
+  popover.onWillDismiss((res) => {
+    if(res == 'Membres'){
+      this.membresCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+    }else if(res == 'Produits'){
+      this.produitsCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+    }else if(res == 'Evaluations'){
+      this.EvaluationsCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+    }else if(res == 'Productions'){
+      this.productionCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+    }else if(res == 'Etat du stock'){
+      this.inventaireProduitsCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+    }else if(res == 'Ventes'){
+      this.ventesCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+    }else if(res == 'Pertes'){
+      this.pertesProduitsCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
+    }
+  })
+}
 
 
   actions() {
@@ -111,7 +159,7 @@ export class GestionCentreTransformationPage {
           handler: () => {
             this.editer(this.centre)
           }
-        },{
+        },/*{
           text: 'Membres',
           //role: 'destructive',
           icon: 'redo',
@@ -161,7 +209,7 @@ export class GestionCentreTransformationPage {
           handler: () => {
             this.pertesProduitsCentre(this.centre._id, this.centre.data.nom_centre, this.centre.data.code_centre);
           }
-        },
+        },*/
         {
           text: 'Supprimer',
           role: 'destructive',
@@ -255,6 +303,11 @@ export class GestionCentreTransformationPage {
     model.present();
   }
 
+  EvaluationsCentre(id_centre, nom_centre, code_centre){
+    let model = this.modelCtl.create('EvaluationPage', {'id_centre': id_centre, "nom_centre": nom_centre, "code_centre": code_centre}, {enableBackdropDismiss: false});
+    model.present();
+  }
+
   initForm(){
     let maDate = new Date();
     let today = this.createDate(maDate.getDate(), maDate.getMonth(), maDate.getFullYear());
@@ -265,12 +318,26 @@ export class GestionCentreTransformationPage {
       type:['centre'],
       nom_centre: ['', Validators.required], 
       code_centre: ['', Validators.required], 
-      type_centre: ['groupement', Validators.required], 
+      type_centre: ['Centre d\'innovation', Validators.required],
       num_aggrement: ['', Validators.required],
-      pour_union: ['oui', Validators.required],
-      id_union: [''],
-      nom_union: [''],
-      code_union: [''],
+      niveau_centre: [this.niveau_centre, Validators.required],
+      
+      /*id_groupement_mere: [''],
+      nom_groupement_mere: [''],
+      code_groupement_mere: [''],*/
+
+      id_federation: [null],
+      nom_federation: [null],
+      code_federation: [null],
+
+      id_union: [null],
+      nom_union: [null],
+      code_union: [null],
+
+      id_op: [null],
+      nom_op: [null],
+      code_op: [null],
+
       pays: ['', Validators.required],
       pays_nom: [''],
       region: ['', Validators.required],
@@ -278,7 +345,7 @@ export class GestionCentreTransformationPage {
       departement: [''],
       departement_nom: [''],
       commune: [''],
-      commune_nom: [''],
+      commune_nom: [''], 
       village: [''],
       village_nom: [''],
       today: [today, Validators.required],
@@ -300,10 +367,24 @@ export class GestionCentreTransformationPage {
       code_centre: [centre.data.code_centre, Validators.required], 
       num_aggrement: [centre.data.num_aggrement, Validators.required],
       type_centre: [centre.data.type_centre, Validators.required],
-      pour_union: [centre.data._id, Validators.required],
+      niveau_centre: [centre.data.niveau_centre, Validators.required],
+      
+      /*id_groupement_mere: [centre.data.id_groupement_mere],
+      nom_groupement_mere: [centre.data.nom_groupement_mere],
+      code_groupement_mere: [centre.data.code_groupement_mere],*/
+
+      id_federation: [centre.data.id_federation],
+      nom_federation: [centre.data.nom_federation],
+      code_federation: [centre.data.code_federation],
+
       id_union: [centre.data.id_union],
       nom_union: [centre.data.nom_union],
       code_union: [centre.data.code_union],
+
+      id_op: [centre.data.id_op],
+      nom_op: [centre.data.nom_op],
+      code_op: [centre.data.code_op],
+
       pays: [centre.data.pays, Validators.required],
       pays_nom: [centre.data.pays_nom],
       region: [centre.data.region, Validators.required],
@@ -322,8 +403,19 @@ export class GestionCentreTransformationPage {
     this.selectedDepartement = centre.data.departement;
     this.selectedCommune = centre.data.commune;
     this.selectedVillage = centre.data.village;
-    this.pour_union = centre.data.pour_union;
-    this.selectedUnion = centre.data.id_union;
+    this.niveau_centre = centre.data.niveau_centre;
+    //this.selectedGroupement = centre.data.id_groupement_mere;
+
+    if(centre.data.niveau_centre == 'Rattaché à une Fédération'){
+      this.selectedGroupement = centre.data.id_federation;
+    }else if(centre.data.niveau_centre == 'Rattaché à une Union'){
+      this.selectedGroupement = centre.data.id_union;
+    }else if(centre.data.niveau_centre == 'Rattaché à une OP'){
+      this.selectedGroupement = centre.data.id_op;
+    }else{
+      this.selectedGroupement = null;
+    }
+
     this.nom_centre = centre.data.nom_centre;
     this.code_centre = centre.data.code_centre;
   }
@@ -349,12 +441,52 @@ export class GestionCentreTransformationPage {
 
   doRefresh(refresher) {
      // this.centres = [];
-      this.servicePouchdb.getPlageDocsRapide('centre','centre:\uffff').then((centres) => {
-        if(centres){
-          if(this.id_union && this.id_union != ""){
+      this.servicePouchdb.getDocByType('centre').then((res) => {
+        if(res){
+          let centres = res.docs;
+          if(this.navParams.data.id_union){
             let uns: any= [];
             centres.forEach((u) => {
-              if(u.doc.data.id_union && u.doc.data.id_union == this.id_union){
+              if(u.data.id_union && u.data.id_union == this.id_groupement_mere){
+                uns.push(u)
+              }
+            });
+            this.centres = uns;
+            this.allCentres = uns;
+            this.rechercher = false;
+          }else if(this.navParams.data.id_op){
+            let uns: any= [];
+            centres.forEach((u) => {
+              if(u.data.id_op && u.data.id_op == this.id_groupement_mere){
+                uns.push(u)
+              }
+            });
+            this.centres = uns;
+            this.allCentres = uns;
+            this.rechercher = false;
+          }else if(this.navParams.data.id_federation){
+            let uns: any= [];
+            centres.forEach((u) => {
+              if(u.data.id_federation && u.data.id_federation == this.id_groupement_mere){
+                uns.push(u)
+              }
+            });
+            this.centres = uns;
+            this.allCentres = uns;
+            this.rechercher = false;
+              
+          }else{
+            this.centres = centres;
+            this.allCentres = centres;
+            this.rechercher = false;
+          }
+
+          refresher.complete();
+
+          /*if(this.id_groupement_mere && this.id_groupement_mere != ""){
+            let uns: any= [];
+            centres.forEach((u) => {
+              if(u.data.id_groupement_mere && u.data.id_groupement_mere == this.id_groupement_mere){
                 uns.push(u)
               }
             });
@@ -365,23 +497,29 @@ export class GestionCentreTransformationPage {
             this.centres = centres;
             this.allCentres = centres;
             refresher.complete();
-          }
+          }*/
           
         }
       });
   }
 
-  estMangerConnecter(user){
+  estManagerConnecter(user){
     //alert('entree')
     if(user && user.roles){
       //alert('ok')
-      this.estManger = global.estManager(user.roles);
+      this.estManager = global.estManager(user.roles);
     }
   }
 
   estAdminConnecter(user){
     if(user && user.roles){
-      this.estManger = global.estAdmin(user.roles);
+      this.estManager = global.estAdmin(user.roles);
+    }
+  }
+
+  estAnimataireConnecter(user){
+    if(user && user.roles){
+      this.estAnimataire = global.estAnimataire(user.roles);
     }
   }
 
@@ -497,7 +635,7 @@ export class GestionCentreTransformationPage {
               p = 0;
               for(let pos=0; pos < this.allCentres.length; pos++){
                 let u = this.allCentres[pos];
-                if(u.doc.data.code_centre === code.toUpperCase()){
+                if(u.data.code_centre === code.toUpperCase()){
                   //alert('trouve '+code.toUpperCase())
                   trouve = true;
                   //alert('trouver '+trouve)
@@ -696,22 +834,22 @@ export class GestionCentreTransformationPage {
 
     let res = 1;
     if(this.action == 'ajouter'){
-      if((centre.pour_union == 'oui' && !centre.id_union) || (centre.pour_union == 'oui' && centre.id_union == '')){
+      if((centre.niveau_centre != 'Indépendant' && !this.selectedGroupement) || (centre.niveau_centre != 'Indépendant' && this.selectedGroupement == '')){
         res = 2;
       }else{
         this.allCentres.forEach((u, index) => {
-          if(/*(centre.nom_centre === u.data.nom_centre) || */(centre.num_aggrement === u.doc.data.num_aggrement)){
+          if(/*(centre.nom_centre === u.data.nom_centre) || */(centre.num_aggrement === u.data.num_aggrement)){
             res = 0;
           }
         });
       }
       
     }else{
-      if((centre.pour_union == 'oui' && !centre.id_union) || (centre.pour_union == 'oui' && centre.id_union == '')){
+      if((centre.niveau_centre != 'Indépendant' && !this.selectedGroupement) || (centre.niveau_centre != 'Indépendant' && this.selectedGroupement == '')){
         res = 2;
       }else{
         this.allCentres.forEach((u, index) => {
-          if((u.doc._id !== this.centre._id) && (/*(centre.nom_centre === u.data.nom_centre) || */(centre.num_aggrement === u.doc.data.num_aggrement))){
+          if((u._id !== this.centre._id) && (/*(centre.nom_centre === u.data.nom_centre) || */(centre.num_aggrement === u.data.num_aggrement))){
             res = 0;
           }
         });
@@ -722,6 +860,19 @@ export class GestionCentreTransformationPage {
     return res;
   }
 
+  generateId(){
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    var randomArray=[]
+    for(let i=0;i<32;i++){
+      var rand = Math.floor(Math.random()*62)
+      randomArray.push(numbers[rand])
+    }
+    
+    var randomString=randomArray.join("");
+    var Id= /*+pays+'-'+region+'-'+department+'-'+commune +'-' +village+ */''+randomString 
+    return Id;
+  }
+
   validAction(){
     let date = new Date();
     let centre = this.centreForm.value;
@@ -729,7 +880,7 @@ export class GestionCentreTransformationPage {
     if(this.verifierUniqueNon(centre) === 0){
       alert('Le numéro d\'aggrement doit être unique!');
     }else if(this.verifierUniqueNon(centre) === 2){
-      alert('L\'union est obligatoir!');
+      alert('Le groupement mère est obligatoir!');
     }else{
       //centre.pays = this.selectedPays;
       for(let i = 0; i < this.pays.length; i++){
@@ -768,24 +919,56 @@ export class GestionCentreTransformationPage {
         }
       }
 
-      if(centre.pour_union == 'oui'){
-        for(let i = 0; i < this.unions.length; i++){
-          if(this.unions[i].doc._id == this.selectedUnion){
-            centre.nom_union = this.unions[i].doc.data.nom_union;
-            centre.code_union = this.unions[i].doc.data.code_union;
+      if(centre.niveau_centre != 'Indépendant'){
+        for(let i = 0; i < this.groupements.length; i++){
+          if(this.groupements[i]._id == this.selectedGroupement){
+            //cas d'un niveau fédération
+            if(centre.niveau_centre == 'Rattaché à une Fédération'){
+              centre.id_federation = this.groupements[i]._id;
+              centre.nom_federation = this.groupements[i].data.nom_federation;
+              centre.code_federation = this.groupements[i].data.code_federation;
+                /*centre.nom_groupement_mere = this.groupements[i].data.nom_federation;
+                centre.code_groupement_mere = this.groupements[i].data.code_federation;*/
+
+            }else if(centre.niveau_centre == 'Rattaché à une Union'){
+                centre.id_union = this.groupements[i]._id;
+                centre.code_union = this.groupements[i].data.code_union;
+                centre.nom_union = this.groupements[i].data.nom_union;
+
+                centre.id_federation = this.groupements[i].data.id_federation;
+                centre.code_federation = this.groupements[i].data.code_federation;
+                centre.nom_federation = this.groupements[i].data.nom_federation;
+            }else if(centre.niveau_centre == 'Rattaché à une OP'){
+                centre.id_op = this.groupements[i]._id;
+                centre.code_op = this.groupements[i].data.code_op;
+                centre.nom_op = this.groupements[i].data.nom_op;
+                centre.id_union = this.groupements[i].data.id_union;
+                centre.code_union = this.groupements[i].data.code_union;
+                centre.nom_union = this.groupements[i].data.nom_union;
+                centre.id_federation = this.groupements[i].data.id_federation;
+                centre.code_federation = this.groupements[i].data.code_federation;
+                centre.nom_federation = this.groupements[i].data.nom_federation;
+            }
+            break;
           }
         }
       }else{
+        centre.id_federation = null;
+        centre.nom_federation = null;
+        centre.code_federation = null;
         centre.id_union = null;
         centre.nom_union = null;
         centre.code_union = null;
+        centre.id_op = null;
+        centre.nom_op = null;
+        centre.code_op = null;
       }
       centre.deviceid = this.device.uuid;
       centre.phonenumber = this.phonenumber;
       centre.imei = this.imei;
 
       if(this.action == 'ajouter'){
-        let id = this.servicePouchdb.generateId('centre', centre.commune, centre.village);
+        let id = 'centre:'+this.generateId();
         centre.end = date.toJSON();
 
         let centreFinal: any = {};
@@ -794,7 +977,7 @@ export class GestionCentreTransformationPage {
         this.servicePouchdb.createDocReturn(centreFinal).then((res) => {
           centreFinal._rev = res.rev;
           let u: any = {}
-          u.doc = centreFinal;
+          u = centreFinal;
           this.centres.push(u)
           this.allCentres = this.centres;
           //this.allCentres1.push(u)
@@ -807,7 +990,7 @@ export class GestionCentreTransformationPage {
           });
           toast.present();
 
-          this.unions = [];
+          this.groupements = [];
           this.reinitVar()
         /*let E: any = this.essais;
         E = E.concat(essais);
@@ -824,10 +1007,24 @@ export class GestionCentreTransformationPage {
         this.centre.data.code_centre = centre.code_centre;
         this.centre.data.num_aggrement = centre.num_aggrement;
         this.centre.data.type_centre = centre.type_centre;
-        this.centre.data.pour_union = centre.pour_union;
+        this.centre.data.niveau_centre = centre.niveau_centre;
+
+        /*this.centre.data.id_groupement_mere = centre.id_groupement_mere;
+        this.centre.data.nom_groupement_mere = centre.nom_groupement_mere;
+        this.centre.data.code_groupement_mere = centre.code_groupement_mere;*/
+
+        this.centre.data.id_federation = centre.id_federation;
+        this.centre.data.nom_federation = centre.nom_federation;
+        this.centre.data.code_federation = centre.code_federation;
+
         this.centre.data.id_union = centre.id_union;
         this.centre.data.nom_union = centre.nom_union;
         this.centre.data.code_union = centre.code_union;
+
+        this.centre.data.id_op = centre.id_op;
+        this.centre.data.nom_op = centre.nom_op;
+        this.centre.data.code_op = centre.code_op;
+
         this.centre.data.pays = centre.pays;
         this.centre.data.pays_nom = centre.pays_nom;
         this.centre.data.region = centre.region;
@@ -858,7 +1055,7 @@ export class GestionCentreTransformationPage {
           });
           this.action  = 'detail';
           toast.present();
-          this.unions = [];
+          this.groupements = [];
           this.reinitVar()
         }
       });
@@ -909,130 +1106,17 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
 
   loadin.present();
   //modification du code centre dans centre
-  this.servicePouchdb.getPlageDocsRapide('centre','centre:\uffff').then((centres) => {
-    centres.forEach((c) => {
+  this.servicePouchdb.getDocByType('centre').then((res) => {
+    res.docs.forEach((c) => {
         //return this.getPhoto(membre)
-        if(c.doc.data.pour_union == 'oui' && c.doc.data.id_centre === id_centre){
-              c.doc.data.nom_centre = nom_centre;
-              c.doc.data.code_centre = code_centre;
-              this.servicePouchdb.updateDoc(c.doc);
+        if(c.data.niveau_centre != 'Indépendant' && c.data.id_centre === id_centre){
+              c.data.nom_centre = nom_centre;
+              c.data.code_centre = code_centre;
+              this.servicePouchdb.updateDoc(c);
               //mbrs.push(mbr);
             }
       });
-      //modification du code centre dans membres
-      /*this.servicePouchdb.getPlageDocsRapide('membre', 'membre:\uffff').then((membres) => {
-        membres.forEach((membre) => {
-          if(membre.doc.data.code_centre === ancien_code){
-            membre.doc.data.code_centre = code;
-            this.servicePouchdb.updateDoc(membre.doc);
-          }
-        })
-
-        //modification du code centre dans essais
-        this.servicePouchdb.getPlageDocsRapide('essai', 'essai:\uffff').then((essais) => {
-          essais.forEach((essai) => {
-              if(essai.doc.data.code_centre === ancien_code){
-                essai.doc.data.code_centre = code;
-                this.servicePouchdb.updateDoc(essai.doc);
-              }
-            });
-
-            //modification du code centre dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_centre === ancien_code){
-                  champ.doc.data.code_centre = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'centre bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          }).catch((err) => {
-            //modification du code centre dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_centre === ancien_code){
-                  champ.doc.data.code_centre = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'centre bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          } ) ;
-
-
-        }).catch((err) => {
-          //modification du code centre dans essais
-        this.servicePouchdb.getPlageDocsRapide('fuma:essai', 'fuma:essai:\uffff').then((essais) => {
-          essais.forEach((essai) => {
-              if(essai.doc.data.code_centre === ancien_code){
-                essai.doc.data.code_centre = code;
-                this.servicePouchdb.updateDoc(essai.doc);
-              }
-            });
-
-            //modification du code centre dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_centre === ancien_code){
-                  champ.doc.data.code_centre = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'centre bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          }).catch((err) => {
-            //modification du code centre dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_centre === ancien_code){
-                  champ.doc.data.code_centre = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'centre bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          });
-
-
-        }) ;*/
-
+      
       loadin.dismiss();
       let toast = this.toastCtl.create({
         message: 'centre bien sauvegardée!',
@@ -1043,106 +1127,11 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
       this.action  = 'detail';
       toast.present();
   }).catch((err) => {
-       //modification du code centre dans membres
-      /*this.servicePouchdb.getPlageDocsRapide('op:membre', 'op:membre:\uffff').then((membres) => {
-        membres.forEach((membre) => {
-          if(membre.doc.data.code_centre === ancien_code){
-            membre.doc.data.code_centre = code;
-            this.servicePouchdb.updateDoc(membre.doc);
-          }
-        })
-
-        //modification du code centre dans essais
-        this.servicePouchdb.getPlageDocsRapide('fuma:essai', 'fuma:essai:\uffff').then((essais) => {
-          essais.forEach((essai) => {
-              if(essai.doc.data.code_centre === ancien_code){
-                essai.doc.data.code_centre = code;
-                this.servicePouchdb.updateDoc(essai.doc);
-              }
-            });
-
-            //modification du code centre dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_centre === ancien_code){
-                  champ.doc.data.code_centre = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'centre bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          });
-
-
-        }).catch((err) => {
-          console.log(err)
-        //modification du code centre dans essais
-        this.servicePouchdb.getPlageDocsRapide('fuma:essai', 'fuma:essai:\uffff').then((essais) => {
-          essais.forEach((essai) => {
-              if(essai.doc.data.code_centre === ancien_code){
-                essai.doc.data.code_centre = code;
-                this.servicePouchdb.updateDoc(essai.doc);
-              }
-            });
-
-            //modification du code centre dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_centre === ancien_code){
-                  champ.doc.data.code_centre = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'centre bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          }).catch((err) => {
-
-            //modification du code centre dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_centre === ancien_code){
-                  champ.doc.data.code_centre = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'centre bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          }) ;
-
-        });*/
+       console.log(err)
   })
   
         
 }
-
-
 
   sync(){
     this.servicePouchdb.syncAvecToast();
@@ -1178,16 +1167,55 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
   }
 
   
-  getallCentres(){
+  getAllCentres(){
     
     this.rechercher = true;
      // this.centres = [];
-      this.servicePouchdb.getPlageDocsRapide('centre','centre:\uffff').then((centres) => {
-        if(centres){
-          if(this.id_union && this.id_union != ""){
+      this.servicePouchdb.getDocByType('centre', false).then((res) => {
+        //console.log(res.docs)
+        if(res.docs){
+          let centres = res.docs;
+          if(this.navParams.data.id_union){
             let uns: any= [];
             centres.forEach((u) => {
-              if(u.doc.data.id_union && u.doc.data.id_union == this.id_union){
+              if(u.data.id_union && u.data.id_union == this.id_groupement_mere){
+                uns.push(u)
+              }
+            });
+            this.centres = uns;
+            this.allCentres = uns;
+            this.rechercher = false;
+          }else if(this.navParams.data.id_op){
+            let uns: any= [];
+            centres.forEach((u) => {
+              if(u.data.id_op && u.data.id_op == this.id_groupement_mere){
+                uns.push(u)
+              }
+            });
+            this.centres = uns;
+            this.allCentres = uns;
+            this.rechercher = false;
+          }else if(this.navParams.data.id_federation){
+            let uns: any= [];
+            centres.forEach((u) => {
+              if(u.data.id_federation && u.data.id_federation == this.id_groupement_mere){
+                uns.push(u)
+              }
+            });
+            this.centres = uns;
+            this.allCentres = uns;
+            this.rechercher = false;
+              
+          }else{
+            this.centres = centres;
+            this.allCentres = centres;
+            this.rechercher = false;
+          }
+
+          /*if(this.id_groupement_mere && this.id_groupement_mere != ""){
+            let uns: any= [];
+            centres.forEach((u) => {
+              if(u.data.id_groupement_mere && u.data.id_groupement_mere == this.id_groupement_mere){
                 uns.push(u)
               }
             });
@@ -1198,7 +1226,7 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
             this.centres = centres;
             this.allCentres = centres;
             this.rechercher = false;
-          }
+          }*/
           
           //this.allCentres1 = centres;
          
@@ -1209,24 +1237,47 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
       }); 
   }
 
-  pourUnion(pour_union){
-    if(pour_union == 'oui'/* && this.unions.length < 0*/){
-      this.getAllUnion();
+  getNiveauCentre(niveau_centre){
+    if(niveau_centre == 'Rattaché à une Fédération'/* && this.groupements.length < 0*/){
+        this.getAllFederation();
+    }else if(niveau_centre == 'Rattaché à une Union'){
+        this.getAllUnion();
+    }else if(niveau_centre == 'Rattaché à une OP'){
+        this.getAllOP();
+    }else {
+
     }
   }
 
   getAllUnion(){
-      this.servicePouchdb.getPlageDocsRapide('union','union:\uffff').then((unions) => {
-        if(unions){
-          this.unions = unions;
+      this.servicePouchdb.getDocByType('union').then((res) => {
+        if(res){
+          this.groupements = res.docs;
         }
       }).catch((err) => console.log(err)); 
   }
 
+    getAllOP(){
+        this.servicePouchdb.getDocByType('op').then((res) => {
+            if(res){
+                this.groupements = res.docs;
+            }
+        }).catch((err) => console.log(err));
+    }
+
+    getAllFederation(){
+        this.servicePouchdb.getDocByType('federation').then((res) => {
+            if(res){
+                this.groupements = res.docs;
+            }
+        }).catch((err) => console.log(err));
+    }
+
 
   ionViewDidEnter() {
-    this.getallCentres();
-    /*this.servicePouchdb.remoteSaved.getSession((err, response) => {
+    this.getAllCentres();
+    if(this.servicePouchdb.remoteSaved){
+      this.servicePouchdb.remoteSaved.getSession((err, response) => {
         if (err) {
           // network error
           //this.events.publish('user:login');
@@ -1243,7 +1294,29 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
           //alert(response.userCtx.name)
           this.aProfile = true;
         }
-      });*/
+      });
+    }else{
+      setTimeout( () => { 
+        this.servicePouchdb.remoteSaved.getSession((err, response) => {
+          if (err) {
+            // network error
+            //this.events.publish('user:login');
+            //alert('network')
+            this.aProfile = false;
+          } else if (!response.userCtx.name) {
+            // nobody's logged in
+            //this.events.publish('user:login');
+            //alert('nobady')
+            this.aProfile = false;
+          } else {
+            // response.userCtx.name is the current user
+            //this.events.publish('user:login', response.userCtx);
+            //alert(response.userCtx.name)
+            this.aProfile = true;
+          }
+        }); 
+      }, 500 );
+    }
       
         
   }
@@ -1258,24 +1331,40 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
     this.initForm();
     this.getInfoSimEmei();
     this.action = 'ajouter';
-    this.getAllUnion();
-      //this.navCtrl.push('AjoutercentrePage', {'confLocaliteEnquete': confLocaliteEnquete});    
+    //this.getAllUnion();
+      //this.navCtrl.push('AjoutercentrePage', {'confLocaliteEnquete': confLocaliteEnquete});
+    if(this.niveau_centre == 'Rattaché à une Fédération'/* && this.groupements.length < 0*/){
+        this.getAllFederation();
+    }else if(this.niveau_centre == 'Rattaché à une Union'){
+        this.getAllUnion();
+    }else if(this.niveau_centre == 'Rattaché à une OP'){
+        this.getAllOP();
+    }
   }
 
-  editer(centre){
-    this.chargerPays();
-    this.chargerSousLocalite(centre.data.pays, 'pays')
-    this.chargerSousLocalite(centre.data.region, 'region')
-    this.chargerSousLocalite(centre.data.departement, 'departement')
-    this.chargerSousLocalite(centre.data.commune, 'commune')
-    this.editForm(centre);
-    if(centre.data.pour_union == 'oui'){
-      this.getAllUnion();
-    }
-    this.getInfoSimEmei();
-    this.action = 'modifier';
-    this.copiecentre = this.clone(centre);
-      //this.navCtrl.push('AjoutercentrePage', {'confLocaliteEnquete': confLocaliteEnquete});    
+  editer(centre, dbclick: boolean = false){
+    if(!dbclick || (dbclick && this.user && this.user.roles && global.estManager(this.user.roles))){
+      this.chargerPays();
+      this.chargerSousLocalite(centre.data.pays, 'pays')
+      this.chargerSousLocalite(centre.data.region, 'region')
+      this.chargerSousLocalite(centre.data.departement, 'departement')
+      this.chargerSousLocalite(centre.data.commune, 'commune')
+      this.editForm(centre);
+      /*if(centre.data.pour_union == 'oui'){
+        this.getAllUnion();
+      }*/
+      if(centre.data.niveau_centre == 'Rattaché à une Fédération'/* && this.groupements.length < 0*/){
+          this.getAllFederation();
+      }else if(centre.data.niveau_centre == 'Rattaché à une Union'){
+          this.getAllUnion();
+      }else if(centre.data.niveau_centre == 'Rattaché à une OP'){
+          this.getAllOP();
+      }
+      this.getInfoSimEmei();
+      this.action = 'modifier';
+      this.copiecentre = this.clone(centre);
+        
+    }//this.navCtrl.push('AjoutercentrePage', {'confLocaliteEnquete': confLocaliteEnquete});    
   }
 
   modifier(){
@@ -1301,18 +1390,18 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
     if (val && val.trim() != '') {
       this.centres = this.centres.filter((item) => {
         if(this.typeRecherche === 'nom'){
-          return (item.doc.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }else if(this.typeRecherche === 'code'){
-          return (item.doc.data.code_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.code_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }else if(this.typeRecherche === 'aggrement'){
-           return (item.doc.data.num_aggrement.toLowerCase().indexOf(val.toLowerCase()) > -1);
+           return (item.data.num_aggrement.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }if(this.typeRecherche === 'site'){
-          if(item.doc.data.commune_nom){
-            return (item.doc.data.commune_nom.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          if(item.data.commune_nom){
+            return (item.data.commune_nom.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }
         }if(this.typeRecherche === 'village'){
-          if(item.doc.data.village_nom){
-            return (item.doc.data.village_nom.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          if(item.data.village_nom){
+            return (item.data.village_nom.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }
         }
 
@@ -1328,8 +1417,12 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
   annuler(){
     if(this.action == 'ajouter'){
       this.action = 'liste';
+      this.groupements = [];
+      this.reinitVar();
     }else if (this.action == 'modifier'){
       this.action = 'detail';
+      this.groupements = [];
+      this.reinitVar();
     }
   }
 
@@ -1366,9 +1459,9 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
             if(data.toString() === 'oui'){
               this.servicePouchdb.deleteReturn(centre).then((res) => {
                 //let e: any = {};
-                //e.doc = essai;
+                //e = essai;
                 this.centres.forEach((es, i) => {
-                  if(es.doc._id === centre._id){
+                  if(es._id === centre._id){
                     this.centres.splice(i, 1);
                   }
                   
@@ -1382,9 +1475,9 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
             }else{
               this.servicePouchdb.deleteDocReturn(centre).then((res) => {
                 //let e: any = {};
-                //e.doc = essai;
+                //e = essai;
                 this.centres.forEach((es, i) => {
-                  if(es.doc._id === centre._id){
+                  if(es._id === centre._id){
                     this.centres.splice(i, 1);
                   }
                   

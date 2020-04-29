@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
+import { IonicPage, NavController, PopoverController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
 import { Validators, FormBuilder, FormGroup } from '@angular/forms';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 import { global } from '../../global-variables/variable';
@@ -8,6 +8,12 @@ import { Sim } from '@ionic-native/sim';
 import { File } from '@ionic-native/file';
 import * as FileSaver from 'file-saver';
 import { Printer, PrintOptions } from '@ionic-native/printer';
+import { RelationProduitComponent } from '../../components/relation-produit/relation-produit';
+import * as cryptoRandomString from 'crypto-random-string';
+declare var createDataTable: any;
+declare var JSONToCSVAndTHMLTable: any;
+declare var $: any;
+declare var Formio;
 declare var cordova: any;
 /**
  * Generated class for the GestionProduitPage page.
@@ -26,7 +32,7 @@ export class GestionProduitPage {
   produitForm: any;
   user: any = global.info_user;
   global:any = global;
-  estManger: boolean = false;
+  estManager: boolean = false;
   estAdmin: boolean = false;
   produits: any = [];
   allProduits: any = [];
@@ -55,7 +61,7 @@ export class GestionProduitPage {
   id_type_produit: string;
 
 
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
+  constructor(public navCtrl: NavController, public popoverController: PopoverController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     if(navParams.data.id_centre){
       this.id_centre = this.navParams.data.id_centre;
       this.code_centre = this.navParams.data.code_centre;
@@ -74,6 +80,25 @@ export class GestionProduitPage {
     this.selectedTypeProduit = '';
     this.code = '';
   }
+
+  
+openRelationProduit(ev: any) {
+  let popover = this.popoverController.create(RelationProduitComponent);
+  popover.present({ev: ev});
+
+  popover.onWillDismiss((res) => {
+    if(res == 'Evaluations'){
+      this.getEvaluations(this.produit._id, this.produit.data.nom, this.produit.data.id_centre);
+    }else if(res == 'Productions'){
+      this.getProduction(this.produit._id, this.produit.data.nom, this.produit.data.id_centre);
+    }else if(res == 'Etat du stock'){
+      this.etatStock(this.produit.data.id_stock, this.produit.data.nom);
+    }else if(res == 'Ventes'){
+      this.getVentes(this.produit._id, this.produit.data.nom, this.produit.data.id_centre);
+    }
+  })
+}
+
 
 
   actions() {
@@ -190,6 +215,11 @@ export class GestionProduitPage {
     let model = this.modelCtl.create('GestionVentePage', {'id_produit': id_produit, 'nom_produit': nom_produit, 'id_centre': id_centre}, {enableBackdropDismiss: false});
     model.present();
   }
+
+  getEvaluations(id_produit, nom_produit, id_centre){
+    let model = this.modelCtl.create('EvaluationPage', {'id_produit': id_produit, 'nom_produit': nom_produit, 'id_centre': id_centre}, {enableBackdropDismiss: false});
+    model.present();
+  }
   
   generateCode(){
     var numbers='0123456789ABCDEFGHIJKLMNPQRSTUVWYZ'
@@ -204,18 +234,18 @@ export class GestionProduitPage {
     return Id;
   }
 
-  generateId(){
-    var numbers='0123456789ABCDEFGHIJKLMNPQRSTUVWYZ'
+  /*generateId(){
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     var randomArray=[]
-    for(let i=0;i<12;i++){
-      var rand = Math.floor(Math.random()*34)
+    for(let i=0;i<32;i++){
+      var rand = Math.floor(Math.random()*62)
       randomArray.push(numbers[rand])
     }
     
     var randomString=randomArray.join("");
-    var Id= /*+pays+'-'+region+'-'+department+'-'+commune +'-' +village+ */''+randomString 
+    var Id= /*+pays+'-'+region+'-'+department+'-'+commune +'-' +village+ ***''+randomString 
     return Id;
-  }
+  }*/
 
 
 
@@ -239,7 +269,8 @@ export class GestionProduitPage {
       code_type_produit: [''],
       unite: ['', Validators.required],
       prix_unitaire: ['', Validators.required],
-      ingredients: [],
+      typeForm: [],
+      formioData: [],
       id_centre: ['', Validators.required],
       nom_centre: [''],
       code_centre: [''],
@@ -260,7 +291,8 @@ export class GestionProduitPage {
       type:['produit'],
       nom: [produit.data.nom, Validators.required], 
       code: [produit.data.code, Validators.required], 
-      ingredients: [produit.data.ingredients],
+      typeForm: [produit.data.typeForm],
+      formioData: [produit.data.formioData],
       id_type_produit: [produit.data.id_type_produit, Validators.required],
       nom_type_produit: [produit.data.nom_type_produit],
       unite: [produit.data.unite, Validators.required],
@@ -300,12 +332,13 @@ export class GestionProduitPage {
 
   doRefresh(refresher) {
      // this.produits = [];
-      this.servicePouchdb.getPlageDocsRapide('produit:','produit:\uffff').then((produits) => {
-        if(produits){
+      this.servicePouchdb.getDocByType('produit').then((res) => {
+        if(res){
+          let produits = res.docs;
           if(this.id_centre && this.id_centre != ""){
             let uns: any= [];
             produits.forEach((u) => {
-              if(u.doc.data.id_centre && u.doc.data.id_centre == this.id_centre){
+              if(u.data.id_centre && u.data.id_centre == this.id_centre){
                 uns.push(u)
               }
             });
@@ -322,17 +355,17 @@ export class GestionProduitPage {
       });
   }
 
-  estMangerConnecter(user){
+  estManagerConnecter(user){
     //alert('entree')
     if(user && user.roles){
       //alert('ok')
-      this.estManger = global.estManager(user.roles);
+      this.estManager = global.estManager(user.roles);
     }
   }
 
   estAdminConnecter(user){
     if(user && user.roles){
-      this.estManger = global.estAdmin(user.roles);
+      this.estManager = global.estAdmin(user.roles);
     }
   }
 
@@ -409,13 +442,13 @@ export class GestionProduitPage {
     let res = 1;
     if(this.action == 'ajouter'){
       this.allProduits.forEach((u, index) => {
-        if((produit.code == u.doc.data.code) || (produit.nom == u.doc.data.nom && produit.id_centre == u.doc.data.id_centre)){
+        if((produit.code == u.data.code) || (produit.nom == u.data.nom && produit.id_centre == u.data.id_centre)){
           res = 0;
         }
       });      
     }else{
       this.allProduits.forEach((u, index) => {
-        if((u.doc._id != this.produit._id) && ((produit.code == u.doc.data.code) || (produit.nom == u.doc.data.nom && produit.id_centre == u.doc.data.id_centre))){
+        if((u._id != this.produit._id) && ((produit.code == u.data.code) || (produit.nom == u.data.nom && produit.id_centre == u.data.id_centre))){
           res = 0;
         }
       });      
@@ -432,17 +465,19 @@ export class GestionProduitPage {
       alert('Le code du produit doit être unique pour tous les centres de trnasformation!\nLe nom du produit doit être unique par centre de transformation!');
     }else{
       for(let i = 0; i < this.centres.length; i++){
-        if(this.centres[i].doc._id == this.selectedCentre){
-          produit.nom_centre = this.centres[i].doc.data.nom_centre;
-          produit.code_centre = this.centres[i].doc.data.code_centre;
+        if(this.centres[i]._id == this.selectedCentre){
+          produit.nom_centre = this.centres[i].data.nom_centre;
+          produit.code_centre = this.centres[i].data.code_centre;
         }
       }
 
       for(let i = 0; i < this.typeProduits.length; i++){
-        if(this.typeProduits[i].doc._id == this.selectedTypeProduit){
-          produit.nom_type_produit = this.typeProduits[i].doc.data.nom;
-          produit.code_type_produit = this.typeProduits[i].doc.data.code;
-          produit.ingredients = this.typeProduits[i].doc.data.ingredients;
+        if(this.typeProduits[i]._id == this.selectedTypeProduit){
+          produit.nom_type_produit = this.typeProduits[i].data.nom;
+          produit.code_type_produit = this.typeProduits[i].data.code;
+          produit.typeForm = this.typeProduits[i].data.formioData.display;
+          produit.formioData = this.typeProduits[i].data.formioData
+          //produit.ingredients = this.typeProduits[i].data.ingredients;
         }
       }
      
@@ -450,7 +485,7 @@ export class GestionProduitPage {
       produit.phonenumber = this.phonenumber;
       produit.imei = this.imei;
       if(this.action == 'ajouter'){
-        let id = this.generateId();
+        let id = cryptoRandomString({length: 20});;
         produit.end = date.toJSON();
         produit.id_stock = 'stock:'+id;
         let produitFinal: any = {};
@@ -460,11 +495,12 @@ export class GestionProduitPage {
         this.servicePouchdb.createDocReturn(produitFinal).then((res) => {
           produitFinal._rev = res.rev;
           let u: any = {}
-          u.doc = produitFinal;
+          u = produitFinal;
 
           //créer le stock associé, ce documnt sera utiliser pour savoir si le stock est disponible ou pa et faire un inventaire sommaine de la stuation du stock
           let stock: any = {};
           stock._id = produitFinal.data.id_stock;
+          stock.type = 'stock';
           stock.data = {};
           stock.data.id_centre = produitFinal.data.id_centre;
           stock.data.code_centre = produitFinal.data.code_centre;
@@ -508,7 +544,9 @@ export class GestionProduitPage {
         this.produit.data.code = produit.code;
         this.produit.data.nom_type_produit = produit.nom_type_produit;
         this.produit.data.code_type_produit = produit.code_type_produit;
-        this.produit.data.ingredients = produit.ingredients;
+        this.produit.data.typeForm = produit.typeForm;
+        this.produit.data.formioData = produit.formioData;
+        //this.produit.data.ingredients = produit.ingredients;
         this.produit.data.id_type_produit = produit.id_type_produit;
         this.produit.data.unite = produit.unite;
         this.produit.data.prix_unitaire = produit.prix_unitaire;
@@ -519,7 +557,7 @@ export class GestionProduitPage {
         this.produit.data.update_phonenumber = this.phonenumber;
         this.produit.data.update_imei = this.imei;
         if(!this.produit.data.id_stock || this.produit.data.id_stock == ''){
-          this.produit.data.id_stock = 'stock:'+this.generateId();
+          this.produit.data.id_stock = 'stock:'+cryptoRandomString({length: 20});;
           stockDefini = 'non';
         }
 
@@ -529,6 +567,7 @@ export class GestionProduitPage {
           if(stockDefini == 'non'){
             let stock: any = {};
             stock._id = this.produit.data.id_stock;
+            stock.type = 'stock';
             stock.data = {};
             stock.data.id_centre = this.produit.data.id_centre;
             stock.data.code_centre = this.produit.data.code_centre;
@@ -552,6 +591,7 @@ export class GestionProduitPage {
             duration: 1000
           });
           this.action  = 'detail';
+          this.detail(this.produit);
           toast.present();
           this.centres = [];
           this.reinitVar()
@@ -631,12 +671,13 @@ detailIngredient(i){
     
     this.rechercher = true;
      // this.produits = [];
-      this.servicePouchdb.getPlageDocsRapide('produit','produit:\uffff').then((produits) => {
-        if(produits){
+      this.servicePouchdb.getDocByType('produit', false).then((res) => {
+        if(res){
+          let produits = res.docs;
           if(this.id_centre && this.id_centre != ""){
             let uns: any= [];
             produits.forEach((u) => {
-              if(u.doc.data.id_centre && u.doc.data.id_centre == this.id_centre){
+              if(u.data.id_centre && u.data.id_centre == this.id_centre){
                 uns.push(u)
               }
             });
@@ -660,17 +701,17 @@ detailIngredient(i){
 
 
   getAllCentre(){
-      this.servicePouchdb.getPlageDocsRapide('centre','centre:\uffff').then((centres) => {
-        if(centres){
-          this.centres = centres;
+      this.servicePouchdb.getDocByType('centre', false).then((res) => {
+        if(res){
+          this.centres = res.docs;
         }
       }).catch((err) => console.log(err)); 
   }
 
   getAllTypeProduits(){
-    this.servicePouchdb.getPlageDocsRapide('type-produit','type-produit:\uffff').then((typeProduits) => {
-      if(typeProduits){
-        this.typeProduits = typeProduits;
+    this.servicePouchdb.getDocByType('type-produit', false).then((res) => {
+      if(res){
+        this.typeProduits = res.docs;
       }
     }).catch((err) => console.log(err)); 
 }
@@ -711,18 +752,19 @@ detailIngredient(i){
     this.action = 'ajouter';
     this.getAllCentre();
     this.getAllTypeProduits();
-    this.code = this.generateCode();
+    this.code = cryptoRandomString({length: 10, type: 'numeric'});
       //this.navCtrl.push('AjouterproduitPage', {'confLocaliteEnquete': confLocaliteEnquete});    
   }
 
-  editer(produit){
-    this.editForm(produit);
-    this.getAllCentre();
-    this.getAllTypeProduits();
-    this.getInfoSimEmei();
-    this.action = 'modifier';
-    this.copieproduit = this.clone(produit);
-      //this.navCtrl.push('AjouterproduitPage', {'confLocaliteEnquete': confLocaliteEnquete});    
+  editer(produit, dbclick: boolean = false){
+    if(!dbclick || (dbclick && this.user && this.user.roles && global.estManager(this.user.roles))){ 
+      this.editForm(produit);
+      this.getAllCentre();
+      this.getAllTypeProduits();
+      this.getInfoSimEmei();
+      this.action = 'modifier';
+      this.copieproduit = this.clone(produit);
+    } //this.navCtrl.push('AjouterproduitPage', {'confLocaliteEnquete': confLocaliteEnquete});    
   }
 
   modifier(){
@@ -734,7 +776,17 @@ detailIngredient(i){
   detail(produit){
     this.produit = produit;
     this.action = 'detail';
+    this.showForm(produit.data.formioData)
     //this.navCtrl.push('DetailproduitPage', {'produit': produit, 'selectedSource': selectedSource});
+  }
+
+
+  showForm(form){
+    $('#show-produit-form').ready(() => {
+      var formElement = document.getElementById('show-produit-form');
+      formElement.innerHTML = '';
+      Formio.createForm(formElement, form, {readOnly: true});
+    })
   }
 
   getItems(ev: any) {
@@ -748,13 +800,13 @@ detailIngredient(i){
     if (val && val.trim() != '') {
       this.produits = this.produits.filter((item) => {
         if(this.typeRecherche === 'nom'){
-          return (item.doc.data.nom.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.nom.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }else if(this.typeRecherche === 'code'){
-          return (item.doc.data.code.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.code.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }else if(this.typeRecherche === 'type-produit'){
-           return (item.doc.data.nom_type_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
+           return (item.data.nom_type_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }if(this.typeRecherche === 'centre'){
-          return (item.doc.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }
 
       });
@@ -771,6 +823,7 @@ detailIngredient(i){
       this.action = 'liste';
     }else if (this.action == 'modifier'){
       this.action = 'detail';
+      this.detail(this.produit)
     }
   }
 
@@ -807,9 +860,9 @@ supprimer(produit){
           if(data.toString() === 'oui'){
             this.servicePouchdb.deleteReturn(produit).then((res) => {
               //let e: any = {};
-              //e.doc = essai;
+              //e = essai;
               this.produits.forEach((es, i) => {
-                if(es.doc._id === produit._id){
+                if(es._id === produit._id){
                   this.produits.splice(i, 1);
                 }
                 
@@ -823,9 +876,9 @@ supprimer(produit){
           }else{
             this.servicePouchdb.deleteDocReturn(produit).then((res) => {
               //let e: any = {};
-              //e.doc = essai;
+              //e = essai;
               this.produits.forEach((es, i) => {
-                if(es.doc._id === produit._id){
+                if(es._id === produit._id){
                   this.produits.splice(i, 1);
                 }
                 

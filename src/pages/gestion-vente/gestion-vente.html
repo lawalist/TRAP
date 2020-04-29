@@ -25,7 +25,7 @@
           <ion-badge color="fuma-green" item-right>{{ventes.length}}</ion-badge>
         </button>
 
-        <button ion-button icon-only color="royal" (click) = "replicationDepuisServeur()" >
+        <!--button ion-button icon-only color="royal" (click) = "replicationDepuisServeur()" >
           <ion-icon name="arrow-round-down"></ion-icon>
        </button>
  
@@ -33,20 +33,36 @@
           <ion-icon name="arrow-round-up"></ion-icon>
        </button>
   
-        <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+        <button ion-button icon-only color="royal" *ngIf="aProfile && !id_centre" (click) = "sync()" >
             <ion-icon name="sync"></ion-icon>
+        </button-->
+
+        <button *ngIf="aProfile && !id_centre" ion-button icon-only color="royal"  (click)="profile()">
+          <ion-icon name="person"></ion-icon>
+        </button>
+  
+        <button *ngIf="!aProfile && !id_centre" ion-button icon-only color="royal" (click)="connexion()">
+          <ion-icon name="unlock"></ion-icon>
         </button>
   
       </ion-buttons>
   
-      <ion-title *ngIf="action == 'liste'">ventes</ion-title>
+      <ion-title *ngIf="action == 'liste'">Ventes</ion-title>
       <ion-title *ngIf="action == 'ajouter'">Ajouter vente</ion-title>
       <ion-title *ngIf="action == 'modifier'">Modifier vente</ion-title>
       <ion-title *ngIf="action == 'detail'">Détail vente</ion-title>
 
-      <button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
+      <ion-buttons *ngIf="action == 'detail'"  end>
+          <button ion-button icon-only color="royal" (click)="openRelationVente($event)"><ion-icon name="more"></ion-icon></button>
+        </ion-buttons>
+      <!--button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
         <ion-icon name="menu"></ion-icon>
-    </button>
+    </button-->
+
+    <ion-buttons *ngIf="!id_centre && action == 'liste'"  end>
+      
+      <button ion-button icon-only color="royal" (click)="option()"><ion-icon name="options"></ion-icon></button>
+    </ion-buttons>
   </ion-navbar>
 
 </ion-header>
@@ -71,7 +87,7 @@
             <ion-item>
               <ion-label floating>Selectionnez le produit</ion-label>
               <ion-select [(ngModel)]="id_produit_selected" (ionChange)="getAllVentes(id_produit_selected)" cancelText="Annuler" okText="Ok" >
-                <ion-option *ngFor="let p of produits" [value]=p.doc._id >{{p.doc.data.nom}}</ion-option>
+                <ion-option *ngFor="let p of produits" [value]=p._id >{{p.data.nom}}</ion-option>
               </ion-select>
             </ion-item>
           </ion-col>
@@ -116,20 +132,20 @@
           </ion-item>
          </ion-list-header>
         <ion-item-sliding *ngFor="let vente of ventes">
-          <ion-item (click)="detail(vente.doc, selectedSource)" >
+          <ion-item (click)="detail(vente, selectedSource)" >
             <!--ion-row>
               <ion-col-->
-                  <h6><strong>Type produit:</strong> {{vente.doc.data.type_produit}}</h6>
-                  <h6><strong>Code produit:</strong> {{vente.doc.data.code_produit}}</h6>
-                  <h6><strong>Nom produit:</strong> {{vente.doc.data.nom_produit}} ({{vente.doc.data.unite}})</h6>
+                  <h6><strong>Type produit:</strong> {{vente.data.type_produit}}</h6>
+                  <h6><strong>Code produit:</strong> {{vente.data.code_produit}}</h6>
+                  <h6><strong>Nom produit:</strong> {{vente.data.nom_produit}} ({{vente.data.unite}})</h6>
               <!--/ion-col>
               <ion-col class="aligneDate"-->
-                <p><strong>Date:</strong> {{vente.doc.data.today | date: 'dd-MM-yyyy'}}</p>
+                <p><strong>Date:</strong> {{vente.data.today | date: 'dd-MM-yyyy'}}</p>
               <!--/ion-col>
             </ion-row-->
           </ion-item> 
-          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
-            <button ion-button icon-only color="my_primary" (click)="partager(vente.doc._id)">
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(vente._id)">
               <ion-icon name="share"></ion-icon>   
             </button>
           </ion-item-options-->
@@ -200,53 +216,53 @@
         </thead>
         <!--hr style="width: 375%"-->
         <tbody>
-          <tr *ngFor="let vente of ventes" (click)="detail(vente.doc)">
+          <tr *ngFor="let vente of ventes" (click)="detail(vente)">
             <td  >
-              {{vente.doc.data.code_vente}}
+              {{vente.data.code_vente}}
             </td>
             <td  >
-                {{vente.doc.data.nom_centre}}
+                {{vente.data.nom_centre}}
               </td>
             <td  >
-              {{vente.doc.data.code_centre}}
+              {{vente.data.code_centre}}
             </td>
             <td  >
-              {{vente.doc.data.type_produit}}
+              {{vente.data.type_produit}}
             </td>
             <td  >
-              {{vente.doc.data.code_produit}}
+              {{vente.data.code_produit}}
             </td>
             <td  >
-              {{vente.doc.data.nom_produit}}
+              {{vente.data.nom_produit}}
             </td>
             <td  >
-              {{vente.doc.data.unite}}
+              {{vente.data.unite}}
             </td>
             <td  >
-              {{vente.doc.data.prix_unitaire}}
+              {{vente.data.prix_unitaire}}
             </td>
             
             <td  >
-                {{vente.doc.data.quantite_vendue}}
+                {{vente.data.quantite_vendue}}
               </td>
               <td  >
-                {{vente.doc.data.reduction}}
+                {{vente.data.reduction}}
               </td>
               
               <td  >
-                {{vente.doc.data.cout_vente}}
+                {{vente.data.cout_vente}}
               </td>
               <td  >
-                {{vente.doc.data.type_client}}
+                {{vente.data.type_client}}
               </td>
               <td  >
-                {{vente.doc.data.type_marche}}
+                {{vente.data.type_marche}}
               </td>
               <td  >
-                {{vente.doc.data.ancien_stock}}
+                {{vente.data.ancien_stock}}
               </td>
               <td  >
-                {{vente.doc.data.nouveau_stock}}
+                {{vente.data.nouveau_stock}}
               </td>  
           </tr>
         </tbody>
@@ -322,7 +338,7 @@
       </ion-card-content> 
     </ion-card>
 
-    <br><br><br>
+    <br><br><br><br><br><br><br><br><br><br><br><br>
   </div>
 
 
@@ -348,16 +364,16 @@
                 <ion-item>
                   <ion-label floating>Selectionnez le centre <span class="error-box">*</span></ion-label>
                   <ion-select formControlName="id_centre" [disabled]="id_centre && id_centre != ''" (ionChange)="getProduitsCentre(venteForm.value.id_centre)" cancelText="Annuler" okText="Ok" >
-                      <ion-option *ngFor="let c of centres" [value]=c.doc._id >{{c.doc.data.nom_centre}}</ion-option>
+                      <ion-option *ngFor="let c of centres" [value]=c._id >{{c.data.nom_centre}}</ion-option>
                     </ion-select>
                 </ion-item>
                 <div style="padding-left: 15px;" class="error-box" *ngIf="venteForm.controls['id_centre'].hasError('required') && venteForm.controls['id_centre'].touched">* le centre est obligatoir!</div>
               </ion-col>
               <ion-col>
-                <ion-item>
+                <ion-item> 
                   <ion-label floating>Selectionnez le produit <span class="error-box">*</span></ion-label>
                   <ion-select formControlName="id_produit" [disabled]="id_produit && id_produit != ''" (ionChange)="getProduit(venteForm.value.id_produit)" cancelText="Annuler" okText="Ok" >
-                      <ion-option *ngFor="let t of produitsCentre" [value]=t.doc._id >{{t.doc.data.nom}}</ion-option>
+                      <ion-option *ngFor="let t of produitsCentre" [value]=t._id >{{t.data.nom}}</ion-option>
                     </ion-select>
                 </ion-item>
                 <div style="padding-left: 15px;" class="error-box" *ngIf="venteForm.controls['id_produit'].hasError('required') && venteForm.controls['id_produit'].touched">* le produit est obligatoir!</div>
@@ -367,21 +383,21 @@
           <!--ion-item>
             <ion-label floating>Selectionnez le produit <span class="error-box">*</span></ion-label>
             <ion-select formControlName="id_produit" [disabled]="id_produit && id_produit != ''" (ionChange)="getProduit(venteForm.value.id_produit)" cancelText="Annuler" okText="Ok" >
-                <ion-option *ngFor="let t of produits" [value]=t.doc._id >{{t.doc.data.nom}}</ion-option>
+                <ion-option *ngFor="let t of produits" [value]=t._id >{{t.data.nom}}</ion-option>
               </ion-select>
           </ion-item>
           <div style="padding-left: 15px;" class="error-box" *ngIf="venteForm.controls['id_produit'].hasError('required') && venteForm.controls['id_produit'].touched">* le produit est obligatoir!</div>
 
           <ion-row>
             <ion-col>
-              <ion-item>
+              <ion-item class="item-no-border">
                 <ion-label floating>Code produit <span class="error-box">*</span></ion-label>
                 <ion-input type="text" formControlName="code_produit" disabled></ion-input>
               </ion-item>
               <div style="padding-left: 15px;" class="error-box" *ngIf="venteForm.controls['code_produit'].hasError('required') && venteForm.controls['code_produit'].touched">* le code du prduit des est obligatoir!</div>    
             </ion-col>
             <ion-col>
-              <ion-item>
+              <ion-item class="item-no-border">
                 <ion-label floating>Nom produit <span class="error-box">*</span></ion-label>
                 <ion-input type="text" formControlName="nom_produit" disabled></ion-input>
               </ion-item>
@@ -390,14 +406,14 @@
           </ion-row>
           <ion-row>
             <ion-col>
-              <ion-item>
+              <ion-item class="item-no-border">
                 <ion-label floating>Code centre <span class="error-box">*</span></ion-label>
                 <ion-input type="text" formControlName="code_centre" disabled></ion-input>
               </ion-item> 
               <div style="padding-left: 15px;" class="error-box" *ngIf="venteForm.controls['code_centre'].hasError('required') && venteForm.controls['code_centre'].touched">* le code du centre est obligatoir!</div>    
             </ion-col>
             <ion-col>
-              <ion-item>
+              <ion-item class="item-no-border">
                 <ion-label floating>Nom centre <span class="error-box">*</span></ion-label>
                 <ion-input type="text" formControlName="nom_centre" disabled></ion-input>
               </ion-item> 
@@ -418,14 +434,14 @@
             <legend>Informations sur la vente</legend>
             <ion-row>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Quantité vendue en ({{venteForm.value.unite}})<span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="quantite_vendue" (keyup)="getCoutVente()"></ion-input>
                 </ion-item>
                 <div style="padding-left: 15px;" class="error-box" *ngIf="venteForm.controls['quantite_vendue'].hasError('required') && venteForm.controls['quantite_vendue'].touched">* la quantité produite est obligatoir!</div>    
               </ion-col>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Réduction en (F) <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="reduction" (keyup)="getCoutVenteReduction()"></ion-input>
                 </ion-item>
@@ -433,7 +449,7 @@
               </ion-col>
             </ion-row> 
 
-            <ion-item>
+            <ion-item class="item-no-border">
               <ion-label floating>Recette en (F)<span class="error-box">*</span></ion-label>
               <ion-input type="number" formControlName="cout_vente" disabled></ion-input>
             </ion-item>  
@@ -470,14 +486,14 @@
               <legend>Etat du stock</legend>        
             <ion-row>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Ancien stock <span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="ancien_stock" disabled></ion-input>
                 </ion-item>
                 <div style="padding-left: 15px;" class="error-box" *ngIf="venteForm.controls['ancien_stock'].hasError('required') && venteForm.controls['ancien_stock'].touched">* l'ancien stock est obligatoir!</div>        
               </ion-col>
               <ion-col>
-                <ion-item>
+                <ion-item class="item-no-border">
                   <ion-label floating>Nouveau stock<span class="error-box">*</span></ion-label>
                   <ion-input type="number" formControlName="nouveau_stock" disabled></ion-input>
                 </ion-item>
@@ -492,10 +508,10 @@
 
         <ion-row>
           <ion-col>
-            <button ion-button type="submit" color="my_secondary" [disabled]="!venteForm.valid" block>Sauvegarder</button>
+            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
           </ion-col>
           <ion-col>
-            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!venteForm.valid" block>Sauvegarder</button>
           </ion-col>
         </ion-row>        
       </form>
@@ -503,11 +519,11 @@
       <br><br><br>
   </div>
 
-  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)"  bottom right>
     <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)">
     <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
     <!--ion-fab-list side="top">
       <button ion-fab mini *ngIf="ventes.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
@@ -517,14 +533,10 @@
   </ion-fab>
 
   <ion-fab bottom right *ngIf="action == 'detail'" >
-      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
-      <!--ion-fab-list side="top">
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(vente)" color="delete" ><ion-icon name="trash"></ion-icon></button>
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(vente.data.code_vente)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(vente.data.code_vente)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
-        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="ventevente(vente.data.num_aggrement, vente.data.nom_vente, vente.data.code_vente)" color="my_primary"><strong>OP</strong></button>
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(vente)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
-      </ion-fab-list-->
-    </ion-fab> 
+    <!--button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button-->
+    <button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="editer(vente)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+    <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (click)="annulerVente(vente)" color="delete" ><ion-icon name="close"></ion-icon></button>
+    <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (click)="supprimer(vente)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+  </ion-fab> 
 
 </ion-content>

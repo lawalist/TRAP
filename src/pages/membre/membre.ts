@@ -1,5 +1,5 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { IonicPage, NavController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
+import { IonicPage, NavController, Events, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
 import { Validators, FormBuilder, FormGroup } from '@angular/forms';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 import { global } from '../../global-variables/variable';
@@ -30,7 +30,8 @@ export class MembrePage {
  membreForm: any;
   user: any = global.info_user;
   global:any = global;
-  estManger: boolean = false;
+  estManager: boolean = false;
+  estAnimataire: boolean = false;
   estAdmin: boolean = false;
   membres: any = [];
   allMembres: any = [];
@@ -96,7 +97,7 @@ export class MembrePage {
   limits: any = [10, 25, 50, 100, 500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 'Tous'];
   recherche: any;
 
-  constructor(public navCtrl: NavController, private sanitizer: DomSanitizer, public imagePicker: ImagePicker, private camera: Camera, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
+  constructor(public navCtrl: NavController, public events: Events, private sanitizer: DomSanitizer, public imagePicker: ImagePicker, private camera: Camera, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     if(navParams.data.id_centre){
       this.id_centre = this.navParams.data.id_centre;
       this.code_centre = this.navParams.data.code_centre;
@@ -106,6 +107,20 @@ export class MembrePage {
 
     this.myPlatform = this.platform.is('android')
     
+    
+    events.subscribe('user:login', (user) => {
+      if(user){
+        this.aProfile = true;
+        this.estManagerConnecter(user)
+        this.estAnimataireConnecter(user)
+      }else{
+        this.aProfile = false;
+        this.estManager = false;
+        this.estAnimataire = false;
+        this.user = global.info_user;
+      }
+    });
+
   }
 
   reinitVar(){
@@ -752,17 +767,22 @@ export class MembrePage {
       });
   }
 
-  estMangerConnecter(user){
+  estManagerConnecter(user){
     //alert('entree')
     if(user && user.roles){
       //alert('ok')
-      this.estManger = global.estManager(user.roles);
+      this.estManager = global.estManager(user.roles);
     }
   }
 
+  estAnimataireConnecter(user){
+    if(user && user.roles){
+      this.estAnimataire = global.estAnimataire(user.roles);
+    }
+  }
   estAdminConnecter(user){
     if(user && user.roles){
-      this.estManger = global.estAdmin(user.roles);
+      this.estManager = global.estAdmin(user.roles);
     }
   }
 
@@ -1009,14 +1029,15 @@ export class MembrePage {
 
 
   generateIdPhoto(){
-    var numbers='0123456789ABCDEFGHIJKLMNPQRSTUVWYZ'
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     var randomArray=[]
-    for(let i=0;i<20;i++){
-      var rand = Math.floor(Math.random()*34)
+    for(let i=0;i<30;i++){
+      var rand = Math.floor(Math.random()*62)
       randomArray.push(numbers[rand])
     }
+    
     var randomString=randomArray.join("");
-    var Id= randomString 
+    var Id= /*+pays+'-'+region+'-'+department+'-'+commune +'-' +village+ */''+randomString 
     return Id;
   }
 
@@ -1037,6 +1058,19 @@ export class MembrePage {
     }
 
     this.matricule_membre = Id;
+  }
+
+  generateId(){
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    var randomArray=[]
+    for(let i=0;i<50;i++){
+      var rand = Math.floor(Math.random()*62)
+      randomArray.push(numbers[rand])
+    }
+    
+    var randomString=randomArray.join("");
+    var Id= /*+pays+'-'+region+'-'+department+'-'+commune +'-' +village+ */''+randomString 
+    return Id;
   }
 
   validAction(){
@@ -1101,7 +1135,7 @@ export class MembrePage {
       membre.imei = this.imei;
 
       if(this.action == 'ajouter'){
-        let id = this.servicePouchdb.generateId('membre:'+membre.code_centre, membre.commune, membre.village);
+        let id = 'membre:'+this.generateId();
         membre.end = date.toJSON();
 
         

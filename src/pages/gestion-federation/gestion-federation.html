@@ -35,6 +35,10 @@
         <ion-title *ngIf="action == 'ajouter'">Ajouter fédération</ion-title>
         <ion-title *ngIf="action == 'modifier'">Modifier fédération</ion-title>
         <ion-title *ngIf="action == 'detail'">Détail fédération</ion-title>
+
+        <ion-buttons *ngIf="action == 'detail'"  end>
+          <button ion-button icon-only color="royal" (click)="openRelationFederation($event)"><ion-icon name="more"></ion-icon></button>
+        </ion-buttons>
       </ion-navbar>
     
 
@@ -103,7 +107,7 @@
               <!--/ion-col>
             </ion-row-->
           </ion-item> 
-          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" side="right">
             <button ion-button icon-only color="my_primary" (click)="partager(federation.doc._id)">
               <ion-icon name="share"></ion-icon>   
             </button>
@@ -198,7 +202,7 @@
 
 
 <div *ngIf="action == 'detail'">
-    <ion-card class="info-card" (dblclick)="editer(federation)"> 
+    <ion-card class="info-card" (dblclick)="editer(federation, true)"> 
       <ion-card-header>
           <ion-item class="message">
               <h2  class="fond-gris blanc">
@@ -268,7 +272,7 @@
         </ion-grid>
       </ion-card-content> 
     </ion-card>
-    <br><br><br>
+    <br><br><br><br><br><br><br><br><br>
   </div>
 
 
@@ -339,19 +343,19 @@
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="federationForm.controls['village'].hasError('required') && federationForm.controls['village'].touched">* le village est obligatoir!</div>
       
-      <ion-item>
+      <ion-item class="item-no-border">
         <ion-label floating>Numéro d'aggrément <span class="error-box">*</span></ion-label>
         <ion-input type="text" formControlName="num_aggrement" ></ion-input>
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="federationForm.controls['num_aggrement'].hasError('required') && federationForm.controls['num_aggrement'].touched">* le numéro d'aggrément est obligatoir!</div>
 
-      <ion-item>
+      <ion-item class="item-no-border">
         <ion-label floating>Nom de l'federation <span class="error-box">*</span></ion-label>
         <ion-input type="text" formControlName="nom_federation" [(ngModel)]="nom_federation" (keyup)="genererCodefederation()" ></ion-input>
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="federationForm.controls['nom_federation'].hasError('required') && federationForm.controls['nom_federation'].touched">* le nom de l'federation des est obligatoir!</div>
       
-      <ion-item>
+      <ion-item class="item-no-border">
         <ion-label floating>Code de l'federation <span class="error-box">*</span></ion-label>
         <ion-input type="text" formControlName="code_federation" [(ngModel)]="code_federation" disabled></ion-input>
       </ion-item>
@@ -361,21 +365,21 @@
 
         <ion-row>
           <ion-col>
-            <button ion-button type="submit" color="my_secondary" [disabled]="!federationForm.valid" block>Sauvegarder</button>
+            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
           </ion-col>
           <ion-col>
-            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!federationForm.valid" block>Sauvegarder</button>
           </ion-col>
         </ion-row>
       </form>
-
+  <br><br><br>
   </div>
 
-  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)"  bottom right>
     <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)">
     <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
     <!--ion-fab-list side="top">
       <button ion-fab mini *ngIf="federations.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
@@ -384,15 +388,10 @@
     </ion-fab-list-->
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'detail'" >
-      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
-      <!--ion-fab-list side="top">
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(federation)" color="delete" ><ion-icon name="trash"></ion-icon></button>
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(federation.data.code_federation)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(federation.data.code_federation)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
-        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="federationfederation(federation.data.num_aggrement, federation.data.nom_federation, federation.data.code_federation)" color="my_primary"><strong>OP</strong></button>
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(federation)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
-      </ion-fab-list-->
-    </ion-fab> 
+  <ion-fab bottom right *ngIf="action == 'detail' && ((user && user.roles && global.estManager(user.roles)) || estManager)" >
+    <!--button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button-->
+    <button ion-fab mini (click)="editer(federation)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+    <button ion-fab mini (click)="supprimer(federation)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+  </ion-fab> 
 
 </ion-content>

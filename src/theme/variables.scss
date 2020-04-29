@@ -74,6 +74,21 @@ $colors: (
   box-shadow: 0 16px 20px rgba(0,0,0,4);
   background-color: #fafafa;*/
   }
+/*.item-inner{
+  border-style: unset !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}*/
+  .item-no-border{
+    //border-style: unset !important;
+    //border-bottom-color: transparent !important;
+    //box-shadow: none !important;
+    .item-inner{
+      border-style: unset !important;
+      border-bottom-color: transparent !important;
+      box-shadow: none !important;
+    }
+  }
 
   .modal .backdrop {
     display: block !important;

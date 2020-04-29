@@ -80,7 +80,7 @@ export class GestionVarietePage {
     events.subscribe('user:login', (user) => {
         if(user){
           this.aProfile = true;
-          this.estMangerConnecter(user)
+          this.estManagerConnecter(user)
           this.estAnimataireConnecter(user)
         }else{
           this.aProfile = false;
@@ -110,7 +110,7 @@ export class GestionVarietePage {
      let toast = this.ionicApp._toastPortal.getActive();
       toast.dismiss();
     }
-    estMangerConnecter(user){
+    estManagerConnecter(user){
       if(user && user.roles){
         this.estManager = global.estManager(user.roles);
       }
@@ -235,18 +235,12 @@ export class GestionVarietePage {
       this.email = '';*/
     }
   
-  generateId(){
-      var chars='ABCDEFGHIJKLMNPQRSTUVWYZ'
-      var numbers='0123456789'
+    generateId(){
+      var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
       var randomArray=[]
-      for(let i=0;i<5;i++){
-        var rand = Math.floor(Math.random()*10)
+      for(let i=0;i<24;i++){
+        var rand = Math.floor(Math.random()*62)
         randomArray.push(numbers[rand])
-      }
-      randomArray.push('-')
-      for(let i=0;i<5;i++){
-        var rand = Math.floor(Math.random()*24)
-        randomArray.push(chars[rand])
       }
       
       var randomString=randomArray.join("");
@@ -519,7 +513,6 @@ export class GestionVarietePage {
       this.printer.print(content, options);
     }
   
-  
      ionViewDidEnter(){
           //this.getEssais()
       /*this.servicePouchdb.remoteSaved.getSession((err, response) => {
@@ -740,7 +733,7 @@ export class GestionVarietePage {
   
   
     editer(variete, dbclick: boolean = false){
-      if(!dbclick || (dbclick && this.user && this.user.roles && global.estAnimataire(this.user.roles))){
+      if(!dbclick || (dbclick && this.user && this.user.roles && global.estManager(this.user.roles))){
         this.grandVariete = variete;
         this.Variete = new VariteteType();
         //this.variete1 = this.grandVariete.data;

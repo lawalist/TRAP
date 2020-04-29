@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
+import { IonicPage, NavController, PopoverController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
 import { Validators, FormBuilder, FormGroup } from '@angular/forms';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 import { global } from '../../global-variables/variable';
@@ -8,6 +8,7 @@ import { Sim } from '@ionic-native/sim';
 import { File } from '@ionic-native/file';
 import * as FileSaver from 'file-saver';
 import { Printer, PrintOptions } from '@ionic-native/printer';
+import { RelationOpComponent } from '../../components/relation-op/relation-op';
 declare var cordova: any;
 /**
  * Generated class for the GestionOpPage page.
@@ -26,7 +27,7 @@ export class GestionOpPage {
   opForm: any;
   user: any = global.info_user;
   global:any = global;
-  estManger: boolean = false;
+  estManager: boolean = false;
   estAdmin: boolean = false;
   ops: any = [];
   allOps: any = [];
@@ -67,7 +68,7 @@ export class GestionOpPage {
   id_union: string;
 
 
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
+  constructor(public navCtrl: NavController, public popoverController: PopoverController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     if(navParams.data.id_union){
       this.id_union = this.navParams.data.id_union;
       this.code_union = this.navParams.data.code_union;
@@ -88,6 +89,19 @@ export class GestionOpPage {
     this.pour_union = 'oui';
   }
 
+
+    
+  openRelationOP(ev: any) {
+    let popover = this.popoverController.create(RelationOpComponent);
+    popover.present({ev: ev});
+  
+    popover.onWillDismiss((res) => {
+      if(res == 'Centres de transformation'){
+        this.centreop(this.op._id, this.op.data.nom_op, this.op.data.code_op);
+      }
+    })
+  }
+  
 
   actions() {
     const actionSheet = this.actionSheetCtrl.create({
@@ -188,9 +202,15 @@ export class GestionOpPage {
       code_op: ['', Validators.required], 
       num_aggrement: ['', Validators.required],
       pour_union: ['oui', Validators.required],
+
+      id_federation: [''],
+      nom_federation: [''],
+      code_federation: [''],
+
       id_union: [''],
       nom_union: [''],
       code_union: [''],
+
       pays: ['', Validators.required],
       pays_nom: [''],
       region: ['', Validators.required],
@@ -220,9 +240,15 @@ export class GestionOpPage {
       code_op: [op.data.code_op, Validators.required], 
       num_aggrement: [op.data.num_aggrement, Validators.required],
       pour_union: [op.data.pour_union, Validators.required],
+
       id_union: [op.data.id_union],
       nom_union: [op.data.nom_union],
       code_union: [op.data.code_union],
+
+      id_federation: [op.data.id_federation],
+      nom_federation: [op.data.nom_federation],
+      code_federation: [op.data.code_federation],
+
       pays: [op.data.pays, Validators.required],
       pays_nom: [op.data.pays_nom],
       region: [op.data.region, Validators.required],
@@ -290,17 +316,17 @@ export class GestionOpPage {
       });
   }
 
-  estMangerConnecter(user){
+  estManagerConnecter(user){
     //alert('entree')
     if(user && user.roles){
       //alert('ok')
-      this.estManger = global.estManager(user.roles);
+      this.estManager = global.estManager(user.roles);
     }
   }
 
   estAdminConnecter(user){
     if(user && user.roles){
-      this.estManger = global.estAdmin(user.roles);
+      this.estManager = global.estAdmin(user.roles);
     }
   }
 
@@ -641,6 +667,19 @@ export class GestionOpPage {
     return res;
   }
 
+  generateId(){
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    var randomArray=[]
+    for(let i=0;i<24;i++){
+      var rand = Math.floor(Math.random()*62)
+      randomArray.push(numbers[rand])
+    }
+    
+    var randomString=randomArray.join("");
+    var Id= /*+pays+'-'+region+'-'+department+'-'+commune +'-' +village+ */''+randomString 
+    return Id;
+  }
+
   validAction(){
     let date = new Date();
     let op = this.opForm.value;
@@ -692,19 +731,25 @@ export class GestionOpPage {
           if(this.unions[i].doc._id == this.selectedUnion){
             op.nom_union = this.unions[i].doc.data.nom_union;
             op.code_union = this.unions[i].doc.data.code_union;
+            op.id_federation = this.unions[i].doc.data.id_federation;
+            op.nom_federation = this.unions[i].doc.data.nom_federation;
+            op.code_federation = this.unions[i].doc.data.code_federation;
           }
         }
       }else{
         op.id_union = null;
         op.nom_union = null;
         op.code_union = null;
+        op.id_federation = null;
+        op.nom_federation = null;
+        op.code_federation = null;
       }
       op.deviceid = this.device.uuid;
       op.phonenumber = this.phonenumber;
       op.imei = this.imei;
 
       if(this.action == 'ajouter'){
-        let id = this.servicePouchdb.generateId('op', op.commune, op.village);
+        let id = 'op:'+this.generateId();
         op.end = date.toJSON();
 
         let opFinal: any = {};
@@ -746,6 +791,9 @@ export class GestionOpPage {
         this.op.data.id_union = op.id_union;
         this.op.data.nom_union = op.nom_union;
         this.op.data.code_union = op.code_union;
+        this.op.data.id_federation = op.id_federation;
+        this.op.data.nom_federation = op.nom_federation;
+        this.op.data.code_federation = op.code_federation;
         this.op.data.pays = op.pays;
         this.op.data.pays_nom = op.pays_nom;
         this.op.data.region = op.region;
@@ -766,8 +814,8 @@ export class GestionOpPage {
           //this.op = this.grandeop
 
           if(this.op.data.code_op !== this.copieOp.data.code_op || this.op.data.nom_op !== this.copieOp.data.nom_op){
-            this.updateCentreAssocies(this.op._id, this.op.data.nom_union, this.op.data.code_union);
-          }else{
+            this.updateCentreAssocies(this.op);
+          }
 
           let toast = this.toastCtl.create({
             message: 'OP bien sauvegardée!',
@@ -778,7 +826,7 @@ export class GestionOpPage {
           toast.present();
           this.unions = [];
           this.reinitVar()
-        }
+      
       });
 
     }
@@ -820,138 +868,32 @@ export class GestionOpPage {
 
 
 
-updateCentreAssocies(id_op, nom_op, code_op) {
-  let loadin = this.loadinCtl.create({
+updateCentreAssocies(op) {
+  /*let loadin = this.loadinCtl.create({
     content: 'Modification des centre associés en cours....'
   });
 
-  loadin.present();
+  loadin.present();*/
   //modification du code op dans centre
   this.servicePouchdb.getPlageDocsRapide('centre','centre:\uffff').then((centres) => {
     centres.forEach((c) => {
         //return this.getPhoto(membre)
-        if(c.doc.data.pour_op == 'oui' && c.doc.data.id_op === id_op){
-              c.doc.data.nom_op = nom_op;
-              c.doc.data.code_op = code_op;
-              this.servicePouchdb.updateDoc(c.doc);
-              //mbrs.push(mbr);
-            }
-      });
-      //modification du code op dans membres
-      /*this.servicePouchdb.getPlageDocsRapide('membre', 'membre:\uffff').then((membres) => {
-        membres.forEach((membre) => {
-          if(membre.doc.data.code_op === ancien_code){
-            membre.doc.data.code_op = code;
-            this.servicePouchdb.updateDoc(membre.doc);
+        if( c.doc.data.niveau_centre != 'Indépendant' && c.doc.data.id_op === op._id){
+            c.doc.data.nom_op = op.data.nom_op;
+            c.doc.data.code_op = op.data.code_op;
+
+            c.doc.data.id_federation = op.data.id_federation;
+            c.doc.data.nom_federation = op.data.nom_federation;
+            c.doc.data.code_federation = op.data.code_federation;
+            c.doc.data.id_union = op.data.id_union;
+            c.doc.data.nom_union = op.data.nom_union;
+            c.doc.data.code_union = op.data.code_union;
+
+            this.servicePouchdb.updateDoc(c.doc);
+
           }
-        })
-
-        //modification du code op dans essais
-        this.servicePouchdb.getPlageDocsRapide('essai', 'essai:\uffff').then((essais) => {
-          essais.forEach((essai) => {
-              if(essai.doc.data.code_op === ancien_code){
-                essai.doc.data.code_op = code;
-                this.servicePouchdb.updateDoc(essai.doc);
-              }
-            });
-
-            //modification du code op dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_op === ancien_code){
-                  champ.doc.data.code_op = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'op bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          }).catch((err) => {
-            //modification du code op dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_op === ancien_code){
-                  champ.doc.data.code_op = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'op bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          } ) ;
-
-
-        }).catch((err) => {
-          //modification du code op dans essais
-        this.servicePouchdb.getPlageDocsRapide('fuma:essai', 'fuma:essai:\uffff').then((essais) => {
-          essais.forEach((essai) => {
-              if(essai.doc.data.code_op === ancien_code){
-                essai.doc.data.code_op = code;
-                this.servicePouchdb.updateDoc(essai.doc);
-              }
-            });
-
-            //modification du code op dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_op === ancien_code){
-                  champ.doc.data.code_op = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'op bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          }).catch((err) => {
-            //modification du code op dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_op === ancien_code){
-                  champ.doc.data.code_op = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'op bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          });
-
-
-        }) ;*/
-
-      loadin.dismiss();
+      });
+      /*loadin.dismiss();
       let toast = this.toastCtl.create({
         message: 'op bien sauvegardée!',
         position: 'top',
@@ -959,102 +901,9 @@ updateCentreAssocies(id_op, nom_op, code_op) {
       });
 
       this.action  = 'detail';
-      toast.present();
+      toast.present();*/
   }).catch((err) => {
-       //modification du code op dans membres
-      /*this.servicePouchdb.getPlageDocsRapide('op:membre', 'op:membre:\uffff').then((membres) => {
-        membres.forEach((membre) => {
-          if(membre.doc.data.code_op === ancien_code){
-            membre.doc.data.code_op = code;
-            this.servicePouchdb.updateDoc(membre.doc);
-          }
-        })
-
-        //modification du code op dans essais
-        this.servicePouchdb.getPlageDocsRapide('fuma:essai', 'fuma:essai:\uffff').then((essais) => {
-          essais.forEach((essai) => {
-              if(essai.doc.data.code_op === ancien_code){
-                essai.doc.data.code_op = code;
-                this.servicePouchdb.updateDoc(essai.doc);
-              }
-            });
-
-            //modification du code op dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_op === ancien_code){
-                  champ.doc.data.code_op = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'op bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          });
-
-
-        }).catch((err) => {
-          console.log(err)
-        //modification du code op dans essais
-        this.servicePouchdb.getPlageDocsRapide('fuma:essai', 'fuma:essai:\uffff').then((essais) => {
-          essais.forEach((essai) => {
-              if(essai.doc.data.code_op === ancien_code){
-                essai.doc.data.code_op = code;
-                this.servicePouchdb.updateDoc(essai.doc);
-              }
-            });
-
-            //modification du code op dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_op === ancien_code){
-                  champ.doc.data.code_op = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'op bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          }).catch((err) => {
-
-            //modification du code op dans champs
-            this.servicePouchdb.getPlageDocsRapide('fuma:champs','fuma:champs:\uffff').then((champs) => {
-              champs.forEach((champ) => {
-                if(champ.doc.data.code_op === ancien_code){
-                  champ.doc.data.code_op = code;
-                  this.servicePouchdb.updateDoc(champ.doc);
-                }
-              })
-
-              loadin.dismiss();
-              let toast = this.toastCtl.create({
-                message: 'op bien sauvegardée!',
-                position: 'top',
-                duration: 1000
-              });
-
-              this.action  = 'detail';
-              toast.present();
-            });
-          }) ;
-
-        });*/
+    console.log(err)
   })
   
         
@@ -1172,20 +1021,22 @@ updateCentreAssocies(id_op, nom_op, code_op) {
       //this.navCtrl.push('AjouteropPage', {'confLocaliteEnquete': confLocaliteEnquete});    
   }
 
-  editer(op){
-    this.chargerPays();
-    this.chargerSousLocalite(op.data.pays, 'pays')
-    this.chargerSousLocalite(op.data.region, 'region')
-    this.chargerSousLocalite(op.data.departement, 'departement')
-    this.chargerSousLocalite(op.data.commune, 'commune')
-    this.editForm(op);
-    if(op.data.pour_union == 'oui'/* && this.unions.length < 0*/){
-      this.getAllUnion();
-    }
-    this.getInfoSimEmei();
-    this.action = 'modifier';
-    this.copieOp = this.clone(op);
-      //this.navCtrl.push('AjouteropPage', {'confLocaliteEnquete': confLocaliteEnquete});    
+  editer(op, dbclick: boolean = false){
+    if(!dbclick || (dbclick && this.user && this.user.roles && global.estManager(this.user.roles))){        
+      this.chargerPays();
+      this.chargerSousLocalite(op.data.pays, 'pays')
+      this.chargerSousLocalite(op.data.region, 'region')
+      this.chargerSousLocalite(op.data.departement, 'departement')
+      this.chargerSousLocalite(op.data.commune, 'commune')
+      this.editForm(op);
+      if(op.data.pour_union == 'oui'/* && this.unions.length < 0*/){
+        this.getAllUnion();
+      }
+      this.getInfoSimEmei();
+      this.action = 'modifier';
+      this.copieOp = this.clone(op);
+        
+    }//this.navCtrl.push('AjouteropPage', {'confLocaliteEnquete': confLocaliteEnquete});    
   }
 
   modifier(){

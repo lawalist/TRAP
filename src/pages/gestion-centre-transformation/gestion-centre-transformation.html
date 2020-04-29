@@ -7,7 +7,7 @@
 
 <ion-header>
   <ion-navbar color="trap_theme">
-      <ion-buttons *ngIf="id_union && id_union != '' && action == 'liste'" left>
+      <ion-buttons *ngIf="id_groupement_mere && id_groupement_mere != '' && action == 'liste'" left>
           <button ion-button icon-only color="royal" (click)="dismiss()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
         </ion-buttons> 
         <ion-buttons *ngIf="action == 'ajouter' || action == 'modifier'" left>
@@ -26,16 +26,24 @@
             <ion-badge color="fuma-green" item-right>{{centres.length}}</ion-badge>
           </button>
 
-          <button ion-button icon-only color="royal" (click) = "replicationDepuisServeur()" >
+          <button ion-button icon-only color="royal" *ngIf="aProfile && !id_groupement_mere" (click) = "replicationDepuisServeur()" >
             <ion-icon name="arrow-round-down"></ion-icon>
          </button>
    
-         <button ion-button icon-only color="royal" (click) = "replicationVersServeur()" >
+         <button ion-button icon-only color="royal" *ngIf="aProfile && !id_groupement_mere" (click) = "replicationVersServeur()" >
             <ion-icon name="arrow-round-up"></ion-icon>
          </button>
     
-          <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+          <!--button ion-button icon-only color="royal" *ngIf="aProfile && !id_groupement_mere" (click) = "sync()" >
               <ion-icon name="sync"></ion-icon>
+          </button-->
+
+          <button *ngIf="aProfile && !id_groupement_mere" ion-button icon-only color="royal"  (click)="profile()">
+            <ion-icon name="person"></ion-icon>
+          </button>
+    
+          <button *ngIf="!aProfile && !id_groupement_mere" ion-button icon-only color="royal" (click)="connexion()">
+            <ion-icon name="unlock"></ion-icon>
           </button>
     
         </ion-buttons>
@@ -45,10 +53,18 @@
         <ion-title *ngIf="action == 'modifier'">Modifier centre</ion-title>
         <ion-title *ngIf="action == 'detail'">Détail centre</ion-title>
 
-        <button ion-button *ngIf="!id_union && action == 'liste'" menuToggle end>
+        <!--button ion-button *ngIf="!id_groupement_mere && action == 'liste'" (click)="option()" menuToggle end>
           <ion-icon name="menu"></ion-icon>
-      </button>
-    </ion-navbar>
+      </button-->
+      <ion-buttons *ngIf="!id_groupement_mere && action == 'liste'"  end>
+      
+        <button ion-button icon-only color="royal" (click)="option()"><ion-icon name="options"></ion-icon></button>
+      </ion-buttons>
+
+      <ion-buttons *ngIf="action == 'detail'"  end>
+        <button ion-button icon-only color="royal" (click)="openRelationCentre($event)"><ion-icon name="more"></ion-icon></button>
+      </ion-buttons>
+    </ion-navbar> 
 </ion-header>
 
 
@@ -96,38 +112,47 @@
       </ion-list>
   
       <br >
-      <ion-list class="info-card" *ngIf="centres.length > 0 && selectedStyle === 'liste'">
-        <ion-list-header>
-          <ion-item class="message">
-            <h2  class="fond-gris blanc"><strong>Liste des centres <span *ngIf="nom_union && nom_union != ''">de l'union {{nom_union}}</span> </strong></h2>
-          </ion-item>
-        </ion-list-header>
+      <ion-card class="info-card">
+        <ion-card-header>
+            <ion-item class="message">
+              <h2  class="fond-gris blanc"><strong>Liste des centres
+                <span *ngIf="niveau_centre && niveau_centre != '' && niveau_centre == 'Rattaché à une Fédération'">de la Fédération {{nom_groupement_mere}}</span>
+                <span *ngIf="niveau_centre && niveau_centre != '' && niveau_centre == 'Rattaché à une Union'">de l'union {{nom_groupement_mere}}</span>
+                <span *ngIf="niveau_centre && niveau_centre != '' && niveau_centre == 'Rattaché à une OP'">de l'OP {{nom_groupement_mere}}</span>
+              </strong></h2>
+            </ion-item>
+          </ion-card-header>
+      <ion-list  *ngIf="centres.length > 0 && selectedStyle === 'liste'">
         <ion-item-sliding *ngFor="let centre of centres">
-          <ion-item (click)="detail(centre.doc, selectedSource)" >
+          <ion-item (click)="detail(centre, selectedSource)" >
             <!--ion-row>
               <ion-col-->
-                  <h6><strong>Numéro d'aggrément:</strong> {{centre.doc.data.num_aggrement}}</h6>
-                  <h6><strong>Code centre:</strong> {{centre.doc.data.code_centre}}</h6>
-                  <h6><strong>Nom centre:</strong> {{centre.doc.data.nom_centre}}</h6>
+                  <h6><strong>Numéro d'aggrément:</strong> {{centre.data.num_aggrement}}</h6>
+                  <h6><strong>Code centre:</strong> {{centre.data.code_centre}}</h6>
+                  <h6><strong>Nom centre:</strong> {{centre.data.nom_centre}}</h6>
               <!--/ion-col>
               <ion-col class="aligneDate"-->
-                <p><strong>Date:</strong> {{centre.doc.data.today | date: 'dd-MM-yyyy'}}</p>
+                <p><strong>Date:</strong> {{centre.data.today | date: 'dd-MM-yyyy'}}</p>
               <!--/ion-col>
             </ion-row-->
           </ion-item> 
-          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
-            <button ion-button icon-only color="my_primary" (click)="partager(centre.doc._id)">
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(centre._id)">
               <ion-icon name="share"></ion-icon>   
             </button>
           </ion-item-options-->
       </ion-item-sliding> 
       </ion-list>
-  
+    </ion-card>
   
     <ion-card class="info-card" *ngIf="centres.length > 0 && selectedStyle === 'tableau'">
       <ion-card-header>
         <ion-item class="message">
-            <h2  class="fond-gris blanc"><strong>Liste des centres <span *ngIf="nom_union && nom_union != ''">de la union {{nom_union}}</span></strong></h2>
+            <h2  class="fond-gris blanc"><strong>Liste des centres
+              <span *ngIf="niveau_centre && niveau_centre != '' && niveau_centre == 'Rattaché à une Fédération'">de la Fédération {{nom_groupement_mere}}</span>
+              <span *ngIf="niveau_centre && niveau_centre != '' && niveau_centre == 'Rattaché à une Union'">de l'union {{nom_groupement_mere}}</span>
+              <span *ngIf="niveau_centre && niveau_centre != '' && niveau_centre == 'Rattaché à une OP'">de l'OP {{nom_groupement_mere}}</span>
+            </strong></h2>
         </ion-item>
       </ion-card-header> 
       <ion-scroll scrollX="true" scrollY="true" id="centre_tableau" style="height: 80vh"> 
@@ -150,13 +175,25 @@
             <strong>Type centre</strong>
           </th>
           <th  >
-            <strong>Pour union</strong>
+            <strong>Niveau</strong>
+          </th>
+          <th  >
+            <strong>Nom fédération</strong>
+          </th>
+          <th  >
+            <strong>Code fédération</strong>
           </th>
           <th  >
             <strong>Nom union</strong>
           </th>
           <th  >
             <strong>Code union</strong>
+          </th>
+          <th  >
+            <strong>Nom op</strong>
+          </th>
+          <th  >
+            <strong>Code op</strong>
           </th>
           <th  >
             <strong>Pays</strong>
@@ -177,42 +214,54 @@
         </thead>
         <!--hr style="width: 375%"-->
         <tbody>
-          <tr *ngFor="let centre of centres" (click)="detail(centre.doc)">
+          <tr *ngFor="let centre of centres" (click)="detail(centre)">
             <td  >
-              {{centre.doc.data.num_aggrement}}
+              {{centre.data.num_aggrement}}
             </td>
             <td  >
-              {{centre.doc.data.nom_centre}}
+              {{centre.data.nom_centre}}
             </td>
             <td  >
-              {{centre.doc.data.code_centre}}
+              {{centre.data.code_centre}}
             </td>
             <td  >
-              {{centre.doc.data.type_centre}}
+              {{centre.data.type_centre}}
             </td>
             <td  >
-              {{centre.doc.data.pour_union}}
+              {{centre.data.niveau_centre}}
             </td>
             <td  >
-              {{centre.doc.data.nom_union}}
+              {{centre.data.nom_federation}}
             </td>
             <td  >
-              {{centre.doc.data.code_union}}
+              {{centre.data.code_federation}}
             </td>
             <td  >
-              {{centre.doc.data.pays_nom}}
+              {{centre.data.nom_union}}
+            </td>
+            <td  >
+              {{centre.data.code_union}}
+            </td>
+            <td  >
+              {{centre.data.nom_op}}
+            </td>
+            <td  >
+              {{centre.data.code_op}}
+            </td>
+            <td  >
+              {{centre.data.pays_nom}}
             </td>          
             <td  >
-              {{centre.doc.data.region_nom}}
+              {{centre.data.region_nom}}
             </td>
             <td  >
-              {{centre.doc.data.departement_nom}}
+              {{centre.data.departement_nom}}
             </td>
             <td  >
-              {{centre.doc.data.commune_nom}}
+              {{centre.data.commune_nom}}
             </td>
             <td  >
-              {{centre.doc.data.village_nom}}
+              {{centre.data.village_nom}}
             </td>
           </tr>
         </tbody>
@@ -233,7 +282,7 @@
 
 
 <div *ngIf="action == 'detail'">
-    <ion-card class="info-card" (dblclick)="editer(centre)"> 
+    <ion-card class="info-card" (dblclick)="editer(centre, true)"> 
       <ion-card-header>
         <ion-item class="message">
           <h2  class="fond-gris blanc">
@@ -248,9 +297,14 @@
           <ion-row> <ion-col class='meta-key'><strong>Type:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.type_centre}}</ion-col> </ion-row>
           <ion-row *ngIf="centre.data.ancien_code_centre"> <ion-col class='meta-key'><strong>Ancien code:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.ancien_code_centre}}</ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Nom:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.nom_centre}} </ion-col> </ion-row>
-          <ion-row> <ion-col class='meta-key'><strong>Pour union ?:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.pour_union}} </ion-col> </ion-row>
-          <ion-row *ngIf="centre.data.pour_union == 'oui'"> <ion-col class='meta-key'><strong>Nom union:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.nom_union}} </ion-col> </ion-row>
-          <ion-row *ngIf="centre.data.pour_union == 'oui'"> <ion-col class='meta-key'><strong>Code union:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.code_union}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Niveau:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.niveau_centre}} </ion-col> </ion-row>
+          <ion-row *ngIf="centre.data.niveau_centre != 'Indépendant'"> <ion-col class='meta-key'><strong>Nom fédération:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.nom_federation}} </ion-col> </ion-row>
+          <ion-row *ngIf="centre.data.niveau_centre != 'Indépendant'"> <ion-col class='meta-key'><strong>Code fédération:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.code_federation}} </ion-col> </ion-row>
+          <ion-row *ngIf="centre.data.niveau_centre != 'Indépendant'"> <ion-col class='meta-key'><strong>Nom union:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.nom_union}} </ion-col> </ion-row>
+          <ion-row *ngIf="centre.data.niveau_centre != 'Indépendant'"> <ion-col class='meta-key'><strong>Code union:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.code_union}} </ion-col> </ion-row>
+          <ion-row *ngIf="centre.data.niveau_centre != 'Indépendant'"> <ion-col class='meta-key'><strong>Nom op:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.nom_op}} </ion-col> </ion-row>
+          <ion-row *ngIf="centre.data.niveau_centre != 'Indépendant'"> <ion-col class='meta-key'><strong>Code op:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.code_op}} </ion-col> </ion-row>
+
           <!--ion-row> <ion-col class='meta-key'><strong>Nombre d'OP:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.num_OP}}</ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Nombre de membres:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.num_membre}}</ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Nombre hommes:</strong></ion-col> <ion-col class='meta-value'> {{centre.data.num_hommes}}</ion-col> </ion-row>
@@ -307,7 +361,7 @@
         </ion-grid>
       </ion-card-content> 
     </ion-card>
-    <br><br><br>
+    <br><br><br><br><br><br><br><br><br>
   </div>
 
 
@@ -377,63 +431,89 @@
         </ion-select>
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['village'].hasError('required') && centreForm.controls['village'].touched">* le village est obligatoir!</div>
-      
-      <ion-item>
-        <ion-label floating>Numéro d'aggrément <span class="error-box">*</span></ion-label>
-        <ion-input type="text" formControlName="num_aggrement" ></ion-input>
-      </ion-item>
-      <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['num_aggrement'].hasError('required') && centreForm.controls['num_aggrement'].touched">* le numéro d'aggrément est obligatoir!</div>
 
-      <ion-item>
-        <ion-label floating>Nom du centre <span class="error-box">*</span></ion-label>
-        <ion-input type="text" formControlName="nom_centre" [(ngModel)]="nom_centre" (keyup)="genererCodecentre()" ></ion-input>
-      </ion-item> 
-      <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['nom_centre'].hasError('required') && centreForm.controls['nom_centre'].touched">* le nom du centre des est obligatoir!</div>
-      
-      <ion-item>
+      <ion-row>
+        <ion-col>
+          <ion-item class="item-no-border">
+            <ion-label floating>Numéro d'aggrément <span class="error-box">*</span></ion-label>
+            <ion-input type="text" formControlName="num_aggrement" ></ion-input>
+          </ion-item>
+          <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['num_aggrement'].hasError('required') && centreForm.controls['num_aggrement'].touched">* le numéro d'aggrément est obligatoir!</div>
+        </ion-col>
+        <ion-col>
+          <ion-item class="item-no-border">
+            <ion-label floating>Nom du centre <span class="error-box">*</span></ion-label>
+            <ion-input type="text" formControlName="nom_centre" [(ngModel)]="nom_centre" (keyup)="genererCodecentre()" ></ion-input>
+          </ion-item>
+          <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['nom_centre'].hasError('required') && centreForm.controls['nom_centre'].touched">* le nom du centre des est obligatoir!</div>
+        </ion-col>
+      </ion-row>
+
+
+      <ion-item class="item-no-border">
         <ion-label floating>Code du centre <span class="error-box">*</span></ion-label>
         <ion-input type="text" formControlName="code_centre" [(ngModel)]="code_centre" disabled></ion-input>
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['code_centre'].hasError('required') && centreForm.controls['code_centre'].touched">* le code du centre des est obligatoir!</div>
-      
-      <ion-item>
-        <ion-label floating>Type centre <span class="error-box">*</span></ion-label>
-        <ion-select formControlName="type_centre" cancelText="Annuler" okText="Ok">
-          <ion-option value="Centre d'innovation">Centre d'innovation</ion-option>
-          <!--ion-option value="individuel">Individuel</ion-option>
-          <ion-option value="ONG">ONG</ion-option-->
-          <ion-option value="autre">Autre</ion-option>
-        </ion-select>
-      </ion-item>
-      <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['type_centre'].hasError('required') && centreForm.controls['type_centre'].touched">* le type du centre des est obligatoir!</div>
-      
-      <ion-item>
-        <ion-label stacked>Est rattachée à une union ? <span class="error-box">*</span></ion-label>
-        <ion-select formControlName="pour_union" [(ngModel)]="pour_union" [disabled]="id_union && id_union != ''" cancelText="Annuler" okText="Ok" (ionChange)="pourUnion(pour_union)" >
-          <ion-option value="oui">Oui</ion-option>
-          <ion-option value="non">Non</ion-option>
-        </ion-select>
-      </ion-item>
-      <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['pour_union'].hasError('required') && centreForm.controls['pour_union'].touched">* Ce champ est obligatoir!</div>
 
-      <ion-item [hidden] = "pour_union == 'non'">
-        <ion-label stacked>Selectionnez la union <span class="error-box">*</span></ion-label>
-        <ion-select formControlName="id_union" [(ngModel)]="selectedUnion" [disabled]="id_union && id_union != ''" cancelText="Annuler" okText="Ok">
-          <ion-option value="" selected disabled>Selectionnez la union</ion-option>
-          <ion-option *ngFor="let u of unions" [value]=u.doc._id >{{u.doc.data.nom_union}}</ion-option>
+      <ion-row>
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Type centre <span class="error-box">*</span></ion-label>
+            <ion-select formControlName="type_centre" cancelText="Annuler" okText="Ok">
+              <ion-option value="Centre d'innovation">Centre d'innovation</ion-option>
+              <!--ion-option value="individuel">Individuel</ion-option>
+              <ion-option value="ONG">ONG</ion-option-->
+              <ion-option value="autre">Autre</ion-option>
+            </ion-select>
+          </ion-item>
+          <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['type_centre'].hasError('required') && centreForm.controls['type_centre'].touched">* le type du centre des est obligatoir!</div>
+        </ion-col>
+        <ion-col>
+          <ion-item>
+            <ion-label stacked>Niveau du centre <span class="error-box">*</span></ion-label>
+            <ion-select formControlName="niveau_centre" [(ngModel)]="niveau_centre" [disabled]="id_groupement_mere && id_groupement_mere != ''" cancelText="Annuler" okText="Ok" (ionChange)="getNiveauCentre(niveau_centre)" >
+              <ion-option value="Indépendant">Indépendant</ion-option>
+              <ion-option value="Rattaché à une Fédération">Rattaché à une Fédération</ion-option>
+              <ion-option value="Rattaché à une Union">Rattaché à une Union</ion-option>
+              <ion-option value="Rattaché à une OP">Rattaché à une OP</ion-option>
+            </ion-select>
+          </ion-item>
+          <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['niveau_centre'].hasError('required') && centreForm.controls['niveau_centre'].touched">* Ce le niveau du centre est obligatoire!</div>
+        </ion-col>
+      </ion-row>
+
+      
+      <ion-item [hidden] = "!niveau_centre || niveau_centre == 'Indépendant' || niveau_centre == ''">
+        <ion-label *ngIf="niveau_centre && niveau_centre == 'Rattaché à une Fédération'" stacked>Selectionnez la Fédération mère <span class="error-box">*</span></ion-label>
+        <ion-label *ngIf="niveau_centre && niveau_centre == 'Rattaché à une Union'" stacked>Selectionnez l'Union mère <span class="error-box">*</span></ion-label>
+        <ion-label *ngIf="niveau_centre && niveau_centre == 'Rattaché à une OP'" stacked>Selectionnez l'OP mère <span class="error-box">*</span></ion-label>
+        <ion-select [ngModelOptions]="{standalone:true}" [(ngModel)]="selectedGroupement" [disabled]="id_groupement_mere && id_groupement_mere != ''" cancelText="Annuler" okText="Ok">
+          <ion-option *ngIf="niveau_centre && niveau_centre == 'Rattaché à une Fédération'" value="" selected disabled>Selectionnez la Fédération mère</ion-option>
+          <ion-option *ngIf="niveau_centre && niveau_centre == 'Rattaché à une Union'" value="" selected disabled>Selectionnez l'Union mère</ion-option>
+          <ion-option *ngIf="niveau_centre && niveau_centre == 'Rattaché à une OP'" value="" selected disabled>Selectionnez l'OP mère</ion-option>
+          <ng-container *ngIf="niveau_centre == 'Rattaché à une Fédération'">
+            <ion-option *ngFor="let g of groupements" [value]=g._id >{{g.data.nom_federation}}</ion-option>
+          </ng-container>
+          <ng-container *ngIf="niveau_centre == 'Rattaché à une Union'">
+            <ion-option *ngFor="let g of groupements" [value]=g._id >{{g.data.nom_union}}</ion-option>
+          </ng-container>
+          <ng-container *ngIf="niveau_centre == 'Rattaché à une OP'">
+            <ion-option *ngFor="let g of groupements" [value]=g._id >{{g.data.nom_op}}</ion-option>
+          </ng-container>
         </ion-select>
       </ion-item>
-      <div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['id_union'].hasError('required') && centreForm.controls['id_union'].touched">* le union est obligatoir!</div>
+      <!--div style="padding-left: 15px;" class="error-box" *ngIf="centreForm.controls['id_groupement_mere'].hasError('required') && centreForm.controls['id_groupement_mere'].touched">* le groupement mère est obligatoir!</div-->
 
 
         <br>
 
         <ion-row>
           <ion-col>
-            <button ion-button type="submit" color="my_secondary" [disabled]="!centreForm.valid" block>Sauvegarder</button>
+            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
           </ion-col>
           <ion-col>
-            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!centreForm.valid" block>Sauvegarder</button>
           </ion-col>
         </ion-row>        
       </form>
@@ -441,11 +521,11 @@
       <br><br><br>
   </div>
 
-  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)"  bottom right>
     <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)">
     <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
     <!--ion-fab-list side="top">
       <button ion-fab mini *ngIf="centres.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
@@ -453,16 +533,13 @@
       <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button> 
     </ion-fab-list-->
   </ion-fab>
-
-  <ion-fab bottom right *ngIf="action == 'detail'" >
-      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
-      <!--ion-fab-list side="top">
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(centre)" color="delete" ><ion-icon name="trash"></ion-icon></button>
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(centre.data.code_centre)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(centre.data.code_centre)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
-        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="centrecentre(centre.data.num_aggrement, centre.data.nom_centre, centre.data.code_centre)" color="my_primary"><strong>OP</strong></button>
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(centre)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
-      </ion-fab-list-->
+  <ion-fab bottom right *ngIf="action == 'detail' && ((user && user.roles && global.estManager(user.roles)) || estManager)" >
+      <!--button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button-->
+      <!--button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
+      <ion-fab-list side="top"-->
+          <button ion-fab mini (click)="editer(centre)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+        <button ion-fab mini (click)="supprimer(centre)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+      <!--/ion-fab-list-->
     </ion-fab> 
 
 </ion-content>

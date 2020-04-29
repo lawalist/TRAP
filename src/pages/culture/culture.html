@@ -33,10 +33,14 @@
 
     </ion-buttons>
 
-    <ion-title *ngIf="!ajoutForm && !detailCulture">culture</ion-title>
-    <ion-title *ngIf="ajoutForm && !modifierFrom">ajouter-culture</ion-title>
-    <ion-title *ngIf="ajoutForm && modifierFrom">modifier-culture</ion-title>
-    <ion-title *ngIf="detailCulture">detail-culture</ion-title>
+    <ion-title *ngIf="!ajoutForm && !detailCulture">Culture</ion-title>
+    <ion-title *ngIf="ajoutForm && !modifierFrom">Ajouter culture</ion-title>
+    <ion-title *ngIf="ajoutForm && modifierFrom">Modifier culture</ion-title>
+    <ion-title *ngIf="detailCulture">Détail culture</ion-title>
+
+    <ion-buttons *ngIf="detailCulture"  end>
+      <button ion-button icon-only color="royal" (click)="openRelationCulture($event)"><ion-icon name="more"></ion-icon></button>
+    </ion-buttons>
   </ion-navbar>
 
 </ion-header>
@@ -191,7 +195,7 @@
         </ion-grid>
       </ion-card-content> 
     </ion-card>
-    <br><br><br>
+    <br><br><br><br><br><br><br><br><br>
   </div>
   
   <div *ngIf="ajoutForm || modifierFrom">
@@ -221,24 +225,24 @@
       <br>
       <ion-row>
         <ion-col>
-          <button ion-button type="submit" color="my_secondary" [disabled]="!cultureForm.valid" block>Sauvegarder</button>
+          <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
         </ion-col>
         <ion-col>
-          <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+          <button ion-button type="submit" color="my_secondary" [disabled]="!cultureForm.valid" block>Sauvegarder</button>
         </ion-col>
       </ion-row>
     </form>
-    
+    <br><br><br>
   </div>
   
-  <ion-fab bottom right *ngIf="!ajoutForm &&!detailCulture && selectedStyle != 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)" bottom>
+  <ion-fab bottom right *ngIf="!ajoutForm &&!detailCulture && selectedStyle != 'tableau' && && ((user && user.roles && global.estManager(user.roles)) || estManager)" bottom>
       <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
           <!--button ion-fab mini (click)="fusionnercultures()" color="my_primary">FUS</button-->
     </ion-fab>
     
   
   
-    <ion-fab bottom right *ngIf="!ajoutForm &&!detailCulture && selectedStyle == 'tableau'">
+    <ion-fab bottom right *ngIf="!ajoutForm &&!detailCulture && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)">
       <button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
       <ion-fab-list side="top"> 
         <button ion-fab mini *ngIf="cultures.length > 0" (click)="onPrint()" color="my_primary"><ion-icon name="print"></ion-icon></button>
@@ -248,13 +252,9 @@
       </ion-fab-list>
     </ion-fab>
   
-    <ion-fab bottom right *ngIf="detailCulture">
-      <button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
-      <ion-fab-list side="top">
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(culture)" color="delete" ><ion-icon name="trash"></ion-icon></button>
-        <button ion-fab mini (click)="varietes(culture)" color="my_primary" ><strong>VR</strong></button>
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(culture)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
-      </ion-fab-list>
+    <ion-fab bottom right *ngIf="detailCulture && ((user && user.roles && global.estManager(user.roles)) || estManager)">
+        <button ion-fab mini (click)="editer(culture)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+        <button ion-fab mini (click)="supprimer(culture)" color="delete" ><ion-icon name="trash"></ion-icon></button>
     </ion-fab>
   
 </ion-content>

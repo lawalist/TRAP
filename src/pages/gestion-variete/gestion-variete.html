@@ -39,10 +39,10 @@
       </button-->
     </ion-buttons>
 
-    <ion-title *ngIf="!ajoutForm && !detailVariete">variétés</ion-title>
-    <ion-title *ngIf="ajoutForm && !modifierFrom">ajouter-variété</ion-title>
-    <ion-title *ngIf="ajoutForm && modifierFrom">modifier-variété</ion-title>
-    <ion-title *ngIf="detailVariete">detail-variété</ion-title>
+    <ion-title *ngIf="!ajoutForm && !detailVariete">Variétés</ion-title>
+    <ion-title *ngIf="ajoutForm && !modifierFrom">Ajouter variété</ion-title>
+    <ion-title *ngIf="ajoutForm && modifierFrom">Modifier variété</ion-title>
+    <ion-title *ngIf="detailVariete">Détail variété</ion-title>
 
     <!--ion-buttons *ngIf="!ajoutForm && !detailVariete && !modifierFrom"  end>
       
@@ -484,7 +484,7 @@
       </ion-select> 
     </ion-item>
     
-    <ion-item>
+    <ion-item class="item-no-border">
       <ion-label floating>Dénomination (Synonymes) <span class="error-box">*</span></ion-label>
       <ion-input type="text" name="denomination" [(ngModel)]="Variete.denomination"></ion-input>
     </ion-item>
@@ -496,162 +496,162 @@
       </ion-select> 
     </ion-item>
 
-    <ion-item>
+    <ion-item class="item-no-border">
       <ion-label floating>Obtenteur </ion-label>
       <ion-input type="text" name="obtenteur" [(ngModel)]="Variete.obtenteur"></ion-input>
     </ion-item>
 
-    <ion-item>
+    <ion-item class="item-no-border">
       <ion-label floating>Année d'obtension</ion-label>
       <ion-input type="number" name="date_obtention" [(ngModel)]="Variete.date_obtention"></ion-input>
     </ion-item>
 
-    <ion-item>
+    <ion-item class="item-no-border">
       <ion-label floating>Pays d’inscription </ion-label>
       <ion-input type="text" name="pays_inscription" [(ngModel)]="Variete.pays_inscription"></ion-input>
     </ion-item>
 
-    <ion-item>
+    <ion-item class="item-no-border">
       <ion-label floating>Année d’inscription</ion-label>
       <ion-input type="number" name="date_inscription" [(ngModel)]="Variete.date_inscription"></ion-input>
     </ion-item>
 
-    <ion-item>
+    <ion-item class="item-no-border">
       <ion-label floating>Mainteneur </ion-label>
       <ion-input type="text" name="mainteneur" [(ngModel)]="Variete.mainteneur"></ion-input>
     </ion-item>
     
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Riz')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Riz')">
       <ion-label floating>Ecosystème de production </ion-label>
       <ion-input type="text" name="ecosysteme_de_production" [(ngModel)]="Variete.ecosysteme_de_production"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé' || Variete.culture == 'Maïs' || Variete.culture == 'Riz' || Variete.culture == 'Mil' || Variete.culture == 'Sorgho')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé' || Variete.culture == 'Maïs' || Variete.culture == 'Riz' || Variete.culture == 'Mil' || Variete.culture == 'Sorgho')">
       <ion-label floating>Cycle semis–maturité (50%) <span *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé' || Variete.culture == 'Maïs' || Variete.culture == 'Riz' || Variete.culture == 'Mil' || Variete.culture == 'Sorgho')">(jr.)</span></ion-label>
       <ion-input type="text" name="cycle_semis_maturite" [(ngModel)]="Variete.cycle_semis_maturite"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Manioc' || Variete.culture == 'Igname' || Variete.culture == 'Pomme de terre' || Variete.culture == 'Oignon' || Variete.culture == 'Tomate')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Manioc' || Variete.culture == 'Igname' || Variete.culture == 'Pomme de terre' || Variete.culture == 'Oignon' || Variete.culture == 'Tomate')">
       <ion-label floating>Cycle plantation maturité <span *ngIf="Variete.culture && (Variete.culture == 'Manioc' || Variete.culture == 'Igname')">(Mois)</span><span *ngIf="Variete.culture && (Variete.culture == 'Pomme de terre' || Variete.culture == 'Oignon' || Variete.culture == 'Tomate')">(jr.)</span> </ion-label>
       <ion-input type="text" name="cycle_plantation_maturite" [(ngModel)]="Variete.cycle_plantation_maturite"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Tomate')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Tomate')">
       <ion-label floating>Poids moyen du fruit (G) </ion-label>
       <ion-input type="text" name="poids_moyen_du_fruit" [(ngModel)]="Variete.poids_moyen_du_fruit"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Tomate')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Tomate')">
       <ion-label floating>Aptitude au transport </ion-label>
       <ion-input type="text" name="aptitude_au_transport" [(ngModel)]="Variete.aptitude_au_transport"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Oignon')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Oignon')">
       <ion-label floating>Forme du bulbe </ion-label>
       <ion-input type="text" name="forme_du_bulbe" [(ngModel)]="Variete.forme_du_bulbe"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Oignon')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Oignon')">
       <ion-label floating>Couleur du Bulbe </ion-label>
       <ion-input type="text" name="couleur_du_Bulbe" [(ngModel)]="Variete.couleur_du_Bulbe"></ion-input>
     </ion-item>
     
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Pomme de terre')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Pomme de terre')">
       <ion-label floating>Forme des tubercules </ion-label>
       <ion-input type="text" name="forme_des_tubercules" [(ngModel)]="Variete.forme_des_tubercules"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Maïs' || Variete.culture == 'Mil' || Variete.culture == 'Sorgho')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Maïs' || Variete.culture == 'Mil' || Variete.culture == 'Sorgho')">
       <ion-label floating>Hauteur de plantes (CM)</ion-label>
       <ion-input type="text" name="hauteur_de_plantes" [(ngModel)]="Variete.hauteur_de_plantes"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Sorgho')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Sorgho')">
       <ion-label floating>Type de panicule </ion-label>
       <ion-input type="text" name="type_panicule" [(ngModel)]="Variete.type_panicule"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Mil')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Mil')">
       <ion-label floating>Aptitude au tallage </ion-label>
       <ion-input type="text" name="aptitude_au_tallage" [(ngModel)]="Variete.aptitude_au_tallage"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Mil')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Mil')">
       <ion-label floating>Longueur de la chandelle </ion-label>
       <ion-input type="text" name="longueur_chandelle" [(ngModel)]="Variete.longueur_chandelle"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Manioc' || Variete.culture == 'Pomme de terre')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Manioc' || Variete.culture == 'Pomme de terre')">
       <ion-label floating>Couleur de la peau </ion-label>
       <ion-input type="text" name="couleur_peau" [(ngModel)]="Variete.couleur_peau"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Igname' || Variete.culture == 'Pomme de terre')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Igname' || Variete.culture == 'Pomme de terre')">
       <ion-label floating>Couleur de la chair </ion-label>
       <ion-input type="text" name="couleur_chair" [(ngModel)]="Variete.couleur_chair"></ion-input>
     </ion-item>
     
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Manioc')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Manioc')">
       <ion-label floating>Teneur en acide cyanhydrique </ion-label>
       <ion-input type="text" name="teneur_en_acide_cyanhydrique" [(ngModel)]="Variete.teneur_en_acide_cyanhydrique"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Riz')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Riz')">
       <ion-label floating>Type de grains </ion-label>
       <ion-input type="text" name="type_de_grains" [(ngModel)]="Variete.type_de_grains"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Niébé')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Niébé')">
       <ion-label floating>Type de floraison </ion-label>
       <ion-input type="text" name="type_de_floraison" [(ngModel)]="Variete.type_de_floraison"></ion-input>
     </ion-item>
 
-    <!--ion-item *ngIf="Variete.culture && (Variete.culture == 'Maïs')">
+    <!--ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Maïs')">
       <ion-label floating>Hauteur de plantes (CM) </ion-label>
       <ion-input type="text" name="hauteur_de_plantes" [(ngModel)]="Variete.hauteur_de_plantes"></ion-input>
     </ion-item-->
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Maïs')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Maïs')">
       <ion-label floating>Recouvrement de l’épi </ion-label>
       <ion-input type="text" name="recouvrement_epi" [(ngModel)]="Variete.recouvrement_epi"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé')">
       <ion-label floating>Port des plants </ion-label>
       <ion-input type="text" name="port_des_plants" [(ngModel)]="Variete.port_des_plants"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé' || Variete.culture == 'Maïs' || Variete.culture == 'Sorgho')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé' || Variete.culture == 'Maïs' || Variete.culture == 'Sorgho')">
       <ion-label floating>Couleur des graines </ion-label>
       <ion-input type="text" name="couleur_des_graines" [(ngModel)]="Variete.couleur_des_graines"></ion-input>
     </ion-item>
     
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé' || Variete.culture == 'Maïs')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Niébé' || Variete.culture == 'Maïs')">
       <ion-label floating>Poids de 100 grains (G) </ion-label>
       <ion-input type="text" name="poids_de_100_grains" [(ngModel)]="Variete.poids_de_100_grains"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Riz' || Variete.culture == 'Mil' || Variete.culture == 'Sorgho')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Riz' || Variete.culture == 'Mil' || Variete.culture == 'Sorgho')">
       <ion-label floating>Poids de 1000 grains (G) </ion-label>
       <ion-input type="text" name="poids_de_1000_grains" [(ngModel)]="Variete.poids_de_1000_grains"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Maïs')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Maïs')">
       <ion-label floating>Texture du grain </ion-label>
       <ion-input type="text" name="texture_du_grain" [(ngModel)]="Variete.texture_du_grain"></ion-input>
     </ion-item>
 
-    <ion-item>
+    <ion-item class="item-no-border">
       <ion-label floating>Rendement potentiel (T/ha)</ion-label>
       <ion-input type="text" name="rendement_potentiel" [(ngModel)]="Variete.rendement_potentiel"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Pomme de terre' || Variete.culture == 'Oignon')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Pomme de terre' || Variete.culture == 'Oignon')">
       <ion-label floating>Aptitude à la conservation </ion-label>
       <ion-input type="text" name="aptitude_a_la_conservation" [(ngModel)]="Variete.aptitude_a_la_conservation"></ion-input>
     </ion-item>
     
-    <ion-item *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Manioc' || Variete.culture == 'Igname')">
+    <ion-item class="item-no-border" *ngIf="Variete.culture && (Variete.culture == 'Arachide' || Variete.culture == 'Manioc' || Variete.culture == 'Igname')">
       <ion-label floating>Vocation </ion-label>
       <ion-input type="text" name="vocation" [(ngModel)]="Variete.vocation"></ion-input>
     </ion-item>
@@ -664,28 +664,26 @@
     <br>
     <ion-row>
       <ion-col>
-        <button ion-button type="submit" color="my_secondary" block>Sauvegarder</button>
+        <button ion-button color="annuler" block (click)="annuler()">Fermer</button>      
       </ion-col>
       <ion-col>
-        <button ion-button color="annuler" block (click)="annuler()">Fermer</button>      
+        <button ion-button type="submit" color="my_secondary" block>Sauvegarder</button>
       </ion-col>
     </ion-row>
     
   </form>
-
-    
-  
+  <br><br><br>
 
 </div>
 
-<ion-fab bottom right *ngIf="!ajoutForm &&!detailVariete && selectedStyle != 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)" bottom>
+<ion-fab bottom right *ngIf="!ajoutForm &&!detailVariete && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)" bottom>
     <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
         <!--button ion-fab mini (click)="fusionnervarietes()" color="my_primary">FUS</button-->
   </ion-fab>
   
 
 
-  <ion-fab bottom right *ngIf="!ajoutForm &&!detailVariete && selectedStyle == 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)">
+  <ion-fab bottom right *ngIf="!ajoutForm &&!detailVariete && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)">
     <button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
     <ion-fab-list side="top"> 
       <button ion-fab mini *ngIf="varietes.length > 0" (click)="onPrint()" color="my_primary"><ion-icon name="print"></ion-icon></button>
@@ -695,12 +693,9 @@
     </ion-fab-list>
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="detailVariete">
-    <button ion-fab color="fuma-green"><ion-icon name="arrow-dropup"></ion-icon></button>
-    <ion-fab-list side="top">
-      <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (click)="supprimer(variete)" color="delete" ><ion-icon name="trash"></ion-icon></button>
-      <button ion-fab mini (click)="editer(variete)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
-    </ion-fab-list>
+  <ion-fab bottom right *ngIf="detailVariete && && ((user && user.roles && global.estManager(user.roles)) || estManager)">
+    <button ion-fab mini (click)="editer(variete)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+    <button ion-fab mini (click)="supprimer(variete)" color="delete" ><ion-icon name="trash"></ion-icon></button>
   </ion-fab>
 
 </ion-content>

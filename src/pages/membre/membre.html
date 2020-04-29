@@ -144,7 +144,7 @@
               <!--/ion-col>
             </ion-row-->
           </ion-item> 
-          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" side="right">
             <button ion-button icon-only color="my_primary" (click)="partager(membre.doc._id)">
               <ion-icon name="share"></ion-icon>   
             </button>
@@ -320,7 +320,7 @@
       </ion-card-content>
     </ion-card>
 
-    <ion-card class="info-card" *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (dblclick)="editer(membre, true)"> 
+    <ion-card class="info-card" *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (dblclick)="editer(membre, true)"> 
       <ion-card-header>
         <ion-item class="message">
           <h2 class="fond-gris blanc">
@@ -350,7 +350,7 @@
       </ion-card-content> 
     </ion-card>
 
-    <br><br><br>
+    <br><br><br><br><br><br><br><br><br>
   </div>
 
 
@@ -362,7 +362,7 @@
   
         <ion-row *ngIf="!myPlatform">
           <ion-col>
-            <ion-item>
+            <ion-item class="item-no-border">
               <ion-label stacked>Photo profile<span class="error-box">*</span></ion-label>
               <ion-input type="file" id="avatar" [(ngModel)]="fileInput"  (change)="onFileChange($event)" #fileInput1></ion-input>
             </ion-item>
@@ -395,7 +395,7 @@
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['id_centre'].hasError('required') && membreForm.controls['id_centre'].touched">* le centre de transformation est obligatoir!</div>
 
-      <ion-item>
+      <ion-item class="item-no-border">
         <ion-label floating>Numéro matricule <span class="error-box">*</span></ion-label>
         <ion-input type="text" formControlName="matricule_membre" [(ngModel)]="matricule_membre" disabled></ion-input>
       </ion-item>
@@ -403,14 +403,14 @@
 
       <ion-row>
         <ion-col>
-          <ion-item>
+          <ion-item class="item-no-border">
             <ion-label floating>Nom du membre <span class="error-box">*</span></ion-label>
             <ion-input type="text" formControlName="nom_membre"></ion-input>
           </ion-item> 
           <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['nom_membre'].hasError('required') && membreForm.controls['nom_membre'].touched">* le nom du membre des est obligatoir!</div>
         </ion-col>
         <ion-col>
-          <ion-item>
+          <ion-item class="item-no-border">
             <ion-label floating>Prénom du membre <span class="error-box">*</span></ion-label>
             <ion-input type="text" formControlName="prenom_membre"></ion-input>
           </ion-item> 
@@ -436,7 +436,7 @@
           <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['date_maissance_membre'].hasError('required') && membreForm.controls['date_maissance_membre'].touched">* la date de maissance du membre des est obligatoir!</div>
         </ion-col>
         <ion-col>
-          <ion-item>
+          <ion-item class="item-no-border">
             <ion-label floating>Age approximative</ion-label>
             <ion-input type="number" [ngModelOptions]="{standalone: true}" [(ngModel)]="age" (keyup)="setDate(age)"></ion-input>
           </ion-item>
@@ -502,17 +502,25 @@
       <div style="padding-left: 15px;" class="error-box" *ngIf="membreForm.controls['village'].hasError('required') && membreForm.controls['village'].touched">* le village est obligatoir!</div>
       
         <br>
-        <button ion-button type="submit" color="my_secondary" [disabled]="!membreForm.valid" block>Sauvegarder</button>
+      <ion-row>
+        <ion-col>
+          <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+        </ion-col>
+        <ion-col>
+          <button ion-button type="submit" color="my_secondary" [disabled]="!membreForm.valid" block>Sauvegarder</button>
+        </ion-col>
+      </ion-row>
+
       </form>
-      <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+
       <br><br><br>
   </div>
 
-  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)"  bottom right>
     <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estAnimataire(user.roles)) || estAnimataire)">
     <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
     <!--ion-fab-list side="top">
       <button ion-fab mini *ngIf="membres.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
@@ -522,15 +530,12 @@
   </ion-fab>
 
   <ion-fab bottom right *ngIf="action == 'detail'" >
-      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
-      <!--ion-fab-list side="top">
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(membre)" color="delete" ><ion-icon name="trash"></ion-icon></button>
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(membre.doc.data.code_membre)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(membre.doc.data.code_membre)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
-        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="membremembre(membre.doc.data.num_aggrement, membre.doc.data.nom_membre, membre.doc.data.code_membre)" color="my_primary"><strong>OP</strong></button>
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(membre)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
-      </ion-fab-list-->
-    </ion-fab> 
+    <!--button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
+    <ion-fab-list side="top"-->
+      <button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="editer(membre, true)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+      <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (click)="supprimer(membre)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+    <!--/ion-fab-list-->
+  </ion-fab> 
 
 </ion-content>
 

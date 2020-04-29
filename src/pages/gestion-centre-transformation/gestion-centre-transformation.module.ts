@@ -4,7 +4,7 @@ import { GestionCentreTransformationPage } from './gestion-centre-transformation
 
 @NgModule({
   declarations: [
-    GestionCentreTransformationPage,
+    GestionCentreTransformationPage
   ], 
   imports: [
     IonicPageModule.forChild(GestionCentreTransformationPage),

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, AlertController, ViewController, ToastController, NavParams, ModalController } from 'ionic-angular';
+import { IonicPage, NavController, LoadingController, AlertController, ViewController, ToastController, NavParams, ModalController } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
 import { global } from '../../global-variables/variable';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
@@ -20,10 +20,10 @@ export class AdminPage {
 
   global:any = global;
   user: any = global.info_user;
-  estManger: boolean = false;
+  estManager: boolean = false;
   estAdmin: boolean = false;
 
-  constructor(public navCtrl: NavController, public viewCtl: ViewController, public toastCtl: ToastController, public database: PouchdbProvider, public alertCtl: AlertController, public storage: Storage, public navParams: NavParams, public modalCtl: ModalController) {
+  constructor(public navCtrl: NavController, public loadtingCtl: LoadingController, public viewCtl: ViewController, public toastCtl: ToastController, public database: PouchdbProvider, public alertCtl: AlertController, public storage: Storage, public navParams: NavParams, public modalCtl: ModalController) {
   }
 
 
@@ -33,6 +33,9 @@ export class AdminPage {
   }
 
 
+  sync(){
+    this.database.syncAvecToast();
+  }
   infoDB(){
     this.storage.get('TRAP_info_db').then((info_db) => {
     if(!info_db){
@@ -54,20 +57,7 @@ export class AdminPage {
           placeholder: 'Nom base de données',
           name: 'nom_db',
           value: info_db.nom_db
-        },
-       /* {
-          type: 'select',
-          placeholder: 'Mode connexion',
-          name: 'mode_connexion',
-          value: info_db.nom_db
-        },
-        {
-          type: 'checkbox',
-          label: 'Mode connexion',
-          value: 'definitive',
-          checked: false,
-          name: 'mode_connexion',
-        },*/
+        }
       ],
       buttons: [
         {
@@ -171,6 +161,222 @@ dismiss(){
   gestionVillages(){
     let model = this.modalCtl.create('GestionVillagePage', {'liste': true});
     model.present();
+  }
+
+
+  compacteRemoteDB(){
+    this.database.compacteRemoteDB();
+  }
+
+  compacteLoacalDB(){
+    this.database.compacteLocalDB();
+  }
+
+  
+
+  viderCorbeille(){
+    let loding = this.loadtingCtl.create({
+      content: 'Suppresion en cours...'
+    });
+
+    loding.present();
+    this.database.getAllDoc().then((docs) => {
+      if(docs){
+        docs.forEach((doc) => {
+          if(doc.data && doc.data.deleted == true ){
+            this.database.deleteReturn(doc);
+          }
+        });
+
+        loding.dismiss();
+      }else{
+        loding.dismiss();
+      }
+    });
+  }
+
+
+  ajouterDesignDoc(){
+    let filter_doc: any = {
+      //Prend en parametre un tableau contenant la liste des code des union
+          _id: '_design/filtrerDocByCodeCentreByCodeCentre',
+          filters: {
+            myfilter: function (doc, req) {
+            var localite_doc = ['pays', 'region', 'commune', 'departement', 'village'/*, 'variete', 'culture'*/];
+              var doc_pour_centre = [/*'federation', 'union', 'op', */'membre', 'centre', 'production', 'produit', 'vente', 'produit-gate', 'stock'];
+              //seul l'admin à accès à la totalité des inforamtions de la base de donnée
+              if(doc._id == '_design/filtrerDocByCodeCentre' || (req.query.roles && req.query.roles.length && (req.query.roles.indexOf('admin') != -1) || (req.query.roles.indexOf('_admin') != -1))){
+                return 1
+              }else {
+              //si pas moderateur
+              //if(req.query.roles.indexOf('moderateur') === -1){
+
+                
+                //localité et photos
+                if(doc.type){
+                  //acceder aux localités
+                  if(localite_doc.indexOf(doc.type) !== -1){
+                    return 1;
+                  }
+                  //acceder aux photo des membres des centres autorisés
+                  else if(doc.type == 'photo'){
+                    if(req.query.codes_centres && req.query.codes_centres.length > 0 && doc.code_centre){
+                      return req.query.codes_centres.indexOf(doc.code_centre) !== -1;
+                    }
+                  }else{
+                    //return 'doc type probleme => '+doc._id
+                    throw({forbidden: 'doc sans data probleme => '+doc._id})
+                  }
+                }//fin doc.type
+                
+                else if(doc.data && doc.data.type){
+                  //culture, variete et type-produit sont publiques
+                  if(doc.data.type == 'culture' || doc.data.type == 'variete' || doc.data.type == 'type-produit'){
+                    return 1;
+                  }else 
+                  //filtrer les fédérations par code_federation
+                  if(doc.data.type == 'federation' && req.query.codes_federations && req.query.codes_federations.length > 0){
+                    return req.query.codes_federations.indexOf(doc.data.code_federation) !== -1;
+                  }else 
+                  //filtrer les unions par code_union
+                  if(doc.data.type == 'union' && req.query.codes_unions && req.query.codes_unions.length > 0){
+                    return req.query.codes_unions.indexOf(doc.data.code_union) !== -1;
+                  }else 
+                  //filtrer les ops par code_op
+                  if(doc.data.type == 'op' && req.query.codes_ops && req.query.codes_ops.length > 0){
+                    return req.query.codes_ops.indexOf(doc.data.code_op) !== -1;
+                  }else
+                  //fitrer les autres document par code_centre
+                  if(doc_pour_centre.indexOf(doc.data.type) !== -1){
+                    //si filtre défini
+                    if(req.query.codes_centres && req.query.codes_centres.length > 0){
+                      //cas du protocole
+                      return req.query.codes_centress.indexOf(doc.data.code_centre) !== -1;
+                    }
+                  }
+                 else{
+                  //throw({forbidden: 'erreur incomprise => '+doc._id})
+                }
+              }//fin  doc.data.type
+            }//fin user filter
+            }.toString()
+          }
+        }
+
+        global.remoteSaved.get('_design/filtrerDocByCodeCentre').then((doc) => {
+          if(doc && doc._id){
+            //doc existe
+            //this.database.remote(doc)
+            filter_doc._rev = doc._rev;
+            global.remoteSaved.put(filter_doc).then((res) => alert('Filter mise à jour avec succes')).catch((err) => alert('erreur mise à jour du filter du filter '+err));
+          }else{
+            //créer le filtre de base
+            //this.ajouterDesignDoc();
+            global.remoteSaved.put(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => alert('erreur ajout du filter '+err));
+          }
+          
+        }).catch((err) => {
+          //alert(err)
+          //this.ajouterDesignDoc();
+          global.remoteSaved.put(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => alert('erreur ajout du filter '+err));
+        });
+    
+
+        //global.remoteSaved.put(filter_doc).catch((err) => alert('erreur vers server '+err));
+        //this.database.put(doc, doc._id).catch((err) => alert('erreur vers local '+err));
+  }
+
+  ajouterLoalDesignDoc(){
+    let filter_doc: any = {
+      //Prend en parametre un tableau contenant la liste des code des union
+          _id: '_design/filtrerDocByCodeCentre',
+          filters: {
+            myfilter: function (doc, req) {
+            var localite_doc = ['pays', 'region', 'commune', 'departement', 'village'/*, 'variete', 'culture'*/];
+              var doc_pour_centre = [/*'federation', 'union', 'op', */'membre', 'centre', 'production', 'produit', 'vente', 'produit-gate', 'stock'];
+              //seul l'admin à accès à la totalité des inforamtions de la base de donnée
+              if(doc._id == '_design/filtrerDocByCodeCentre' || (req.query.roles && req.query.roles.length && (req.query.roles.indexOf('admin') != -1) || (req.query.roles.indexOf('_admin') != -1))){
+                return 1
+              }else {
+              //si pas moderateur
+              //if(req.query.roles.indexOf('moderateur') === -1){
+
+                
+                //localité et photos
+                if(doc.type){
+                  //acceder aux localités
+                  if(localite_doc.indexOf(doc.type) !== -1){
+                    return 1;
+                  }
+                  //acceder aux photo des membres des centres autorisés
+                  else if(doc.type == 'photo'){
+                    if(req.query.codes_centres && req.query.codes_centres.length > 0 && doc.code_centre){
+                      return req.query.codes_centres.indexOf(doc.code_centre) !== -1;
+                    }
+                  }else{
+                    //return 'doc type probleme => '+doc._id
+                    throw({forbidden: 'doc sans data probleme => '+doc._id})
+                  }
+                }//fin doc.type
+                
+                else if(doc.data && doc.data.type){
+                  //culture, variete et type-produit sont publiques
+                  if(doc.data.type == 'culture' || doc.data.type == 'variete' || doc.data.type == 'type-produit'){
+                    return 1;
+                  }else 
+                  //filtrer les fédérations par code_federation
+                  if(doc.data.type == 'federation' && req.query.codes_federations && req.query.codes_federations.length > 0){
+                    return req.query.codes_federations.indexOf(doc.data.code_federation) !== -1;
+                  }else 
+                  //filtrer les unions par code_union
+                  if(doc.data.type == 'union' && req.query.codes_unions && req.query.codes_unions.length > 0){
+                    return req.query.codes_unions.indexOf(doc.data.code_union) !== -1;
+                  }else 
+                  //filtrer les ops par code_op
+                  if(doc.data.type == 'op' && req.query.codes_ops && req.query.codes_ops.length > 0){
+                    return req.query.codes_ops.indexOf(doc.data.code_op) !== -1;
+                  }else
+                  //fitrer les autres document par code_centre
+                  if(doc_pour_centre.indexOf(doc.data.type) !== -1){
+                    //si filtre défini
+                    if(req.query.codes_centres && req.query.codes_centres.length > 0){
+                      //cas du protocole
+                      return req.query.codes_centress.indexOf(doc.data.code_centre) !== -1;
+                    }
+                  }
+                 else{
+                  //throw({forbidden: 'erreur incomprise => '+doc._id})
+                }
+              }//fin  doc.data.type
+            }//fin user filter
+            }.toString()
+          }
+        }
+
+        this.database.getDocById('_design/filtrerDocByCodeCentre').then((doc) => {
+          if(doc && doc._id){
+            //doc existe
+            //this.database.remote(doc)
+            filter_doc._id = '_design/filtrerDocByCodeCentre';
+            filter_doc._rev = doc._rev;
+            this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter mise à jour avec succes')).catch((err) => alert('erreur mise à jour du filter du filter => '+err));
+          }else{
+            //créer le filtre de base
+            //this.ajouterDesignDoc();
+            filter_doc._id = '_design/filtrerDocByCodeCentre';
+            this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => alert('erreur ajout du filter => '+err));
+          }
+          
+        }).catch((err) => {
+          //alert(err)
+          //this.ajouterDesignDoc();
+          filter_doc._id = '_design/filtrerDocByCodeCentre';
+          this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => alert('erreur ajout du filter '+err));
+        });
+    
+
+        //global.remoteSaved.put(filter_doc).catch((err) => alert('erreur vers server '+err));
+        //this.database.put(doc, doc._id).catch((err) => alert('erreur vers local '+err));
   }
 
 

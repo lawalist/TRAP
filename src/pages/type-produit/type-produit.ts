@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, IonicApp, ActionSheetController, ToastController, NavParams, LoadingController, ViewController, App, AlertController, Platform, ModalController, IonicPage, MenuController, Events  } from 'ionic-angular';
+import { NavController, PopoverController, IonicApp, ActionSheetController, ToastController, NavParams, LoadingController, ViewController, App, AlertController, Platform, ModalController, IonicPage, MenuController, Events  } from 'ionic-angular';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 //import { AjouterEssaiPage } from './ajouter-essai/ajouter-essai';
 //import { DetailEssaiPage } from './detail-essai/detail-essai';
@@ -11,7 +11,14 @@ import { Printer, PrintOptions } from '@ionic-native/printer';
 import { Device } from '@ionic-native/device';
 import { Sim } from '@ionic-native/sim';
 import { Validators, FormGroup, FormArray, FormBuilder } from '@angular/forms';
+import { RelationTypeProduitComponent } from '../../components/relation-type-produit/relation-type-produit';
+import * as cryptoRandomString from 'crypto-random-string';
+
 declare var cordova: any;
+declare var createDataTable: any;
+declare var JSONToCSVAndTHMLTable: any;
+declare var $: any;
+declare var Formio;
 /**
  * Generated class for the TypeProduitPage page.
  *
@@ -27,6 +34,16 @@ declare var cordova: any;
 export class TypeProduitPage {
 
   typeProduitForm: FormGroup;
+
+  formulaireForm: FormGroup;
+  //protocole: any;
+  builder: any;
+  jsonElement: any;
+  formElement: any;
+  //subJSON : any;
+  formulaires: any = [];
+  //formulairesData: any = [];
+  //allFormulairesData: any = [];
 
   typeProduits: any = [];
   AllTypeProduits: any = [];
@@ -57,11 +74,11 @@ export class TypeProduitPage {
   modifierFrom: boolean = false;
   estInstancier: boolean = false;
   ajoutForm: boolean = false;
-  cultures:any  = [];
+  //cultures:any  = [];
   sauvegarder: boolean = true;
-  ingredients: any = [];
+  
 
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadtingCtl: LoadingController, public toastCtl: ToastController, public ionicApp: IonicApp, public viewCtl: ViewController, public formBuilder: FormBuilder, public sim: Sim, public device: Device, public modelCtl: ModalController, public a: App, public events: Events, public navParams: NavParams, public menuCtl: MenuController, public printer: Printer, public file: File, public platform: Platform, public storage: Storage, public servicePouchdb: PouchdbProvider, public alertCtl: AlertController) {
+  constructor(public navCtrl: NavController, public popoverController: PopoverController, public actionSheetCtrl: ActionSheetController, public loadtingCtl: LoadingController, public toastCtl: ToastController, public ionicApp: IonicApp, public viewCtl: ViewController, public formBuilder: FormBuilder, public sim: Sim, public device: Device, public modelCtl: ModalController, public a: App, public events: Events, public navParams: NavParams, public menuCtl: MenuController, public printer: Printer, public file: File, public platform: Platform, public storage: Storage, public servicePouchdb: PouchdbProvider, public alertCtl: AlertController) {
   
     this.menuCtl.enable(false, 'options');
       this.menuCtl.enable(false, 'connexion');
@@ -71,7 +88,7 @@ export class TypeProduitPage {
     events.subscribe('user:login', (user) => {
         if(user){
           this.aProfile = true;
-          this.estMangerConnecter(user)
+          this.estManagerConnecter(user)
           this.estAnimataireConnecter(user)
         }else{
           this.aProfile = false;
@@ -92,6 +109,18 @@ export class TypeProduitPage {
       });
   
   }
+
+  
+openRelationTypeProduit(ev: any) {
+  let popover = this.popoverController.create(RelationTypeProduitComponent);
+  popover.present({ev: ev});
+
+  popover.onWillDismiss((res) => {
+    if(res == 'Produits'){
+      this.getProduits(this.typeProduit._id, this.typeProduit.data.nom);
+    }
+  })
+}
 
 
   actions() {
@@ -192,7 +221,7 @@ export class TypeProduitPage {
    let toast = this.ionicApp._toastPortal.getActive();
     toast.dismiss();
   }
-  estMangerConnecter(user){
+  estManagerConnecter(user){
     if(user && user.roles){
       this.estManager = global.estManager(user.roles);
     }
@@ -204,13 +233,13 @@ export class TypeProduitPage {
     }
   }
 
-  getCultures(){
+  /*getCultures(){
     this.servicePouchdb.getPlageDocsRapide('culture:', 'culture:\uffff').then((c) => {
       if(c){
           this.cultures = c;
         }
     });
-  }
+  }*/
 
 
   createDate(jour: any, moi: any, annee: any){
@@ -236,14 +265,13 @@ export class TypeProduitPage {
     //this.dateAjout = maDate;
     let today = this.createDate(maDate.getDate(), maDate.getMonth(), maDate.getFullYear());
     this.typeProduitForm = this.formBuilder.group({
+      today: [today],
       type:['type-produit'],
       nom: ['', Validators.required],
-      culture: [''],
-      id_culture: [''],
       origine: [''],
-      ingredients: this.formBuilder.array([]),
       description: [''],
-      today: [today],
+      typeForm: [],
+      formioData: [{}],
       //deviceid: [''],
       //imei: [''],
       //phonenumber: [''],
@@ -261,12 +289,11 @@ editForm(typeProduit){
   this.typeProduitForm = this.formBuilder.group({
     //type:['type-produit'],
     nom: [typeProduit.nom, Validators.required],
-    culture: [typeProduit.culture],
-    id_culture: [typeProduit.id_culture],
     origine: [typeProduit.origine],
     code: [typeProduit.code],
-    //ingredients: this.formBuilder.array([]),
     description: [typeProduit.description],
+    typeForm: [typeProduit.typeForm],
+    formioData: [typeProduit.formioData],
     today: [typeProduit.today],
     //deviceid: [''],
     //imei: [''],
@@ -277,7 +304,7 @@ editForm(typeProduit){
 }
 
 
-addIngredient(ingredients){
+/*addIngredient(ingredients){
   let model = this.modelCtl.create('IngredientPage', {'ingredients': ingredients}, {enableBackdropDismiss: false});
   model.present();
   
@@ -295,9 +322,13 @@ deleteIngredient(i, ind){
   this.ingredients.splice(ind, 1);
   //const control = <FormArray>this.typeProduitForm.controls['ingredients'];
   //control.removeAt(ind);
+}*/
+
+selectChange(e) {
+  console.log(e);
 }
 
-editerIngredient(i, ind, ingredients){
+/*editerIngredient(i, ind, ingredients){
   let model = this.modelCtl.create('IngredientPage', {'ingredient': i, 'index': ind, 'ingredients': ingredients}, {enableBackdropDismiss: false});
   model.present();
   model.onDidDismiss((ingredient) => {
@@ -307,7 +338,7 @@ editerIngredient(i, ind, ingredients){
     //const control = <FormArray>this.typeProduitForm.controls['ingredients'];
     //control[ind] = ingredient;
   });
-}
+}*/
 
 detailIngredient(i){
   let model = this.modelCtl.create('IngredientPage', {'ingredient': i, 'detail': 'true'}, {enableBackdropDismiss: false});
@@ -478,20 +509,17 @@ partager(_id){
   actionForm(){
     if(this.sauvegarder){
       let typeProduit = this.typeProduitForm.value;
+      let formioData = this.builder.instance.form;
+      typeProduit.typeForm = formioData.display;
+      
       let res = this.existe(typeProduit);
       if(res == 1){
         alert('Erreur! Enrégistrement impossible, ce type de produit existe déjà !!');
       }else{
 
         if(this.ajoutForm && !this.modifierFrom){
-          let date = new Date();
-          this.cultures.forEach((c) => {
-            if(typeProduit.culture == c.doc.data.nom){
-              typeProduit.id_culture = c.doc._id;
-            }
-          })
-          
-          typeProduit.ingredients = this.ingredients;
+          let date = new Date();          
+          typeProduit.formioData = formioData
           typeProduit.deviceid = this.device.uuid;
           typeProduit.phonenumber = this.phonenumber;
           typeProduit.imei = this.imei; 
@@ -525,7 +553,7 @@ partager(_id){
               //this.viewCtl.dismiss(essaiFinal);
             // this.zone.run(() => {
               this.typeProduits.push(E);
-              this.ingredients = [];
+              //this.ingredients = [];
             }).catch((err) => alert('err ajout '+err));
   
             
@@ -537,14 +565,8 @@ partager(_id){
             //let typeProduit = this.typeProduitForm.value;
             this.typeProduit1.nom = typeProduit.nom;
             this.typeProduit1.origine = typeProduit.origine;
-            //this.typeProduit1.ingredients = typeProduit.ingredients;
-            this.typeProduit1.culture = typeProduit.culture;
-            this.cultures.forEach((c) => {
-              if(typeProduit.culture == c.doc.data.nom){
-                this.typeProduit1.id_culture = c.doc._id;
-              }
-            })
-            this.typeProduit1.ingredients = this.ingredients;
+            this.typeProduit1.typeForm = formioData.display;
+            this.typeProduit1.formioData = formioData
             this.typeProduit1.description = typeProduit.description;
             this.typeProduit1.update_deviceid = this.device.uuid;
             this.typeProduit1.update_phonenumber = this.phonenumber;
@@ -555,6 +577,7 @@ partager(_id){
               this.updateProduit(this.grandTypeProduit);
               this.typeProduit = this.grandTypeProduit;
               this.reinitFormModifier();
+              
               /*this.modifierFrom = false;
               this.detailTypeProduit = true
               this.ajoutForm = false;*/
@@ -586,7 +609,7 @@ updateProduit(typeProduit){
         if(p.doc.data.id_type_produit == typeProduit._id){
           p.doc.data.nom_type_produit = typeProduit.data.nom;
           p.doc.data.code_type_produit = typeProduit.data.code;
-          p.doc.data.ingredients = typeProduit.data.ingredients;
+          p.doc.data.formioData = typeProduit.data.formioData;
           this.servicePouchdb.updateDoc(p.doc);
         }
       });
@@ -601,6 +624,7 @@ updateProduit(typeProduit){
       this.modifierFrom = false;
       this.detailTypeProduit = true
       this.ajoutForm = false;
+      this.detail(typeProduit);
       toast.present();
     }else{
       loadin.dismiss();
@@ -613,6 +637,7 @@ updateProduit(typeProduit){
       this.modifierFrom = false;
       this.detailTypeProduit = true
       this.ajoutForm = false;
+      this.detail(typeProduit);
       toast.present();
     }
   }).catch((err) => {
@@ -626,17 +651,19 @@ updateProduit(typeProduit){
       this.modifierFrom = false;
       this.detailTypeProduit = true
       this.ajoutForm = false;
+      this.detail(typeProduit);
       toast.present();
   });
 }
 annuler(){
-    this.ajoutForm = false;
+  this.ajoutForm = false;
 
   if(this.modifierFrom){
     this.modifierFrom = false;
     this.ajoutForm = false;
     this.detailTypeProduit = true;
     this.reinitFormModifier();
+    this.detail(this.typeProduit)
   } 
 }
 
@@ -777,6 +804,7 @@ onPrint(){
 
 
 ionViewDidEnter(){
+
   //this.getEssais()
 /*this.servicePouchdb.remoteSaved.getSession((err, response) => {
   if (err) {
@@ -867,12 +895,6 @@ choixLimit1(){
 
             this.servicePouchdb.getPlageDocsRapide('type-produit:', 'type-produit:\uffff').then((c) => {
               if(c){
-                /*let cs:any = [];
-                c.forEach((culture) => {
-                  if(culture.doc.data.type == 'typeProduit'){
-                    cs.push(culture);
-                  }
-                })*/
                   this.typeProduits = c;
                   this.AllTypeProduits = c;
                   this.rechercher = false;
@@ -935,24 +957,29 @@ choixLimit1(){
 
 
 editer(typeProduit2, dbclick: boolean = false){
-  if(!dbclick || (dbclick && this.user && this.user.roles && global.estAnimataire(this.user.roles))){
-    this.getCultures();
+  if(!dbclick || (dbclick && this.user && this.user.roles && global.estManager(this.user.roles))){
+    //this.getCultures();
     this.grandTypeProduit = typeProduit2;
     this.typeProduit1 = this.grandTypeProduit.data;
-    this.ingredients = this.grandTypeProduit.data.ingredients;
+    let formioData: {};
+    let typeForm = "form";
+    if(typeProduit2.data.formioData) {
+      formioData = typeProduit2.data.formioData;
+      typeForm = typeProduit2.data.formioData.display
+    }
     let typeProduit = {
       nom: typeProduit2.data.nom, // required
       description: typeProduit2.data.description,
-      culture: typeProduit2.data.nom,
       origine: typeProduit2.data.origine,
       type: typeProduit2.data.type,
-      ingredients: typeProduit2.data.ingredients,
+      typeForm: typeForm,
+      formioData: formioData,
       today: typeProduit2.data.today,
       start: typeProduit2.data.start
-  }
+    }
   //this.typeProduitForm.patchValue(typeProduit);
 
-  this.editForm(typeProduit2.data)
+    this.editForm(typeProduit2.data)
     
     this.detailTypeProduit = false;
 
@@ -960,11 +987,17 @@ editer(typeProduit2, dbclick: boolean = false){
 
     this.modifierFrom = true;
     this.typeProduitAModifier = typeProduit;
+    if(typeProduit2.data.formioData && typeProduit2.data.formioData.display && typeProduit2.data.formioData.components){
+      this.formBuider(typeProduit2.data.formioData.display, typeProduit2.data.formioData.components)
+    }else{
+      this.formBuider();
+    }
+    
+      
  }
 }
 
 reinitFormModifier(){
-  this.ingredients = [];
   this.grandTypeProduit = {};
   this.typeProduit1 = {};
   //this.typeProduitForm.reset({variables: []});
@@ -975,15 +1008,89 @@ reinitFormModifier(){
 }
 
 
+formBuider(form = "form", components = []){
+  var self = this;
+  $('#conf-builder1').ready(() => {
+    var jsonElement = document.getElementById('json1');
+    var formElement = document.getElementById('formio1');
+    var subJSON = document.getElementById('subjson1');
+    //console.log(document.getElementById("builder"))
+    self.builder = new Formio.FormBuilder(document.getElementById("conf-builder1"), {
+      display: form,
+      components: components/*,
+      settings: {
+        pdf: {
+          "id": "1ec0f8ee-6685-5d98-a847-26f67b67d6f0",
+          "src": "https://files.form.io/pdf/5692b91fd1028f01000407e3/file/1ec0f8ee-6685-5d98-a847-26f67b67d6f0"
+        }
+      }*/
+    }/*, {
+      baseUrl: 'https://examples.form.io'
+    }*/);
+
+    var onForm = function(form) {
+      form.on('change', function() {
+        subJSON.innerHTML = '';
+        subJSON.appendChild(document.createTextNode(JSON.stringify(form.submission, null, 4)));
+      });
+    };
+
+    var onBuild = function(build) {
+      jsonElement.innerHTML = '';
+      formElement.innerHTML = '';
+      jsonElement.appendChild(document.createTextNode(JSON.stringify(self.builder.instance.schema, null, 4)));
+      Formio.createForm(formElement, self.builder.instance.form).then(onForm);
+      //console.log(self.builder.instance.form)
+    };
+
+    var onReady = function() {
+      var jsonElement = document.getElementById('json1');
+      var formElement = document.getElementById('formio1');
+      self.builder.instance.on('saveComponent', onBuild);
+      self.builder.instance.on('editComponent', onBuild);
+    };
+
+    var setDisplay = function(display) {
+      self.builder.setDisplay(display).then(onReady);
+    };
+
+    // Handle the form selection.
+    $('#form-select1').ready(() => {
+      var formSelect = <HTMLInputElement> document.getElementById('form-select1');
+      //console.log(formSelect)
+      formSelect.addEventListener("change", function() {
+        //console.log(this.value)
+        setDisplay(this.value);
+      });
+    })
+    
+
+    self.builder.instance.ready.then(onReady);
+  })
+  
+}
+
+
+showForm(form){
+  $('#show-protocole-form').ready(() => {
+    var formElement = document.getElementById('show-protocole-form');
+    formElement.innerHTML = '';
+    Formio.createForm(formElement, form, {readOnly: true});
+  })
+}
+
+
+
  ajouter(){
 
-  this.getCultures();
+  //this.getCultures();
     let maDate = new Date();
     this.today = this.createDate(maDate.getDate(), maDate.getMonth(), maDate.getFullYear());
-    this.id = this.generateId();
+    this.id = cryptoRandomString({length: 10});
 
     this.ajoutForm = true;
     
+    this.formBuider();
 }
 
 
@@ -991,6 +1098,10 @@ detail(typeProduit){
   this.typeProduit = typeProduit;
 
   this.detailTypeProduit = true;
+
+  if(typeProduit.data.formioData && typeProduit.data.formioData != ''){
+    this.showForm(typeProduit.data.formioData)
+  }
 
 }
 

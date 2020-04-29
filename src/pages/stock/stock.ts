@@ -22,7 +22,7 @@ export class StockPage {
 
   user: any = global.info_user;
   global:any = global;
-  estManger: boolean = false;
+  estManager: boolean = false;
   estAdmin: boolean = false;
   stocks: any = [];
   allStocks: any = [];
@@ -179,17 +179,17 @@ updateProduit(id){
      });
  }
 
- estMangerConnecter(user){
+ estManagerConnecter(user){
    //alert('entree')
    if(user && user.roles){
      //alert('ok')
-     this.estManger = global.estManager(user.roles);
+     this.estManager = global.estManager(user.roles);
    }
  }
 
  estAdminConnecter(user){
    if(user && user.roles){
-     this.estManger = global.estAdmin(user.roles);
+     this.estManager = global.estAdmin(user.roles);
    }
  }
 

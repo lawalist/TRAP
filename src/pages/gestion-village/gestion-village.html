@@ -64,19 +64,19 @@
   <div *ngIf="!liste">
   <form [formGroup]="villageForm" (ngSubmit) = "actionForm()" >
 
-    <ion-item *ngIf="commune_defini">
+    <ion-item class="item-no-border" *ngIf="commune_defini">
       <ion-label floating>Id commune <span class="error-box">*</span></ion-label>
       <ion-input formControlName="id_commune" [(ngModel)]="id_commune"  type="text" disabled></ion-input>
     </ion-item>
     <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['id_commune'].hasError('required') && villageForm.controls['id_commune'].touched">* Le ID de la commune est obligatoire</div>
 
-    <ion-item *ngIf="commune_defini">
+    <ion-item class="item-no-border" *ngIf="commune_defini">
       <ion-label floating>Nom commune</ion-label>
       <ion-input formControlName="nom_commune" [(ngModel)]="nom_commune"  type="text" disabled></ion-input>
     </ion-item>
     <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['nom_commune'].hasError('required') && villageForm.controls['nom_commune'].touched">* Le Nom de la commune est obligatoire</div>
 
-    <ion-item *ngIf="!commune_defini">
+    <ion-item class="item-no-border" *ngIf="!commune_defini">
       <ion-label floating>Commune <span class="error-box">*</span></ion-label>
       <!--ion-input formControlName="id_commune" [(ngModel)]="id_commune"  type="text" disabled></ion-input-->
       <ion-select formControlName="id_commune" [(ngModel)]="id_commune" cancelText="Annuler" okText="Ok">
@@ -85,28 +85,36 @@
     </ion-item>
     <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['id_commune'].hasError('required') && villageForm.controls['id_commune'].touched">* Le ID de la commune est obligatoire</div>
 
-    <ion-item>
+    <ion-item class="item-no-border">
       <ion-label floating>Id village <span class="error-box">*</span></ion-label>
       <ion-input formControlName="id" type="text"  [(ngModel)]="id" disabled></ion-input>
     </ion-item>
     <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['id'].hasError('required') && villageForm.controls['id'].touched">* Le ID du village est obligatoire</div>
 
-    <ion-item *ngIf="ajouter">
+    <ion-item class="item-no-border" *ngIf="ajouter">
       <ion-label floating>Nom village <span class="error-box">*</span></ion-label>
       <ion-input formControlName="nom" type="text"  [(ngModel)]="nom" (keyup)="genererID()"></ion-input>
     </ion-item>
     <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['nom'].hasError('required') && villageForm.controls['nom'].touched">* Le nom du village est obligatoire</div>
 
-    <ion-item *ngIf="modifier">
+    <ion-item class="item-no-border" *ngIf="modifier">
       <ion-label floating>Nom village <span class="error-box">*</span></ion-label>
       <ion-input formControlName="nom" type="text"  [(ngModel)]="nom"></ion-input>
     </ion-item>
     <div style="padding-left: 15px;" class="error-box" *ngIf="villageForm.controls['nom'].hasError('required') && villageForm.controls['nom'].touched">* Le nom du village est obligatoire</div>
 
     <br>
-    <button ion-button type="submit" color="my_secondary" [disabled]="!villageForm.valid" block>Sauvegarder</button>
+    <ion-row>
+      <ion-col>
+        <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
+      </ion-col>
+      <ion-col>
+        <button ion-button type="submit" color="my_secondary" [disabled]="!villageForm.valid" block>Sauvegarder</button>
+      </ion-col>
+    </ion-row>
+
   </form>
-  <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
+    <br><br><br>
   </div>
 
   <ion-fab bottom right *ngIf="liste" bottom>

@@ -37,6 +37,9 @@
       <ion-title *ngIf="action == 'modifier'">Modifier produit</ion-title>
       <ion-title *ngIf="action == 'detail'">Détail produit</ion-title>
 
+      <ion-buttons *ngIf="action == 'detail'"  end>
+          <button ion-button icon-only color="royal" (click)="openRelationProduit($event)"><ion-icon name="more"></ion-icon></button>
+        </ion-buttons>
       <!--button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
         <ion-icon name="menu"></ion-icon>
     </button-->
@@ -92,20 +95,20 @@
           </ion-item>
         </ion-list-header>
         <ion-item-sliding *ngFor="let produit of produits">
-          <ion-item (click)="detail(produit.doc, selectedSource)" >
+          <ion-item (click)="detail(produit, selectedSource)" >
             <!--ion-row>
               <ion-col-->
-                  <h6><strong>Type produit:</strong> {{produit.doc.data.nom_type_produit}}</h6>
-                  <h6><strong>Code:</strong> {{produit.doc.data.code}}</h6>
-                  <h6><strong>Nom:</strong> {{produit.doc.data.nom}} ({{produit.doc.data.unite}})</h6>
+                  <h6><strong>Type produit:</strong> {{produit.data.nom_type_produit}}</h6>
+                  <h6><strong>Code:</strong> {{produit.data.code}}</h6>
+                  <h6><strong>Nom:</strong> {{produit.data.nom}} ({{produit.data.unite}})</h6>
               <!--/ion-col>
               <ion-col class="aligneDate"-->
-                <p><strong>Date:</strong> {{produit.doc.data.today | date: 'dd-MM-yyyy'}}</p>
+                <p><strong>Date:</strong> {{produit.data.today | date: 'dd-MM-yyyy'}}</p>
               <!--/ion-col>
             </ion-row-->
           </ion-item> 
-          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
-            <button ion-button icon-only color="my_primary" (click)="partager(produit.doc._id)">
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" side="right">
+            <button ion-button icon-only color="my_primary" (click)="partager(produit._id)">
               <ion-icon name="share"></ion-icon>   
             </button>
           </ion-item-options-->
@@ -151,27 +154,27 @@
         </thead>
         <!--hr style="width: 375%"-->
         <tbody>
-          <tr *ngFor="let produit of produits" (click)="detail(produit.doc)">
+          <tr *ngFor="let produit of produits" (click)="detail(produit)">
             <td  >
-              {{produit.doc.data.nom_type_produit}}
+              {{produit.data.nom_type_produit}}
             </td>
             <td  >
-              {{produit.doc.data.code}}
+              {{produit.data.code}}
             </td>
             <td  >
-              {{produit.doc.data.nom}}
+              {{produit.data.nom}}
             </td>
             <td  >
-              {{produit.doc.data.unite}}
+              {{produit.data.unite}}
             </td>
             <td  >
-              {{produit.doc.data.prix_unitaire}}
+              {{produit.data.prix_unitaire}}
             </td>
             <td  >
-              {{produit.doc.data.nom_centre}}
+              {{produit.data.nom_centre}}
             </td>
             <td  >
-              {{produit.doc.data.code_centre}}
+              {{produit.data.code_centre}}
             </td>
           </tr>
         </tbody>
@@ -221,10 +224,15 @@
         </ion-card-header>
         <ion-card-content>
         <ion-scroll scrollX="true" scrollY="true" id="ingredients_tableau" style="height: 50vh"> 
-            <!--ion-card-header  style="width: 100vw">
+          <ion-row>
+            <ion-col col-12>
+              <div id="show-produit-form" class="card card-body bg-light"></div>
+            </ion-col>
+          </ion-row>  
+          <!--ion-card-header  style="width: 100vw">
               <h2><strong>Liste des productions</strong></h2>
             </ion-card-header--> 
-            <table class="table table-striped table-bordered">
+            <!--table class="table table-striped table-bordered">
               <thead>
                 <tr>
                 <th>
@@ -250,7 +258,7 @@
                 </th>
                 </tr>
               </thead>
-              <!--hr style="width: 375%"-->
+              
               <tbody>
                 <tr *ngFor="let i of produit.data.ingredients; let ind=index">
                   <td  >
@@ -277,7 +285,7 @@
 
                 </tr>
               </tbody>
-            </table>
+            </table-->
           </ion-scroll>
 
           <!--ion-grid>
@@ -331,7 +339,7 @@
       </ion-card-content> 
     </ion-card>
 
-    <br><br><br>
+    <br><br><br><br><br><br><br><br><br>
   </div>
 
 
@@ -345,7 +353,7 @@
         <ion-datetime disabled="true" displayFormat="DD/MM/YYYY" formControlName="today" cancelText="Annuler" doneText="Valider"></ion-datetime>
       </ion-item>
 
-      <ion-item>
+      <ion-item class="item-no-border">
         <ion-label floating>Code produit <span class="error-box">*</span></ion-label>
         <ion-input type="text" formControlName="code" [(ngModel)]="code" disabled></ion-input>
       </ion-item>
@@ -354,7 +362,7 @@
       <ion-item>
         <ion-label floating>Selectionnez le centre<span class="error-box">*</span></ion-label>
         <ion-select formControlName="id_centre" [(ngModel)]="selectedCentre" [disabled]="id_centre && id_centre != ''" cancelText="Annuler" okText="Ok">
-          <ion-option *ngFor="let u of centres" [value]=u.doc._id >{{u.doc.data.nom_centre}}</ion-option>
+          <ion-option *ngFor="let u of centres" [value]=u._id >{{u.data.nom_centre}}</ion-option>
         </ion-select>
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['id_centre'].hasError('required') && produitForm.controls['id_centre'].touched">* le centre est obligatoir!</div>  
@@ -362,12 +370,12 @@
       <ion-item>
         <ion-label floating>Selectionnez le type de produit <span class="error-box">*</span></ion-label>
         <ion-select formControlName="id_type_produit" [(ngModel)]="selectedTypeProduit" cancelText="Annuler" okText="Ok">
-            <ion-option *ngFor="let t of typeProduits" [value]=t.doc._id >{{t.doc.data.nom}}</ion-option>
+            <ion-option *ngFor="let t of typeProduits" [value]=t._id >{{t.data.nom}}</ion-option>
           </ion-select>
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['id_type_produit'].hasError('required') && produitForm.controls['id_type_produit'].touched">* le type de produit est obligatoir!</div>
 
-      <ion-item>
+      <ion-item class="item-no-border">
         <ion-label floating>Nom produit <span class="error-box">*</span></ion-label>
         <ion-input type="text" formControlName="nom"></ion-input>
       </ion-item> 
@@ -387,7 +395,7 @@
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="produitForm.controls['unite'].hasError('required') && produitForm.controls['unite'].touched">* l'unite de mésure du produit est obligatoir!</div>    
       
-      <ion-item>
+      <ion-item class="item-no-border">
         <ion-label floating>Prix unitaire<span class="error-box">*</span></ion-label>
         <ion-input type="number" formControlName="prix_unitaire"></ion-input>
       </ion-item>
@@ -397,22 +405,22 @@
 
         <ion-row>
           <ion-col>
-            <button ion-button type="submit" color="my_secondary" [disabled]="!produitForm.valid" block>Sauvegarder</button>
+            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
           </ion-col>
           <ion-col>
-            <button ion-button color="annuler" block (click)="annuler()">Fermer</button>
+            <button ion-button type="submit" color="my_secondary" [disabled]="!produitForm.valid" block>Sauvegarder</button>
           </ion-col>
         </ion-row>        
       </form>
-      
-      <br><br><br>
+
+  <br><br><br>
   </div>
 
-  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)"  bottom right>
+  <ion-fab *ngIf="action == 'liste' && selectedStyle != 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)"  bottom right>
     <button ion-fab mini (click)="ajouter()" color="my_primary"><ion-icon name="add"></ion-icon></button>
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)">
     <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
     <!--ion-fab-list side="top">
       <button ion-fab mini *ngIf="produits.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
@@ -421,15 +429,10 @@
     </ion-fab-list-->
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'detail'" >
-      <button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
-      <!--ion-fab-list side="top">
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(produit)" color="delete" ><ion-icon name="trash"></ion-icon></button>
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(produit.data.code_produit)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
-        <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(produit.data.code_produit)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
-        <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="produitproduit(produit.data.num_aggrement, produit.data.nom_produit, produit.data.code_produit)" color="my_primary"><strong>OP</strong></button>
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(produit)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
-      </ion-fab-list-->
-    </ion-fab> 
+  <ion-fab bottom right *ngIf="action == 'detail' && ((user && user.roles && global.estManager(user.roles)) || estManager)" >
+    <!--button ion-fab mini (click)="actions()" color="my_primary"><ion-icon name="apps"></ion-icon></button-->
+    <button ion-fab mini (click)="editer(produit)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+    <button ion-fab mini (click)="supprimer(produit)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+  </ion-fab> 
 
 </ion-content>

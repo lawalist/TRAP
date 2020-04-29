@@ -9,6 +9,29 @@
 
   <link rel="icon" type="image/x-icon" href="assets/icon/favicon.ico">
   <link rel="manifest" href="manifest.json">
+  
+  <link rel='stylesheet' href='./assets/formiojs/css/font-awesome-4.7.0.min.css'>
+  <link rel='stylesheet' href='./assets/formiojs/css/icons.css'>
+  <!--link href="./assets/bootstrap-4.4.1/css/bootstrap.min.css" rel="stylesheet" type="text/css"/-->
+  <link href="./assets/bootstrap-materia/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+  <link rel='stylesheet' href='./assets/formiojs/css/formiojs@4.9.8.full.min.css'>
+
+  <link href="./assets/bootstrap-4.4.1/css/bootstrap-datepicker.min.css" rel="stylesheet" type="text/css"/>
+  <link href="./assets/select2/select2.min.css" rel="stylesheet" type="text/css"/>
+  <link href="./assets/select2/select2-bootstrap4.min.css" rel="stylesheet" type="text/css"/>
+  <link href="./assets/bootstrap-select/css/bootstrap-select.css" rel="stylesheet" type="text/css"/>
+
+ 
+  <!-- DataTables css -->
+  <link href="./assets/datatable/css/b4/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css"/>
+  <link href="./assets/datatable/css/b4/select.bootstrap4.min.css" rel="stylesheet" type="text/css"/>  
+  <link href="./assets/datatable/css/b4/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css"/>  
+  <link href="./assets/datatable/css/b4/fixedHeader.bootstrap4.min.css" rel="stylesheet" type="text/css"/>  
+  <link href="./assets/datatable/css/b4/components.css" rel="stylesheet" type="text/css" />
+  <link href="./assets/datatable/css/core.css" rel="stylesheet" type="text/css" />
+
+  <link href="./assets/datatable/css/b4/multiple-select.min.css" rel="stylesheet">
+
   <meta name="theme-color" content="#4e8ef7">
 
   <!-- add to homescreen for ios -->
@@ -35,6 +58,13 @@
   <!-- Ionic's root component and where the app will load -->
   <ion-app></ion-app>
 
+  <script>
+    if (typeof module === 'object') {
+      window.module = module; 
+      module = undefined;
+    }
+  </script>
+
   <!-- The polyfills js is generated during the build process -->
   <script src="build/polyfills.js"></script>
 
@@ -45,5 +75,41 @@
   <!-- The main bundle js is generated during the build process -->
   <script src="build/main.js"></script>
 
+  <script src="./assets/JSONToTHMLTable/jquery-3.4.1.min.js"></script>
+  <script src="./assets/bootstrap-4.4.1/js/popper.min.js"></script>
+  <script src="./assets/bootstrap-4.4.1/js/bootstrap.min.js"></script>
+  <script src='./assets/formiojs/js/formiojs@4.9.8.full.min.js'></script>
+  <script type="text/javascript">Formio.icons = 'fontawesome';</script>
+
+  <!--Convert JSOn To HTML Table-->
+  <script src="./assets/JSONToTHMLTable/strsup.js"></script>
+  <script src="./assets/JSONToTHMLTable/localread.js"></script>
+  <script src="./assets/JSONToTHMLTable/csvparse.js"></script>
+  <script src="./assets/JSONToTHMLTable/csvsup.js"></script>
+  <script src="./assets/JSONToTHMLTable/jQuery-csv.js"></script>
+  <script src="./assets/JSONToTHMLTable/convert.js"></script>
+
+  <!--Datatable-->
+  <script src="./assets/datatable/js/b4/multiple-select.min.js"></script>
+  <script src="./assets/datatable/js/b4/jquery.dataTables.min.js"></script>
+  <script src="./assets/datatable/js/b4/dataTables.bootstrap4.min.js"></script>
+  <script src="./assets/datatable/js/b4/dataTables.select.min.js"></script>
+  <script src="./assets/datatable/js/b4/dataTables.buttons.min.js"></script>
+  <script src="./assets/datatable/js/b4/buttons.bootstrap4.min.js"></script>
+  <script src="./assets/datatable/js/b4/jszip.min.js"></script>
+  <script src="./assets/datatable/js/b4/pdfmake.min.js"></script>
+  <script src="./assets/datatable/js/b4/vfs_fonts.js"></script>
+  <script src="./assets/datatable/js/b4/buttons.html5.min.js"></script>
+  <script src="./assets/datatable/js/b4/buttons.print.min.js"></script>
+  <script src="./assets/datatable/js/b4/buttons.colVis.min.js"></script>
+  <script src="./assets/datatable/js/b4/dataTables.fixedHeader.min.js"></script>
+  <script src="./assets/datatable/js/b4/datatable.prev()-next().row().js"></script>
+  <script src="./assets/datatable/js/jquery.datatables.init.js"></script>
+  
+  <script src="./assets/bootstrap-4.4.1/js/bootstrap-datepicker.min.js"></script>
+  <script src="./assets/select2/select2.min.js"></script>
+ 
+  <!--En for electron compatibilité-->
+  <script>if (window.module) module = window.module;</script>
 </body>
 </html>

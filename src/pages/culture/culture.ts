@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, IonicApp, ToastController, NavParams, LoadingController, ViewController, App, AlertController, Platform, ModalController, IonicPage, MenuController, Events  } from 'ionic-angular';
+import { NavController, IonicApp, PopoverController, ToastController, NavParams, LoadingController, ViewController, App, AlertController, Platform, ModalController, IonicPage, MenuController, Events  } from 'ionic-angular';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 //import { AjouterEssaiPage } from './ajouter-essai/ajouter-essai';
 //import { DetailEssaiPage } from './detail-essai/detail-essai';
@@ -14,6 +14,7 @@ import { Sim } from '@ionic-native/sim';
 //import {Culture} from '../../app/culture.interface'
 //import { from } from 'rxjs/observable/from';
 import { Validators, FormGroup, FormArray, FormBuilder } from '@angular/forms';
+import { RelationCultureComponent } from '../../components/relation-culture/relation-culture';
 //import { variable } from '@angular/compiler/src/output/output_ast';
 
 declare var cordova: any;
@@ -66,7 +67,7 @@ export class CulturePage {
   listeCultures:any  = ['Arachide', 'Igname', 'Maïs', 'Manioc', 'Mil', 'Niébé', 'Oignon', 'Pomme de terre', 'Riz', 'Sorgho', 'Tomate'];
   sauvegarder: boolean = true;
 
-  constructor(public navCtrl: NavController, public loadtingCtl: LoadingController, public toastCtl: ToastController, public ionicApp: IonicApp, public viewCtl: ViewController, public formBuilder: FormBuilder, public sim: Sim, public device: Device, public modelCtl: ModalController, public a: App, public events: Events, public navParams: NavParams, public menuCtl: MenuController, public printer: Printer, public file: File, public platform: Platform, public storage: Storage, public servicePouchdb: PouchdbProvider, public alertCtl: AlertController) {
+  constructor(public navCtrl: NavController, public popoverController: PopoverController, public loadtingCtl: LoadingController, public toastCtl: ToastController, public ionicApp: IonicApp, public viewCtl: ViewController, public formBuilder: FormBuilder, public sim: Sim, public device: Device, public modelCtl: ModalController, public a: App, public events: Events, public navParams: NavParams, public menuCtl: MenuController, public printer: Printer, public file: File, public platform: Platform, public storage: Storage, public servicePouchdb: PouchdbProvider, public alertCtl: AlertController) {
   
     this.menuCtl.enable(false, 'options');
       this.menuCtl.enable(false, 'connexion');
@@ -76,7 +77,7 @@ export class CulturePage {
     events.subscribe('user:login', (user) => {
         if(user){
           this.aProfile = true;
-          this.estMangerConnecter(user)
+          this.estManagerConnecter(user)
           this.estAnimataireConnecter(user)
         }else{
           this.aProfile = false;
@@ -106,7 +107,7 @@ export class CulturePage {
    let toast = this.ionicApp._toastPortal.getActive();
     toast.dismiss();
   }
-  estMangerConnecter(user){
+  estManagerConnecter(user){
     if(user && user.roles){
       this.estManager = global.estManager(user.roles);
     }
@@ -284,24 +285,31 @@ partager(_id){
     this.initForm();
   }
 
-generateId(){
-    var chars='ABCDEFGHIJKLMNPQRSTUVWYZ'
-    var numbers='0123456789'
+  generateId(){
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     var randomArray=[]
-    for(let i=0;i<4;i++){
-      var rand = Math.floor(Math.random()*10)
+    for(let i=0;i<30;i++){
+      var rand = Math.floor(Math.random()*62)
       randomArray.push(numbers[rand])
-    }
-    randomArray.push('-')
-    for(let i=0;i<4;i++){
-      var rand = Math.floor(Math.random()*24)
-      randomArray.push(chars[rand])
     }
     
     var randomString=randomArray.join("");
     var Id= /*+pays+'-'+region+'-'+department+'-'+commune +'-' +village+ */''+randomString 
     return Id;
   }
+
+
+  openRelationCulture(ev: any) {
+    let popover = this.popoverController.create(RelationCultureComponent);
+    popover.present({ev: ev});
+  
+    popover.onWillDismiss((res) => {
+      if(res == 'variete'){
+        this.varietes(this.culture);
+      }
+    })
+  }
+  
 
 
   existe(culture){
@@ -717,7 +725,7 @@ choixLimit1(){
 
 
 editer(culture, dbclick: boolean = false){
-  if(!dbclick || (dbclick && this.user && this.user.roles && global.estAnimataire(this.user.roles))){
+  if(!dbclick || (dbclick && this.user && this.user.roles && global.estManager(this.user.roles))){
     this.grandCulture = culture;
     this.culture1 = this.grandCulture.data;
     let Culture = {

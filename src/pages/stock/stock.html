@@ -23,18 +23,18 @@
           <ion-badge color="fuma-green" item-right>{{stocks.length}}</ion-badge>
         </button>
   
-        <button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
+        <!--button ion-button icon-only color="royal" *ngIf="aProfile" (click) = "sync()" >
             <ion-icon name="sync"></ion-icon>
-        </button>
+        </button-->
   
       </ion-buttons>
   
       <ion-title *ngIf="action == 'liste'">Stocks</ion-title>
       <ion-title *ngIf="action == 'detail'">Détail stock</ion-title>
 
-      <button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
+      <!--button ion-button *ngIf="!id_centre && action == 'liste'" menuToggle end>
         <ion-icon name="menu"></ion-icon>
-    </button>
+    </button-->
   </ion-navbar>
 
 
@@ -94,7 +94,7 @@
             <h6><strong>Code produit:</strong> {{stock.doc.data.code_produit}}</h6>
             <h6><strong>Nom produit:</strong> {{stock.doc.data.nom_produit}}</h6>
           </ion-item> 
-          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" side="right">
+          <!--ion-item-options *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" side="right">
             <button ion-button icon-only color="my_primary" (click)="partager(stock.doc._id)">
               <ion-icon name="share"></ion-icon>   
             </button>
@@ -245,7 +245,7 @@
   </div>
 
   
-  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManger)">
+  <ion-fab bottom right *ngIf="action == 'liste' && selectedStyle == 'tableau' && ((user && user.roles && global.estManager(user.roles)) || estManager)">
     <button mini ion-fab (click)="options()" color="my_primary"><ion-icon name="apps"></ion-icon></button>
     <!--ion-fab-list side="top">
       <button ion-fab mini *ngIf="produits.length > 0" (click)="onPrint()"><ion-icon name="print"></ion-icon></button>
@@ -254,14 +254,14 @@
     </ion-fab-list-->
   </ion-fab>
 
-  <ion-fab bottom right *ngIf="action == 'detail'" >
-      <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="supprimer(stock)" color="delete" ><ion-icon name="trash"></ion-icon></button>
+  <ion-fab bottom right *ngIf="action == 'detail' && ((user && user.roles && global.estManager(user.roles)) || estManager)" >
+      <button ion-fab mini (click)="supprimer(stock)" color="delete" ><ion-icon name="trash"></ion-icon></button>
       <!--ion-fab-list side="top">
         
         <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="openMap(gate.data.code_gate)" color="my_primary"><ion-icon name="pin"></ion-icon></button-->
         <!--button ion-fab mini *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="calculStatisitque(gate.data.code_gate)" color="my_primary"><ion-icon name="stats"></ion-icon></button->
         <button ion-fab *ngIf="(user && user.roles && global.estAnimataire(user.roles)) || estAnimataire" (click)="gategate(gate.data.num_aggrement, gate.data.nom_gate, gate.data.code_gate)" color="my_primary"><strong>OP</strong></button>
-        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManger" (click)="editer(gate)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
+        <button ion-fab mini *ngIf="(user && user.roles && global.estManager(user.roles)) || estManager" (click)="editer(gate)" color="my_primary" ><ion-icon name="create"></ion-icon></button>
       </ion-fab-list-->
     </ion-fab> 
 

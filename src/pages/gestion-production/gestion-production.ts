@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
+import { IonicPage, NavController, PopoverController, Events, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
 import { Validators, FormBuilder, FormGroup } from '@angular/forms';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 import { global } from '../../global-variables/variable';
@@ -8,8 +8,12 @@ import { Sim } from '@ionic-native/sim';
 import { File } from '@ionic-native/file';
 import * as FileSaver from 'file-saver';
 import { Printer, PrintOptions } from '@ionic-native/printer';
+import { RelationProductionComponent } from '../../components/relation-production/relation-production';
 declare var cordova: any;
-
+declare var createDataTable: any;
+declare var JSONToCSVAndTHMLTable: any;
+declare var $: any;
+declare var Formio;
 /**
  * Generated class for the GestionProductionPage page.
  *
@@ -27,7 +31,8 @@ export class GestionProductionPage {
   productionForm: FormGroup;
   user: any = global.info_user;
   global:any = global;
-  estManger: boolean = false;
+  estManager: boolean = false;
+  estAnimataire: boolean = false;
   estAdmin: boolean = false;
   productions: any = [];
   allProductions: any = [];
@@ -51,19 +56,20 @@ export class GestionProductionPage {
 
   produits: any = [];
   selectedProduit: any;
-  ingredients: any = [];
+  //ingredients: any = [];
   varietes: any = [];
   stock: any;
   id_produit_selected: any;
   copie_stock: any;
-  selectedProduitIngredients: any;
+  produitFormio: any;
   //depense: number = 0;
 
   id_produit: any;
   nom_produit: any;
   produitsCentre: any = [];
+  complete: boolean = false;
 
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
+  constructor(public navCtrl: NavController, public popoverController: PopoverController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public events: Events, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     if(navParams.data.id_centre && !navParams.data.id_produit){
       this.id_centre = this.navParams.data.id_centre;
       this.code_centre = this.navParams.data.code_centre;
@@ -78,6 +84,19 @@ export class GestionProductionPage {
       this.selectedCentre = this.id_centre;
       //this.getProduit(this.id_produit);
     }
+
+    events.subscribe('user:login', (user) => {
+      if(user){
+        this.aProfile = true;
+        this.estManagerConnecter(user)
+        this.estAnimataireConnecter(user)
+      }else{
+        this.aProfile = false;
+        this.estManager = false;
+        this.estAnimataire = false;
+        this.user = global.info_user;
+      }
+    });
   }
 
   initParamsData(){
@@ -89,11 +108,29 @@ export class GestionProductionPage {
     }
   }
 
+  estAnimataireConnecter(user){
+    if(user && user.roles){
+      this.estAnimataire = global.estAnimataire(user.roles);
+    }
+  }
+  
   reinitVar(){
     this.selectedCentre = '';
     this.selectedProduit = '';
     this.code = '';
   }
+
+  
+openRelationProduction(ev: any) {
+  let popover = this.popoverController.create(RelationProductionComponent);
+  popover.present({ev: ev});
+
+  popover.onWillDismiss((res) => {
+    if(res == 'Etat du stock'){
+      this.etatStock(this.production.data.id_stock, this.production.data.nom);
+    }
+  })
+}
 
 
   actions(){
@@ -216,10 +253,10 @@ export class GestionProductionPage {
   }
 
   generateId(){
-    var numbers='0123456789ABCDEFGHIJKLMNPQRSTUVWYZ'
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     var randomArray=[]
-    for(let i=0;i<24;i++){
-      var rand = Math.floor(Math.random()*34)
+    for(let i=0;i<50;i++){
+      var rand = Math.floor(Math.random()*62)
       randomArray.push(numbers[rand])
     }
     
@@ -250,7 +287,7 @@ export class GestionProductionPage {
       code_produit: [''], 
       type_produit: [''],
       unite: [''],
-      ingredients: [],
+      formData: [{}],
       id_centre: [this.id_centre],
       nom_centre: [''],
       code_centre: [''],
@@ -300,7 +337,7 @@ export class GestionProductionPage {
       code_produit: [production.data.code_produit], 
       type_produit: [production.data.type_produit],
       unite: [production.data.unite],
-      ingredients: [production.data.ingredients],
+      formData: [production.data.formData],
       id_centre: [production.data.id_centre],
       nom_centre: [production.data.nom_centre],
       code_centre: [production.data.code_centre],
@@ -338,38 +375,41 @@ export class GestionProductionPage {
     this.nom_centre = production.data.nom_centre;
     this.code_centre = production.data.code_centre;
     this.code = production.data.code;
-    this.ingredients = production.data.ingredients;
+    //this.ingredients = production.data.ingredients;
     this.getStock(production.data.id_stock, 'editer');
   }
 
 
   getVariete(){
     let cls: any = [];
-    this.servicePouchdb.getPlageDocsRapide('variete', 'variete:\uffff').then((v) => {
-      this.varietes = v
+    this.servicePouchdb.getDocByType('variete', false).then((v) => {
+      this.varietes = v.docs;
     });
   }
   
 
   getProduit(id_produit){
+    this.produitFormio = {};
     for(let i = 0; i < this.produits.length; i++){
-      if(this.produitsCentre[i].doc._id == id_produit){
-        this.productionForm.controls.code_produit.setValue(this.produits[i].doc.data.code);
-        this.productionForm.controls.nom_produit.setValue(this.produits[i].doc.data.nom);
-        this.productionForm.controls.code_centre.setValue(this.produits[i].doc.data.code_centre);
-        this.productionForm.controls.nom_centre.setValue(this.produits[i].doc.data.nom_centre);
+      if(this.produitsCentre[i]._id == id_produit){
+        this.productionForm.controls.code_produit.setValue(this.produits[i].data.code);
+        this.productionForm.controls.nom_produit.setValue(this.produits[i].data.nom);
+        this.productionForm.controls.code_centre.setValue(this.produits[i].data.code_centre);
+        this.productionForm.controls.nom_centre.setValue(this.produits[i].data.nom_centre);
         /*if(this.id_produit && this.id_produit != ''){
-          this.productionForm.controls.id_centre.setValue(this.produits[i].doc.data.id_centre);
+          this.productionForm.controls.id_centre.setValue(this.produits[i].data.id_centre);
         }*/
-        this.productionForm.controls.unite.setValue(this.produits[i].doc.data.unite);
-        this.productionForm.controls.type_produit.setValue(this.produits[i].doc.data.nom_type_produit);
-        this.productionForm.controls.prix_unitaire.setValue(this.produits[i].doc.data.prix_unitaire);
-        this.productionForm.controls.id_stock.setValue(this.produits[i].doc.data.id_stock);
-        this.ingredients = this.produits[i].doc.data.ingredients;
-        this.getStock(this.produits[i].doc.data.id_stock)
+        this.productionForm.controls.unite.setValue(this.produits[i].data.unite);
+        this.productionForm.controls.type_produit.setValue(this.produits[i].data.nom_type_produit);
+        this.productionForm.controls.prix_unitaire.setValue(this.produits[i].data.prix_unitaire);
+        //console.log(this.productionForm.controls.prix_unitaire +"   "+this.produits[i].data.prix_unitaire)
+        this.productionForm.controls.id_stock.setValue(this.produits[i].data.id_stock);
+        this.produitFormio = this.produits[i].data.formioData;
+        this.getStock(this.produits[i].data.id_stock)
         this.getVariete();
         this.getDepense();
         this.getQuantiteReelle();
+        this.presentFormEditer(this.produitFormio, this.productionForm.controls.formData.value)
         break;
       }
     }
@@ -391,9 +431,9 @@ export class GestionProductionPage {
 
     let d: number = 0;
     //cout des ingredients
-    this.ingredients.forEach((i) => {
-      d += /*i.quantite * */i.cout * 1;
-    })
+    /*this.ingredients.forEach((i) => {
+      d += /*i.quantite * *****i.cout * 1;
+    })*/
 
     //cout de la main d'oeuvre interne
     if(this.productionForm.controls.mode_paiement_interne.value != 'argent'){
@@ -555,12 +595,13 @@ getBenefice(){
 
   doRefresh(refresher) {
      // this.productions = [];
-      this.servicePouchdb.getPlageDocsRapide('production','production:\uffff').then((productions) => {
-        if(productions){
+      this.servicePouchdb.getDocByType('production', false).then((res) => {
+        if(res){
+          let productions = res.docs;
           if(this.id_centre && this.id_centre != ""){
             let uns: any= [];
             productions.forEach((u) => {
-              if(u.doc.data.id_produit == this.id_produit_selected && u.doc.data.id_centre && u.doc.data.id_centre == this.id_centre){
+              if(u.data.id_produit == this.id_produit_selected && u.data.id_centre && u.data.id_centre == this.id_centre){
                 uns.push(u)
               }
             });
@@ -570,7 +611,7 @@ getBenefice(){
           }else{
             let uns: any= [];
             productions.forEach((u) => {
-              if(u.doc.data.id_produit == this.id_produit_selected){
+              if(u.data.id_produit == this.id_produit_selected){
                 uns.push(u)
               }
             });
@@ -583,17 +624,17 @@ getBenefice(){
       });
   }
 
-  estMangerConnecter(user){
+  estManagerConnecter(user){
     //alert('entree')
     if(user && user.roles){
       //alert('ok')
-      this.estManger = global.estManager(user.roles);
+      this.estManager = global.estManager(user.roles);
     }
   }
 
   estAdminConnecter(user){
     if(user && user.roles){
-      this.estManger = global.estAdmin(user.roles);
+      this.estManager = global.estAdmin(user.roles);
     }
   }
 
@@ -668,7 +709,7 @@ getBenefice(){
   verifier(production){
     let msg = '';
 
-    production.ingredients.forEach((i) => {
+    /*production.ingredients.forEach((i) => {
       if(i.est_obligatoire == 'oui' &&((!i.quantite || i.quantite == '' ) || (i.type == 'culture' &&(!i.variete || i.variete == '' || !i.quantite || i.quantite == '' )))){
         msg += '\nLes renseignements de l\'ingrédient '+i.nom+' sont obligatoires.'
       }
@@ -676,7 +717,7 @@ getBenefice(){
       if(i.cout < 0 || (!i.cout && i.cout != 0)){
         msg += '\nLe coût de l\'ingrédient '+i.nom+' est obligatoire et non null ou négatif.'
       }
-    });
+    });*/
 
 
     if(production.quantite_produite < 0){
@@ -686,13 +727,13 @@ getBenefice(){
     //1
     /*if(this.action == 'ajouter'){
       this.allProductions.forEach((u, index) => {
-        if((production.code == u.doc.data.code) || (production.nom == u.doc.data.nom && production.id_centre == u.doc.data.id_centre)){
+        if((production.code == u.data.code) || (production.nom == u.data.nom && production.id_centre == u.data.id_centre)){
           res = 0;
         }
       });      
     }else{
       this.allProductions.forEach((u, index) => {
-        if((u.doc._id != this.production._id) && ((production.code == u.doc.data.code) || (production.nom == u.doc.data.nom && production.id_centre == u.doc.data.id_centre))){
+        if((u._id != this.production._id) && ((production.code == u.data.code) || (production.nom == u.data.nom && production.id_centre == u.data.id_centre))){
           res = 0;
         }
       });      
@@ -704,7 +745,8 @@ getBenefice(){
   validAction(){
     let date = new Date();
     let production = this.productionForm.value;
-    production.ingredients = this.ingredients;
+    delete production.formData.submit
+    //production.ingredients = this.ingredients;
     if(this.verifier(production) != ''/*==*/){
       alert(this.verifier(production));
     }else{
@@ -723,7 +765,7 @@ getBenefice(){
         this.servicePouchdb.createDocReturn(productionFinal).then((res) => {
           productionFinal._rev = res.rev;
           let u: any = {}
-          u.doc = productionFinal;
+          u = productionFinal;
 
           //metre à jour le stock
           this.stock.data.quantite_produite += parseFloat(productionFinal.data.quantite_produite);
@@ -763,7 +805,8 @@ getBenefice(){
         this.production.data.type_produit = production.type_produit;
         
         this.production.data.unite = production.unite;
-        this.production.data.ingredients = this.ingredients;
+        this.production.data.prix_unitaire = production.prix_unitaire;
+        this.production.data.formData = production.formData;
         this.production.data.id_centre = production.id_centre;
         this.production.data.nom_centre = production.nom_centre;
         this.production.data.code_centre = production.code_centre;
@@ -773,11 +816,11 @@ getBenefice(){
         this.production.data.quantite_reelle = production.quantite_reelle;
         this.production.data.ancien_stock = production.ancien_stock;
         this.production.data.nouveau_stock = production.nouveau_stock;
-        this.production.data.prix_unitaire = production.montan_production;
-        this.production.data.prix_unitaire = production.quantite_gate;
-        this.production.data.prix_unitaire = production.perte;
-        this.production.data.prix_unitaire = production.benefice;
-        this.production.data.prix_unitaire = production.autre_depense;
+        this.production.data.montan_production = production.montan_production;
+        this.production.data.quantite_gate = production.quantite_gate;
+        this.production.data.perte = production.perte;
+        this.production.data.benefice = production.benefice;
+        this.production.data.autre_depense = production.autre_depense;
       
         this.production.data.type_main_doeuvre_interne = production.type_main_doeuvre_interne;
         this.production.data.nombre_femme_interne = production.nombre_femme_interne;
@@ -829,7 +872,8 @@ getBenefice(){
             position: 'top',
             duration: 1000
           });
-          this.action  = 'detail';
+          //this.action  = 'detail';
+          this.detail(this.production)
           toast.present();
           this.centres = [];
           this.reinitVar()
@@ -915,21 +959,22 @@ detailIngredient(i){
   
   getAllProductions(id_produit_selected){
 
-    for(let i = 0; i > this.produits.length; i++ ){
-      if(this.produits[i].doc._id == id_produit_selected){
-        this.selectedProduitIngredients = this.produits[i].doc.data.ingredients;
+    /*for(let i = 0; i > this.produits.length; i++ ){
+      if(this.produits[i]._id == id_produit_selected){
+        this.produitFormio = this.produits[i].data.formioData;
         break;
       }
-    }
+    }*/
     
     //this.rechercher = true;
      // this.productions = [];
-      this.servicePouchdb.getPlageDocsRapide('production','production:\uffff').then((productions) => {
-        if(productions){
+      this.servicePouchdb.getDocByType('production', false).then((res) => {
+        if(res){
+          let productions = res.docs;
           if(this.id_centre && this.id_centre != ""){
             let uns: any= [];
             productions.forEach((u) => {
-              if(u.doc.data.id_produit == id_produit_selected && u.doc.data.id_centre && u.doc.data.id_centre == this.id_centre){
+              if(u.data.id_produit == id_produit_selected && u.data.id_centre && u.data.id_centre == this.id_centre){
                 uns.push(u)
               }
             });
@@ -939,7 +984,7 @@ detailIngredient(i){
           }else{
             let uns: any= [];
             productions.forEach((u) => {
-              if(u.doc.data.id_produit == id_produit_selected){
+              if(u.data.id_produit == id_produit_selected){
                 uns.push(u)
               }
             });
@@ -959,33 +1004,191 @@ detailIngredient(i){
 
 
   getAllCentre(){
-      this.servicePouchdb.getPlageDocsRapide('centre','centre:\uffff').then((centres) => {
+      this.servicePouchdb.getDocByType('centre', false).then((centres) => {
         if(centres){
-          this.centres = centres;
+          this.centres = centres.docs;
         }
       }).catch((err) => console.log(err)); 
   }
 
   getProduitsCentre(id_centre){
-    this.getProduitsByCentre(id_centre);
+    this.produitsCentre = [];
+    this.servicePouchdb.getDocByType('produit', false).then((res) => {
+      if(res){
+        let produits =  res.docs;
+        let p: any = [];
+        produits.forEach((prod) => {
+          if(prod.data.id_centre == id_centre){
+            p.push(prod);
+          }
+        });
+        this.produitsCentre = p;
+
+        if(this.id_produit && this.id_produit != ''){
+          if(this.action != 'modifier'){
+            this.getProduit(this.id_produit);
+          }
+        }
+      }
+    }).catch((err) => {
+      console.log(err)
+    }); 
+
+    //this.getProduitsByCentre(id_centre);
+  }
+
+  getProduitsCentreEdit(id_centre){
+    this.produitsCentre = [];
+    console.log(this.copieProduction)
+    this.servicePouchdb.getDocByType('produit', false).then((res) => {
+      if(res){
+        let produits =  res.docs;
+        let pro = null;
+        let p: any = [];
+        produits.forEach((prod) => {
+          if(prod.data.id_centre == id_centre){
+            p.push(prod);
+            if(prod._id == this.copieProduction.data.id_produit){
+              pro = prod;
+            }
+          }
+        });
+
+        this.produitsCentre = p;
+
+        if(pro)
+          this.presentFormEditer(pro.data.formioData, this.copieProduction.data.formData)
+      }
+    }).catch((err) => {
+      console.log(err)
+    }); 
+
+    //this.getProduitsByCentre(id_centre);
+  }
+
+
+  presentFormEditer(form, formData){
+    var self = this;
+    this.complete = false;
+    $('#formio3').ready(() => {
+      //Formio.icons = 'fontawesome';
+      var formElement = document.getElementById('formio3');
+      var opts = {
+        breadcrumbSettings: {clickable:false},
+        buttonSettings: {showCancel: false},
+        language: 'fr',
+        i18n: {
+          fr: {
+            'Submit': 'Valider',
+            'submit': 'Terminer',
+            'cancel': 'Annuler',
+            'complete': 'Terminé avec succès',
+            'error' : "Veuillez corriger les erreurs suivantes avant de termier.",
+            'invalid_date' :"{{field}} is not a valid date.",
+            'invalid_email' : "{{field}} must be a valid email.",
+            'invalid_regex' : "{{field}} does not match the pattern {{regex}}.",
+            'mask' : "{{field}} does not match the mask.",
+            'max' : "{{field}} ne peut pas être supérieur à {{max}}.",
+            'maxLength' : "{{field}} doit être plus court que {{length}} charactères.",
+            'min' : "{{field}} ne peut pas être inférieur à {{min}}.",
+            'minLength' : "{{field}} doit être plus long que {{length}} charactères.",
+            'next' : "Suivant",
+            'pattern' : "{{field}} does not match the pattern {{pattern}}",
+            'previous' : "Précédent",
+            'required' : "{{field}} est requis",
+          }
+        }
+      };
+      formElement.innerHTML = '';
+      Formio.createForm(formElement, form, opts).then((form) => {
+        //console.log(form)
+        form.submission = {
+          data: formData
+        };
+        //self.formObject = form;
+        //self.formObject.submit().catch((err)=> {console.log(err)});
+        form.on('submit', (submission) => {
+          //JSON.stringify(submission)
+          self.productionForm.controls.formData.setValue(submission.data);
+          self.complete = true;
+          //self.afficheForm = false;
+          //form.data = {};
+          //console.log('The form was just submitted!!!');
+        });
+
+        /*form.on('change', (c) => {
+          console.log('ch '+ c);
+        })*/
+        
+        
+        /*form.on('error', (errors) => {
+          console.log('We have errors! '+errors);
+        })*/
+      });
+    })
+  }
+
+
+
+  showForm(form, formData){
+    $('#show-ingredient-form').ready(() => {
+      var formElement = document.getElementById('show-ingredient-form');
+      var opts = {
+        //breadcrumbSettings: {clickable:false},
+        //buttonSettings: {showCancel: false},
+        readOnly: true,
+        language: 'fr',
+        i18n: {
+          fr: {
+            'Submit': 'Valider',
+            'submit': 'Terminer',
+            'cancel': 'Annuler',
+            'complete': 'Terminé avec succès',
+            'error' : "Veuillez corriger les erreurs suivantes avant de termier.",
+            'invalid_date' :"{{field}} is not a valid date.",
+            'invalid_email' : "{{field}} must be a valid email.",
+            'invalid_regex' : "{{field}} does not match the pattern {{regex}}.",
+            'mask' : "{{field}} does not match the mask.",
+            'max' : "{{field}} ne peut pas être supérieur à {{max}}.",
+            'maxLength' : "{{field}} doit être plus court que {{length}} charactères.",
+            'min' : "{{field}} ne peut pas être inférieur à {{min}}.",
+            'minLength' : "{{field}} doit être plus long que {{length}} charactères.",
+            'next' : "Suivant",
+            'pattern' : "{{field}} does not match the pattern {{pattern}}",
+            'previous' : "Précédent",
+            'required' : "{{field}} est requis",
+          }
+        }
+      };
+      
+      formElement.innerHTML = '';
+      Formio.createForm(formElement, form, opts).then((form) => {
+        //console.log(form)
+        form.submission = {
+          data: formData
+        };
+        
+      });
+    })
   }
 
   getAllProduits(){
     this.rechercher = true;
      // this.productions = [];
-    this.servicePouchdb.getPlageDocsRapide('produit:','produit:\uffff').then((produits) => {
-      if(produits){
+    this.servicePouchdb.getDocByType('produit', false).then((res) => {
+      if(res){
+        let produits =  res.docs;
         if(this.id_centre && this.id_centre != ''){
           let p: any = [];
           produits.forEach((prod) => {
-            if(prod.doc.data.id_centre == this.id_centre){
+            if(prod.data.id_centre == this.id_centre){
               p.push(prod);
             }
           });
           this.produits = p;
           if(this.produits.length > 0){
-            this.id_produit_selected = this.produits[0].doc._id;
-            this.selectedProduitIngredients = this.produits[0].doc.data.ingredients;
+            this.id_produit_selected = this.produits[0]._id;
+            //this.produitFormio = this.produits[0].data.formioData;
             this.getAllProductions(this.id_produit_selected);
           }else{
             this.rechercher = false;
@@ -994,8 +1197,8 @@ detailIngredient(i){
         }else{
           this.produits = produits;
           if(this.produits.length > 0){
-            this.id_produit_selected = this.produits[0].doc._id;
-            this.selectedProduitIngredients = this.produits[0].doc.data.ingredients;
+            this.id_produit_selected = this.produits[0]._id;
+            //this.produitFormio = this.produits[0].data.formioData;
             this.getAllProductions(this.id_produit_selected);
           }else{
             this.rechercher = false;
@@ -1014,7 +1217,7 @@ detailIngredient(i){
 getProduitsByCentre(id_centre){
   let p: any = [];
   this.produits.forEach((prod) => {
-    if(prod.doc.data.id_centre == id_centre){
+    if(prod.data.id_centre == id_centre){
       p.push(prod);
     }
   });
@@ -1030,7 +1233,7 @@ getProduitsByCentre(id_centre){
   ionViewDidEnter() {
     //this.getallProductions();
     this.getAllProduits();
-    /*this.servicePouchdb.remoteSaved.getSession((err, response) => {
+    this.servicePouchdb.remoteSaved.getSession((err, response) => {
         if (err) {
           // network error
           //this.events.publish('user:login');
@@ -1047,7 +1250,7 @@ getProduitsByCentre(id_centre){
           //alert(response.userCtx.name)
           this.aProfile = true;
         }
-      });*/
+      });
       
         
   }
@@ -1081,8 +1284,9 @@ getProduitsByCentre(id_centre){
     //this.getAllProduits();
     this.getInfoSimEmei();
     this.action = 'modifier';
-    this.getProduitsByCentre(production.data.id_centre);
     this.copieProduction = this.clone(production);
+    //this.getProduitsByCentre(production.data.id_centre);
+    this.getProduitsCentreEdit(production.data.id_centre)
       //this.navCtrl.push('AjouterproductionPage', {'confLocaliteEnquete': confLocaliteEnquete});    
   }
 
@@ -1095,6 +1299,11 @@ getProduitsByCentre(id_centre){
   detail(production){
     this.production = production;
     this.action = 'detail';
+    //console.log(production.data.id_produit)
+    this.servicePouchdb.getDocById(production.data.id_produit).then((s) => {
+      //console.log(s.data.formioData)
+      this.showForm(s.data.formioData, production.data.formData)
+    })
     //this.navCtrl.push('DetailproductionPage', {'production': production, 'selectedSource': selectedSource});
   }
 
@@ -1109,15 +1318,15 @@ getProduitsByCentre(id_centre){
     if (val && val.trim() != '') {
       this.productions = this.productions.filter((item) => {
         if(this.typeRecherche === 'nom_produit'){
-          return (item.doc.data.nom_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.nom_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }else if(this.typeRecherche === 'code_produit'){
-          return (item.doc.data.code_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.code_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }else if(this.typeRecherche === 'type_produit'){
-           return (item.doc.data.type_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
+           return (item.data.type_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }if(this.typeRecherche === 'code_centre'){
-          return (item.doc.data.code_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.code_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }if(this.typeRecherche === 'nom_centre'){
-          return (item.doc.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+          return (item.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
         }
       });
     } 
@@ -1179,9 +1388,9 @@ supprimer(production){
                   //mettre le stock à jour
                   //this.servicePouchdb.updateDoc(stock);
                   //let e: any = {};
-                  //e.doc = essai;
+                  //e = essai;
                   this.productions.forEach((es, i) => {
-                    if(es.doc._id === production._id){
+                    if(es._id === production._id){
                       this.productions.splice(i, 1);
                     }
                     
@@ -1217,9 +1426,9 @@ supprimer(production){
                   //mettre le stock à jour
                  // this.servicePouchdb.updateDoc(stock);
                   //let e: any = {};
-                  //e.doc = essai;
+                  //e = essai;
                   this.productions.forEach((es, i) => {
-                    if(es.doc._id === production._id){
+                    if(es._id === production._id){
                       this.productions.splice(i, 1);
                     }
                     
@@ -1288,9 +1497,9 @@ annulerProduction(production){
                   //mettre le stock à jour
                   this.servicePouchdb.updateDoc(stock);
                   //let e: any = {};
-                  //e.doc = essai;
+                  //e = essai;
                   this.productions.forEach((es, i) => {
-                    if(es.doc._id === production._id){
+                    if(es._id === production._id){
                       this.productions.splice(i, 1);
                     }
                     
@@ -1326,9 +1535,9 @@ annulerProduction(production){
                   //mettre le stock à jour
                   this.servicePouchdb.updateDoc(stock);
                   //let e: any = {};
-                  //e.doc = essai;
+                  //e = essai;
                   this.productions.forEach((es, i) => {
-                    if(es.doc._id === production._id){
+                    if(es._id === production._id){
                       this.productions.splice(i, 1);
                     }
                     

@@ -45,7 +45,10 @@ export var global = {
     info_user: {
       name: 'Admin',
       roles: ['admin'],
-      codes_unions: []
+      codes_federations: [],
+      codes_unions: [],
+      codes_ops: [],
+      codes_centres: []
     },
     info_connexion: null,
     config_app: {
@@ -56,7 +59,7 @@ export var global = {
         ip: '@ip:5984',
         nom_db: 'nom_db'// 'fuma_frn_app',
     }, 
-    pays: {
+    /*pays: {
         "_id": "pays",
         "type": "pays",
         "data": [
@@ -1253,5 +1256,5 @@ export var global = {
             "nom_commune": "Chadakori"
           }
         ]
-      },
+    },*/
 }

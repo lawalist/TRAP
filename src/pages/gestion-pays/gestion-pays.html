@@ -65,27 +65,35 @@
   <div *ngIf="!liste">
     <form [formGroup]="paysForm" (ngSubmit) = "actionForm()" >
 
-      <ion-item>
+      <ion-item class="item-no-border">
         <ion-label floating>Id pays <span class="error-box">*</span></ion-label>
         <ion-input formControlName="id" type="text"  [(ngModel)]="id" disabled></ion-input>
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="paysForm.controls['id'].hasError('required') && paysForm.controls['id'].touched">* Le ID du pays est obligatoire</div>
 
-      <ion-item *ngIf="ajouter">
+      <ion-item class="item-no-border" *ngIf="ajouter">
         <ion-label floating>Nom pays <span class="error-box">*</span></ion-label>
         <ion-input formControlName="nom" type="text"  [(ngModel)]="nom" (keyup)="genererID()"></ion-input>
       </ion-item>
 
-      <ion-item *ngIf="modifier">
+      <ion-item class="item-no-border" *ngIf="modifier">
         <ion-label floating>Nom pays <span class="error-box">*</span></ion-label>
         <ion-input formControlName="nom" type="text"  [(ngModel)]="nom"></ion-input>
       </ion-item>
       <div style="padding-left: 15px;" class="error-box" *ngIf="paysForm.controls['nom'].hasError('required') && paysForm.controls['nom'].touched">* Le nom du pays est obligatoire</div>
 
       <br>
-      <button ion-button type="submit" color="my_secondary" [disabled]="!paysForm.valid" block>Sauvegarder</button>
+      <ion-row>
+        <ion-col>
+          <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
+        </ion-col>
+        <ion-col>
+          <button ion-button type="submit" color="my_secondary" [disabled]="!paysForm.valid" block>Sauvegarder</button>
+        </ion-col>
+      </ion-row>
+
     </form>
-    <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
+    <br><br><br>
   </div>
 
 

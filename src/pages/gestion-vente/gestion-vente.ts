@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-  import { IonicPage, NavController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
+  import { IonicPage, NavController, Events, PopoverController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
   import { Validators, FormBuilder, FormGroup } from '@angular/forms';
   import { PouchdbProvider } from '../../providers/pouchdb-provider';
   import { global } from '../../global-variables/variable';
@@ -8,6 +8,7 @@ import { Component } from '@angular/core';
   import { File } from '@ionic-native/file';
   import * as FileSaver from 'file-saver';
   import { Printer, PrintOptions } from '@ionic-native/printer';
+import { RelationVenteComponent } from '../../components/relation-vente/relation-vente';
   declare var cordova: any;
   
 /**
@@ -27,7 +28,8 @@ export class GestionVentePage {
     venteForm: FormGroup;
     user: any = global.info_user;
     global:any = global;
-    estManger: boolean = false;
+    estManager: boolean = false;
+    estAnimataire: boolean = false;
     estAdmin: boolean = false;
     ventes: any = [];
     allVentes: any = [];
@@ -61,7 +63,7 @@ export class GestionVentePage {
     id_produit: any;
     nom_produit: any;
     produitsCentre: any = [];
-    constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
+    constructor(public navCtrl: NavController, public events: Events, public popoverController: PopoverController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
       if(navParams.data.id_centre && !navParams.data.id_produit){
         this.id_centre = this.navParams.data.id_centre;
         this.code_centre = this.navParams.data.code_centre;
@@ -75,6 +77,19 @@ export class GestionVentePage {
         this.selectedCentre = this.id_centre;
         //this.getProduit(this.id_produit);
       }
+
+      events.subscribe('user:login', (user) => {
+        if(user){
+          this.aProfile = true;
+          this.estManagerConnecter(user)
+          this.estAnimataireConnecter(user)
+        }else{
+          this.aProfile = false;
+          this.estManager = false;
+          this.estAnimataire = false;
+          this.user = global.info_user;
+        }
+      });
     }
 
     initParamsData(){
@@ -92,6 +107,18 @@ export class GestionVentePage {
       this.code = '';
     }
   
+    
+openRelationVente(ev: any) {
+  let popover = this.popoverController.create(RelationVenteComponent);
+  popover.present({ev: ev});
+
+  popover.onWillDismiss((res) => {
+    if(res == 'Etat du stock'){
+      this.etatStock(this.vente.data.id_stock, this.vente.data.nom);
+    }
+  })
+}
+
   
     actions() {
       const actionSheet = this.actionSheetCtrl.create({
@@ -204,10 +231,10 @@ export class GestionVentePage {
     }
   
     generateId(){
-      var numbers='0123456789ABCDEFGHIJKLMNPQRSTUVWYZ'
+      var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
       var randomArray=[]
-      for(let i=0;i<24;i++){
-        var rand = Math.floor(Math.random()*34)
+      for(let i=0;i<50;i++){
+        var rand = Math.floor(Math.random()*62)
         randomArray.push(numbers[rand])
       }
       
@@ -253,7 +280,7 @@ export class GestionVentePage {
         code_produit: [''], 
         type_produit: [''],
         unite: [''],
-        id_centre: [this.id_centre],
+        id_centre: [this.id_centre, Validators.required],
         nom_centre: [''],
         code_centre: [''],
         //depense: [0],
@@ -291,7 +318,7 @@ export class GestionVentePage {
         code_produit: [vente.data.code_produit], 
         type_produit: [vente.data.type_produit],
         unite: [vente.data.unite],
-        id_centre: [vente.data.id_centre],
+        id_centre: [vente.data.id_centre, Validators.required],
         nom_centre: [vente.data.nom_centre],
         code_centre: [vente.data.code_centre],
         type_client: [vente.data.type_client],
@@ -319,25 +346,25 @@ export class GestionVentePage {
   
     getVariete(){
       let cls: any = [];
-      this.servicePouchdb.getPlageDocsRapide('variete', 'variete:\uffff').then((v) => {
-        this.varietes = v
+      this.servicePouchdb.getDocByType('variete', false).then((v) => {
+        this.varietes = v.docs
       });
     }
     
   
     getProduit(id_produit){
       for(let i = 0; i < this.produits.length; i++){
-        if(this.produits[i].doc._id == id_produit){
-          this.venteForm.controls.code_produit.setValue(this.produits[i].doc.data.code);
-          this.venteForm.controls.nom_produit.setValue(this.produits[i].doc.data.nom);
-          this.venteForm.controls.code_centre.setValue(this.produits[i].doc.data.code_centre);
-          this.venteForm.controls.nom_centre.setValue(this.produits[i].doc.data.nom_centre);
-          //this.venteForm.controls.id_centre.setValue(this.produits[i].doc.data.id_centre);
-          this.venteForm.controls.unite.setValue(this.produits[i].doc.data.unite);
-          this.venteForm.controls.type_produit.setValue(this.produits[i].doc.data.nom_type_produit);
-          this.venteForm.controls.prix_unitaire.setValue(this.produits[i].doc.data.prix_unitaire);
-          this.venteForm.controls.id_stock.setValue(this.produits[i].doc.data.id_stock);
-          this.getStock(this.produits[i].doc.data.id_stock)
+        if(this.produits[i]._id == id_produit){
+          this.venteForm.controls.code_produit.setValue(this.produits[i].data.code);
+          this.venteForm.controls.nom_produit.setValue(this.produits[i].data.nom);
+          this.venteForm.controls.code_centre.setValue(this.produits[i].data.code_centre);
+          this.venteForm.controls.nom_centre.setValue(this.produits[i].data.nom_centre);
+          //this.venteForm.controls.id_centre.setValue(this.produits[i].data.id_centre);
+          this.venteForm.controls.unite.setValue(this.produits[i].data.unite);
+          this.venteForm.controls.type_produit.setValue(this.produits[i].data.nom_type_produit);
+          this.venteForm.controls.prix_unitaire.setValue(this.produits[i].data.prix_unitaire);
+          this.venteForm.controls.id_stock.setValue(this.produits[i].data.id_stock);
+          this.getStock(this.produits[i].data.id_stock)
           this.getCoutVente();
           this.getCoutVenteReduction();
           //this.getVariete();
@@ -428,12 +455,13 @@ export class GestionVentePage {
   
     doRefresh(refresher) {
        // this.ventes = [];
-        this.servicePouchdb.getPlageDocsRapide('vente','vente:\uffff').then((ventes) => {
-          if(ventes){
+        this.servicePouchdb.getDocByType('vente', false).then((res) => {
+          if(res){
+            let ventes = res.docs;
             if(this.id_centre && this.id_centre != ""){
               let uns: any= [];
               ventes.forEach((u) => {
-                if(u.doc.data.id_produit == this.id_produit_selected && u.doc.data.id_centre && u.doc.data.id_centre == this.id_centre){
+                if(u.data.id_produit == this.id_produit_selected && u.data.id_centre && u.data.id_centre == this.id_centre){
                   uns.push(u)
                 }
               });
@@ -443,7 +471,7 @@ export class GestionVentePage {
             }else{
               let uns: any= [];
               ventes.forEach((u) => {
-                if(u.doc.data.id_produit == this.id_produit_selected){
+                if(u.data.id_produit == this.id_produit_selected){
                   uns.push(u)
                 }
               });
@@ -456,17 +484,23 @@ export class GestionVentePage {
         });
     }
   
-    estMangerConnecter(user){
+    estManagerConnecter(user){
       //alert('entree')
       if(user && user.roles){
         //alert('ok')
-        this.estManger = global.estManager(user.roles);
+        this.estManager = global.estManager(user.roles);
       }
     }
   
     estAdminConnecter(user){
       if(user && user.roles){
-        this.estManger = global.estAdmin(user.roles);
+        this.estManager = global.estAdmin(user.roles);
+      }
+    }
+
+    estAnimataireConnecter(user){
+      if(user && user.roles){
+        this.estAnimataire = global.estAnimataire(user.roles);
       }
     }
   
@@ -543,13 +577,13 @@ export class GestionVentePage {
       let res = 0;//1
       if(this.action == 'ajouter'){
         this.allVentes.forEach((u, index) => {
-          if((vente.code == u.doc.data.code) || (vente.nom == u.doc.data.nom && vente.id_centre == u.doc.data.id_centre)){
+          if((vente.code == u.data.code) || (vente.nom == u.data.nom && vente.id_centre == u.data.id_centre)){
             res = 0;
           }
         });      
       }else{
         this.allVentes.forEach((u, index) => {
-          if((u.doc._id != this.vente._id) && ((vente.code == u.doc.data.code) || (vente.nom == u.doc.data.nom && vente.id_centre == u.doc.data.id_centre))){
+          if((u._id != this.vente._id) && ((vente.code == u.data.code) || (vente.nom == u.data.nom && vente.id_centre == u.data.id_centre))){
             res = 0;
           }
         });      
@@ -581,7 +615,7 @@ export class GestionVentePage {
           this.servicePouchdb.createDocReturn(venteFinal).then((res) => {
             venteFinal._rev = res.rev;
             let u: any = {}
-            u.doc = venteFinal;
+            u = venteFinal;
   
             //metre à jour le stock
             //this.stock.data.quantite_vendue += venteFinal.data.quantite_vendue;
@@ -797,12 +831,13 @@ export class GestionVentePage {
       
       //this.rechercher = true;
        // this.ventes = [];
-        this.servicePouchdb.getPlageDocsRapide('vente','vente:\uffff').then((ventes) => {
-          if(ventes){
+        this.servicePouchdb.getDocByType('vente', false).then((res) => {
+          if(res){
+            let ventes = res.docs;
             if(this.id_centre && this.id_centre != ""){
               let uns: any= [];
               ventes.forEach((u) => {
-                if(u.doc.data.id_produit == id_produit_selected && u.doc.data.id_centre && u.doc.data.id_centre == this.id_centre){
+                if(u.data.id_produit == id_produit_selected && u.data.id_centre && u.data.id_centre == this.id_centre){
                   uns.push(u)
                 }
               });
@@ -812,7 +847,7 @@ export class GestionVentePage {
             }else{
               let uns: any= [];
               ventes.forEach((u) => {
-                if(u.doc.data.id_produit == id_produit_selected){
+                if(u.data.id_produit == id_produit_selected){
                   uns.push(u)
                 }
               });
@@ -832,9 +867,9 @@ export class GestionVentePage {
   
   
     getAllCentre(){
-        this.servicePouchdb.getPlageDocsRapide('centre','centre:\uffff').then((centres) => {
+        this.servicePouchdb.getDocByType('centre', false).then((centres) => {
           if(centres){
-            this.centres = centres;
+            this.centres = centres.docs;
           }
         }).catch((err) => console.log(err)); 
     }
@@ -846,18 +881,19 @@ export class GestionVentePage {
     getAllProduits(){
       this.rechercher = true;
        // this.ventes = [];
-      this.servicePouchdb.getPlageDocsRapide('produit:','produit:\uffff').then((produits) => {
-        if(produits){
+      this.servicePouchdb.getDocByType('produit', false).then((res) => {
+        if(res){
+          let produits = res.docs;
           if(this.id_centre && this.id_centre != ''){
             let p: any = [];
             produits.forEach((prod) => {
-              if(prod.doc.data.id_centre == this.id_centre){
+              if(prod.data.id_centre == this.id_centre){
                 p.push(prod);
               }
             });
             this.produits = p;
             if(this.produits.length > 0){
-              this.id_produit_selected = this.produits[0].doc._id;
+              this.id_produit_selected = this.produits[0]._id;
               this.getAllVentes(this.id_produit_selected);
             }else{
               this.rechercher = false;
@@ -866,7 +902,7 @@ export class GestionVentePage {
           }else{
             this.produits = produits;
             if(this.produits.length > 0){
-              this.id_produit_selected = this.produits[0].doc._id;
+              this.id_produit_selected = this.produits[0]._id;
               this.getAllVentes(this.id_produit_selected);
             }else{
               this.rechercher = false;
@@ -885,7 +921,7 @@ export class GestionVentePage {
   getProduitsByCentre(id_centre){
     let p: any = [];
     this.produits.forEach((prod) => {
-      if(prod.doc.data.id_centre == id_centre){
+      if(prod.data.id_centre == id_centre){
         p.push(prod);
       }
     });
@@ -902,7 +938,7 @@ export class GestionVentePage {
     ionViewDidEnter() {
       //this.getAllVentes();
       this.getAllProduits();
-      /*this.servicePouchdb.remoteSaved.getSession((err, response) => {
+      this.servicePouchdb.remoteSaved.getSession((err, response) => {
           if (err) {
             // network error
             //this.events.publish('user:login');
@@ -919,7 +955,7 @@ export class GestionVentePage {
             //alert(response.userCtx.name)
             this.aProfile = true;
           }
-        });*/
+        });
         
           
     }
@@ -981,25 +1017,25 @@ export class GestionVentePage {
       if (val && val.trim() != '') {
         this.ventes = this.ventes.filter((item) => {
           if(this.typeRecherche === 'nom_produit'){
-            return (item.doc.data.nom_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
+            return (item.data.nom_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }else if(this.typeRecherche === 'code_produit'){
-            return (item.doc.data.code_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
+            return (item.data.code_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }else if(this.typeRecherche === 'type_produit'){
-             return (item.doc.data.type_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
+             return (item.data.type_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }if(this.typeRecherche === 'code_centre'){
-            return (item.doc.data.code_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+            return (item.data.code_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }if(this.typeRecherche === 'nom_centre'){
-            return (item.doc.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+            return (item.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }
           /*
           if(this.typeRecherche === 'nom'){
-            return (item.doc.data.nom.toLowerCase().indexOf(val.toLowerCase()) > -1);
+            return (item.data.nom.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }else if(this.typeRecherche === 'code'){
-            return (item.doc.data.code.toLowerCase().indexOf(val.toLowerCase()) > -1);
+            return (item.data.code.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }else if(this.typeRecherche === 'produit'){
-             return (item.doc.data.nom_type_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
+             return (item.data.nom_type_produit.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }if(this.typeRecherche === 'centre'){
-            return (item.doc.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+            return (item.data.nom_centre.toLowerCase().indexOf(val.toLowerCase()) > -1);
           }*/
   
         });
@@ -1062,9 +1098,9 @@ export class GestionVentePage {
                     //mettre le stock à jour
                     //this.servicePouchdb.updateDoc(stock);
                     //let e: any = {};
-                    //e.doc = essai;
+                    //e = essai;
                     this.ventes.forEach((es, i) => {
-                      if(es.doc._id === vente._id){
+                      if(es._id === vente._id){
                         this.ventes.splice(i, 1);
                       }
                       
@@ -1100,9 +1136,9 @@ export class GestionVentePage {
                     //mettre le stock à jour
                     //this.servicePouchdb.updateDoc(stock);
                     //let e: any = {};
-                    //e.doc = essai;
+                    //e = essai;
                     this.ventes.forEach((es, i) => {
-                      if(es.doc._id === vente._id){
+                      if(es._id === vente._id){
                         this.ventes.splice(i, 1);
                       }
                       
@@ -1171,9 +1207,9 @@ export class GestionVentePage {
                     //mettre le stock à jour
                     this.servicePouchdb.updateDoc(stock);
                     //let e: any = {};
-                    //e.doc = essai;
+                    //e = essai;
                     this.ventes.forEach((es, i) => {
-                      if(es.doc._id === vente._id){
+                      if(es._id === vente._id){
                         this.ventes.splice(i, 1);
                       }
                       
@@ -1209,9 +1245,9 @@ export class GestionVentePage {
                     //mettre le stock à jour
                     this.servicePouchdb.updateDoc(stock);
                     //let e: any = {};
-                    //e.doc = essai;
+                    //e = essai;
                     this.ventes.forEach((es, i) => {
-                      if(es.doc._id === vente._id){
+                      if(es._id === vente._id){
                         this.ventes.splice(i, 1);
                       }
                       

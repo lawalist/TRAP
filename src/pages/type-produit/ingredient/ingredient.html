@@ -10,7 +10,7 @@
       <ion-buttons left>
         <button ion-button icon-only color="royal" (click)="annuler()"> Fermer <!--ion-icon name="arrow-back"></ion-icon--></button>
       </ion-buttons> 
-    <ion-title>ingredient</ion-title>
+    <ion-title>Ingredient</ion-title>
   </ion-navbar>
 
 </ion-header>
@@ -36,14 +36,14 @@
 
     <ion-row *ngIf="ingredientForm.value.type">
       <ion-col>
-        <ion-item>
+        <ion-item class="item-no-border">
           <ion-label floating>Code ingrédient <span class="error-box">*</span></ion-label>
           <ion-input [disabled]=detail type="text" formControlName="code"></ion-input>
         </ion-item>
         <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['code'].hasError('required') && ingredientForm.controls['code'].touched">* le code de l'ingredient est obligatoir et doit comporter au plus 50 caractères (letrres + nombre + _ + -)!</div>    
       </ion-col>
       <ion-col>
-        <ion-item *ngIf="ingredientForm.value.type && ingredientForm.value.type != 'culture'">
+        <ion-item class="item-no-border" *ngIf="ingredientForm.value.type && ingredientForm.value.type != 'culture'">
           <ion-label floating>Nom <span class="error-box">*</span></ion-label>
           <ion-input [disabled]=detail type="text" formControlName="nom"></ion-input>
         </ion-item>
@@ -69,7 +69,7 @@
         <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['variete'].hasError('required') && ingredientForm.controls['variete'].touched">* la variete de l'ingredient est obligatoir!</div>    
       </ion-col>
       <ion-col>
-        <ion-item>
+        <ion-item class="item-no-border">
           <ion-label floating>Quantite par défaut</ion-label>
           <ion-input [disabled]=detail type="number" formControlName="quantite"></ion-input>
         </ion-item>
@@ -77,19 +77,19 @@
       </ion-col>
     </ion-row>
 
-    <ion-item *ngIf="ingredientForm.value.type && (ingredientForm.value.type == 'choix' || ingredientForm.value.type == 'choix_multiple')">
+    <ion-item class="item-no-border" *ngIf="ingredientForm.value.type && (ingredientForm.value.type == 'choix' || ingredientForm.value.type == 'choix_multiple')">
       <ion-label floating>Liste des choix séparés par des virgules (,) <span class="error-box">*</span></ion-label>
       <ion-input [disabled]=detail type="text" formControlName="choix"></ion-input>
     </ion-item>
 
-    <ion-item *ngIf="ingredientForm.value.type && ingredientForm.value.type == 'quantitatif'">
+    <ion-item class="item-no-border" *ngIf="ingredientForm.value.type && ingredientForm.value.type == 'quantitatif'">
       <ion-label floating>Quantite par défaut</ion-label>
       <ion-input [disabled]=detail type="number" formControlName="quantite"></ion-input>
     </ion-item>
     <div style="padding-left: 15px;" class="error-box" *ngIf="ingredientForm.controls['quantite'].hasError('required') && ingredientForm.controls['quantite'].touched">* Veuillez indiquer la quantite par défaut de l'ingredient!</div>      
 
 
-    <ion-item *ngIf="ingredientForm.value.type && ingredientForm.value.type != 'culture' && ingredientForm.value.type != 'quantitatif'">
+    <ion-item class="item-no-border" *ngIf="ingredientForm.value.type && ingredientForm.value.type != 'culture' && ingredientForm.value.type != 'quantitatif'">
         <ion-label floating>Valeur par défaut</ion-label>
         <ion-input [disabled]=detail type="text" formControlName="quantite"></ion-input>
       </ion-item>
@@ -141,12 +141,12 @@
   <br>
   <ion-row *ngIf="!detail">
     <ion-col>
-      <button ion-button type="submit" color="my_secondary" [disabled]="!ingredientForm.valid" block>Sauvegarder</button>
+      <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
     </ion-col>
     <ion-col>
-      <button ion-button color="annuler" block (click)="annuler()">Annuler</button>
+      <button ion-button type="submit" color="my_secondary" [disabled]="!ingredientForm.valid" block>Sauvegarder</button>
     </ion-col>
   </ion-row>
 </form>
-
+  <br><br><br>
 </ion-content>

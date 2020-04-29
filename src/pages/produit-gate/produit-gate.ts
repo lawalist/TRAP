@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
+import { IonicPage, NavController, PopoverController, ActionSheetController, NavParams, LoadingController, ViewController, MenuController, AlertController, ToastController, ModalController, Platform } from 'ionic-angular';
 import { Validators, FormBuilder, FormGroup } from '@angular/forms';
 import { PouchdbProvider } from '../../providers/pouchdb-provider';
 import { global } from '../../global-variables/variable';
@@ -8,6 +8,7 @@ import { Sim } from '@ionic-native/sim';
 import { File } from '@ionic-native/file';
 import * as FileSaver from 'file-saver';
 import { Printer, PrintOptions } from '@ionic-native/printer';
+import { RelationProduitGateComponent } from '../../components/relation-produit-gate/relation-produit-gate';
 declare var cordova: any;
 /**
  * Generated class for the ProduitGatePage page.
@@ -28,6 +29,7 @@ export class ProduitGatePage {
   global:any = global;
   estManger: boolean = false;
   estAdmin: boolean = false;
+  estAnimataire: boolean = false;
   gates: any = [];
   allGates: any = [];
   //allGates1: any = [];
@@ -59,7 +61,7 @@ export class ProduitGatePage {
   //depense: number = 0;
 
 
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
+  constructor(public navCtrl: NavController, public popoverController: PopoverController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     if(navParams.data.id_centre){
       this.id_centre = this.navParams.data.id_centre;
       this.code_centre = this.navParams.data.code_centre;
@@ -73,6 +75,18 @@ export class ProduitGatePage {
     this.selectedProduit = '';
     this.code = '';
   }
+
+     
+openRelationProduitGate(ev: any) {
+  let popover = this.popoverController.create(RelationProduitGateComponent);
+  popover.present({ev: ev});
+
+  popover.onWillDismiss((res) => {
+    if(res == 'Etat du stock'){
+      this.etatStock(this.gate.data.id_stock, this.gate.data.nom);
+    }
+  })
+}
 
 
   actions() {
@@ -186,10 +200,10 @@ export class ProduitGatePage {
   }
 
   generateId(){
-    var numbers='0123456789ABCDEFGHIJKLMNPQRSTUVWYZ'
+    var numbers='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     var randomArray=[]
-    for(let i=0;i<24;i++){
-      var rand = Math.floor(Math.random()*34)
+    for(let i=0;i<50;i++){
+      var rand = Math.floor(Math.random()*62)
       randomArray.push(numbers[rand])
     }
     
@@ -373,6 +387,12 @@ export class ProduitGatePage {
   estAdminConnecter(user){
     if(user && user.roles){
       this.estManger = global.estAdmin(user.roles);
+    }
+  }
+
+  estAnimataireConnecter(user){
+    if(user && user.roles){
+      this.estAnimataire = global.estAnimataire(user.roles);
     }
   }
 
