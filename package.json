@@ -103,7 +103,7 @@
     "ionic-stepper": "^1.1.0",
     "ionicons": "3.0.0",
     "jsbarcode": "^3.11.0",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.13.1",
     "pouchdb": "^7.0.0",
     "pouchdb-authentication": "^1.1.3",
     "pouchdb-core": "^7.0.0",
