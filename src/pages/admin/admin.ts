@@ -203,7 +203,7 @@ dismiss(){
           filters: {
             myfilter: function (doc, req) {
             var localite_doc = ['pays', 'region', 'commune', 'departement', 'village'/*, 'variete', 'culture'*/];
-              var doc_pour_centre = [/*'federation', 'union', 'op', */'membre', 'centre', 'production', 'produit', 'vente', 'produit-gate', 'stock'];
+              var doc_pour_centre = [/*'federation', 'union', 'op', */'membre', 'centre', 'production', 'produit', 'vente', 'produit-gate', 'stock', 'donnees-enquete'];
               //seul l'admin à accès à la totalité des inforamtions de la base de donnée
               if(doc._id == '_design/filtrerDocByCodeCentre' || (req.query.roles && req.query.roles.length && (req.query.roles.indexOf('admin') != -1) || (req.query.roles.indexOf('_admin') != -1))){
                 return 1
@@ -223,15 +223,15 @@ dismiss(){
                     if(req.query.codes_centres && req.query.codes_centres.length > 0 && doc.code_centre){
                       return req.query.codes_centres.indexOf(doc.code_centre) !== -1;
                     }
-                  }else{
+                  }/*else{
                     //return 'doc type probleme => '+doc._id
                     throw({forbidden: 'doc sans data probleme => '+doc._id})
-                  }
+                  }*/
                 }//fin doc.type
                 
                 else if(doc.data && doc.data.type){
-                  //culture, variete et type-produit sont publiques
-                  if(doc.data.type == 'culture' || doc.data.type == 'variete' || doc.data.type == 'type-produit'){
+                  //culture, variete et type-produit sont publiques, formulaire
+                  if(doc.data.type == 'culture' || doc.data.type == 'variete' || doc.data.type == 'type-produit' || doc.data.type == 'formulaire-enquete'){
                     return 1;
                   }else 
                   //filtrer les fédérations par code_federation
@@ -251,7 +251,7 @@ dismiss(){
                     //si filtre défini
                     if(req.query.codes_centres && req.query.codes_centres.length > 0){
                       //cas du protocole
-                      return req.query.codes_centress.indexOf(doc.data.code_centre) !== -1;
+                      return req.query.codes_centres.indexOf(doc.data.code_centre) !== -1;
                     }
                   }
                  else{
@@ -264,21 +264,33 @@ dismiss(){
         }
 
         global.remoteSaved.get('_design/filtrerDocByCodeCentre').then((doc) => {
+          console.log(doc)
           if(doc && doc._id){
             //doc existe
+            //console.log('existe')
             //this.database.remote(doc)
             filter_doc._rev = doc._rev;
-            global.remoteSaved.put(filter_doc).then((res) => alert('Filter mise à jour avec succes')).catch((err) => alert('erreur mise à jour du filter du filter '+err));
+            global.remoteSaved.put(filter_doc).then((res) => alert('Filter mise à jour avec succes')).catch((err) => {
+              alert('erreur mise à jour du filter du filter '+err)
+              console.log(err)
+            });
           }else{
             //créer le filtre de base
             //this.ajouterDesignDoc();
-            global.remoteSaved.put(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => alert('erreur ajout du filter '+err));
+            console.log('non existe')
+            global.remoteSaved.put(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => {
+              alert('erreur ajout du filter '+err)
+              console.log(err)
+            });
           }
           
         }).catch((err) => {
-          //alert(err)
+          console.log(err)
           //this.ajouterDesignDoc();
-          global.remoteSaved.put(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => alert('erreur ajout du filter '+err));
+          global.remoteSaved.put(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => {
+            alert('erreur ajout du filter '+err)
+            console.log(err)
+          });
         });
     
 
@@ -293,7 +305,7 @@ dismiss(){
           filters: {
             myfilter: function (doc, req) {
             var localite_doc = ['pays', 'region', 'commune', 'departement', 'village'/*, 'variete', 'culture'*/];
-              var doc_pour_centre = [/*'federation', 'union', 'op', */'membre', 'centre', 'production', 'produit', 'vente', 'produit-gate', 'stock'];
+              var doc_pour_centre = [/*'federation', 'union', 'op', */'membre', 'centre', 'production', 'produit', 'vente', 'produit-gate', 'stock', 'donnees-enquete'];
               //seul l'admin à accès à la totalité des inforamtions de la base de donnée
               if(doc._id == '_design/filtrerDocByCodeCentre' || (req.query.roles && req.query.roles.length && (req.query.roles.indexOf('admin') != -1) || (req.query.roles.indexOf('_admin') != -1))){
                 return 1
@@ -313,15 +325,15 @@ dismiss(){
                     if(req.query.codes_centres && req.query.codes_centres.length > 0 && doc.code_centre){
                       return req.query.codes_centres.indexOf(doc.code_centre) !== -1;
                     }
-                  }else{
+                  }/*else{
                     //return 'doc type probleme => '+doc._id
                     throw({forbidden: 'doc sans data probleme => '+doc._id})
-                  }
+                  }*/
                 }//fin doc.type
                 
                 else if(doc.data && doc.data.type){
                   //culture, variete et type-produit sont publiques
-                  if(doc.data.type == 'culture' || doc.data.type == 'variete' || doc.data.type == 'type-produit'){
+                  if(doc.data.type == 'culture' || doc.data.type == 'variete' || doc.data.type == 'type-produit' || doc.data.type == 'formulaire-enquete'){
                     return 1;
                   }else 
                   //filtrer les fédérations par code_federation
@@ -341,7 +353,7 @@ dismiss(){
                     //si filtre défini
                     if(req.query.codes_centres && req.query.codes_centres.length > 0){
                       //cas du protocole
-                      return req.query.codes_centress.indexOf(doc.data.code_centre) !== -1;
+                      return req.query.codes_centres.indexOf(doc.data.code_centre) !== -1;
                     }
                   }
                  else{
@@ -359,19 +371,28 @@ dismiss(){
             //this.database.remote(doc)
             filter_doc._id = '_design/filtrerDocByCodeCentre';
             filter_doc._rev = doc._rev;
-            this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter mise à jour avec succes')).catch((err) => alert('erreur mise à jour du filter du filter => '+err));
+            this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter mise à jour avec succes')).catch((err) => {
+              alert('erreur mise à jour du filter du filter => '+err)
+              console.log(err)
+            });
           }else{
             //créer le filtre de base
             //this.ajouterDesignDoc();
             filter_doc._id = '_design/filtrerDocByCodeCentre';
-            this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => alert('erreur ajout du filter => '+err));
+            this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => {
+              alert('erreur ajout du filter => '+err)
+              console.log(err)
+            });
           }
           
         }).catch((err) => {
-          //alert(err)
+          console.log(err)
           //this.ajouterDesignDoc();
           filter_doc._id = '_design/filtrerDocByCodeCentre';
-          this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => alert('erreur ajout du filter '+err));
+          this.database.createSimpleDocReturn(filter_doc).then((res) => alert('Filter ajouté avec succes')).catch((err) => {
+            alert('erreur ajout du filter '+err)
+            console.log(err)
+          });
         });
     
 

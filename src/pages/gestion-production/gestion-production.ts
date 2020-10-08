@@ -9,6 +9,10 @@ import { File } from '@ionic-native/file';
 import * as FileSaver from 'file-saver';
 import { Printer, PrintOptions } from '@ionic-native/printer';
 import { RelationProductionComponent } from '../../components/relation-production/relation-production';
+var flatten = require('flat');
+const keys = require('all-object-keys');
+const jessy = require('jessy');
+
 declare var cordova: any;
 declare var createDataTable: any;
 declare var JSONToCSVAndTHMLTable: any;
@@ -37,6 +41,7 @@ export class GestionProductionPage {
   productions: any = [];
   allProductions: any = [];
   //allProductions1: any = [];
+  jessy = jessy;
   code: any;
   phonenumber: any;
   imei: any;
@@ -68,6 +73,8 @@ export class GestionProductionPage {
   nom_produit: any;
   produitsCentre: any = [];
   complete: boolean = false;
+
+  colonnes = [];
 
   constructor(public navCtrl: NavController, public popoverController: PopoverController, public actionSheetCtrl: ActionSheetController, public loadinCtl: LoadingController, public viewCtl: ViewController, public menuCtl: MenuController, public alertCtl: AlertController, public sim: Sim, public device: Device, public servicePouchdb: PouchdbProvider, public events: Events, public platform: Platform, public toastCtl: ToastController, public printer: Printer, public file: File, public modelCtl: ModalController, public navParams: NavParams, public formBuilder: FormBuilder) {
     if(navParams.data.id_centre && !navParams.data.id_produit){
@@ -283,6 +290,7 @@ openRelationProduction(ev: any) {
       type:['production'],
       date_production: [today, Validators.required],
       id_produit: [this.id_produit, Validators.required], 
+      prixUnitaire: [0, Validators.required],
       nom_produit: [''], 
       code_produit: [''], 
       type_produit: [''],
@@ -291,30 +299,10 @@ openRelationProduction(ev: any) {
       id_centre: [this.id_centre],
       nom_centre: [''],
       code_centre: [''],
-      depense: [0],
-      autre_depense: [0],
-      quantite_produite: [, Validators.required],
-      quantite_gate: [0, Validators.required],
-      perte: [0, Validators.required],
-      montan_production: [0, Validators.required],
-      benefice: [0, Validators.required],
-      quantite_reelle: [0, Validators.required],
-      ancien_stock: [0, Validators.required],
-      nouveau_stock: [0, Validators.required],
-      prix_unitaire: [0, Validators.required],
-      type_main_doeuvre_interne: ['gratuite', Validators.required],
-      nombre_femme_interne: [0, Validators.required],
-      cout_femme_interne: [0, Validators.required],
-      nombre_homme_interne: [0, Validators.required],
-      cout_homme_interne: [0, Validators.required],
-      mode_paiement_interne: ['argent'],
-
-      type_main_doeuvre_externe: ['aucune', Validators.required],
-      nombre_femme_externe: [0, Validators.required],
-      cout_femme_externe: [0, Validators.required],
-      nombre_homme_externe: [0, Validators.required],
-      cout_homme_externe: [0, Validators.required],
-      mode_paiement_externe: ['argent'],
+      quantiteProduite: [],
+      ancienStock: [0, Validators.required],
+      nouveauStock: [],
+      
       id_stock: [''],
       today: [today, Validators.required],
       deviceid: [''],
@@ -341,31 +329,11 @@ openRelationProduction(ev: any) {
       id_centre: [production.data.id_centre],
       nom_centre: [production.data.nom_centre],
       code_centre: [production.data.code_centre],
-      depense: [production.data.depense, Validators.required],
-      quantite_produite: [production.data.quantite_produite, Validators.required],
-      autre_depense: [production.data.autre_depense, Validators.required],
-      quantite_gate: [production.data.quantite_gate, Validators.required],
-      perte: [production.data.perte, Validators.required],
-      montan_production: [production.data.montan_production, Validators.required],
-      benefice: [production.data.benefice, Validators.required],
-      quantite_reelle: [production.data.quantite_reelle, Validators.required],
-      ancien_stock: [production.data.ancien_stock, Validators.required],
-      nouveau_stock: [production.data.nouveau_stock, Validators.required],
-      prix_unitaire: [production.data.prix_unitaire, Validators.required],
+      quantiteProduite: [production.data.quantiteProduite, Validators.required],
+      ancienStock: [production.data.ancienStock, Validators.required],
+      nouveauStock: [production.data.nouveauStock, Validators.required],
+      prixUnitaire: [production.data.prixUnitaire, Validators.required],
       
-      type_main_doeuvre_interne: [production.data.type_main_doeuvre_interne, Validators.required],
-      nombre_femme_interne: [production.data.nombre_femme_interne],
-      cout_femme_interne: [production.data.cout_femme_interne],
-      nombre_homme_interne: [production.data.nombre_homme_interne],
-      cout_homme_interne: [production.data.cout_homme_interne],
-      mode_paiement_interne: [production.data.mode_paiement_interne],
-
-      type_main_doeuvre_externe: [production.data.type_main_doeuvre_externe, Validators.required],
-      nombre_femme_externe: [production.data.nombre_femme_externe],
-      cout_femme_externe: [production.data.cout_femme_externe],
-      nombre_homme_externe: [production.data.nombre_homme_externe],
-      cout_homme_externe: [production.data.cout_homme_externe],
-      mode_paiement_externe: [production.data.mode_paiement_externe],
       id_stock: [production.data.id_stock],
       today: [production.data.today, Validators.required],
     });
@@ -390,26 +358,27 @@ openRelationProduction(ev: any) {
 
   getProduit(id_produit){
     this.produitFormio = {};
-    for(let i = 0; i < this.produits.length; i++){
+    for(let i = 0; i < this.produitsCentre.length; i++){
       if(this.produitsCentre[i]._id == id_produit){
-        this.productionForm.controls.code_produit.setValue(this.produits[i].data.code);
-        this.productionForm.controls.nom_produit.setValue(this.produits[i].data.nom);
-        this.productionForm.controls.code_centre.setValue(this.produits[i].data.code_centre);
-        this.productionForm.controls.nom_centre.setValue(this.produits[i].data.nom_centre);
+        this.productionForm.controls.code_produit.setValue(this.produitsCentre[i].data.code);
+        this.productionForm.controls.nom_produit.setValue(this.produitsCentre[i].data.nom);
+        this.productionForm.controls.code_centre.setValue(this.produitsCentre[i].data.code_centre);
+        this.productionForm.controls.nom_centre.setValue(this.produitsCentre[i].data.nom_centre);
         /*if(this.id_produit && this.id_produit != ''){
-          this.productionForm.controls.id_centre.setValue(this.produits[i].data.id_centre);
+          this.productionForm.controls.id_centre.setValue(this.produitsCentre[i].data.id_centre);
         }*/
-        this.productionForm.controls.unite.setValue(this.produits[i].data.unite);
-        this.productionForm.controls.type_produit.setValue(this.produits[i].data.nom_type_produit);
-        this.productionForm.controls.prix_unitaire.setValue(this.produits[i].data.prix_unitaire);
-        //console.log(this.productionForm.controls.prix_unitaire +"   "+this.produits[i].data.prix_unitaire)
-        this.productionForm.controls.id_stock.setValue(this.produits[i].data.id_stock);
-        this.produitFormio = this.produits[i].data.formioData;
-        this.getStock(this.produits[i].data.id_stock)
-        this.getVariete();
-        this.getDepense();
-        this.getQuantiteReelle();
-        this.presentFormEditer(this.produitFormio, this.productionForm.controls.formData.value)
+        this.productionForm.controls.unite.setValue(this.produitsCentre[i].data.unite);
+        this.productionForm.controls.type_produit.setValue(this.produitsCentre[i].data.nom_type_produit);
+        this.productionForm.controls.prixUnitaire.setValue(this.produitsCentre[i].data.prix_unitaire);
+        //console.log(this.productionForm.controls.prix_unitaire +"   "+this.produitsCentre[i].data.prix_unitaire)
+        this.productionForm.controls.id_stock.setValue(this.produitsCentre[i].data.id_stock);
+        this.produitFormio = this.produitsCentre[i].data.formioData;
+        this.getStock(this.produitsCentre[i].data.id_stock)
+        
+        if(this.action != 'ajouter'){
+          this.presentFormEditer(this.produitFormio, this.productionForm.controls.formData.value)
+        }
+        
         break;
       }
     }
@@ -421,159 +390,18 @@ openRelationProduction(ev: any) {
       if(editer == 'editer'){
         this.copie_stock = this.clone(s);
       }
-      this.productionForm.controls.ancien_stock.setValue(s.data.quantite_disponible);
+      this.productionForm.controls.ancienStock.setValue(s.data.quantite_disponible);
+
+      if(this.action == 'ajouter'){
+        let data = {
+          prixUnitaire: this.productionForm.controls.prixUnitaire.value,
+          ancienStock: this.productionForm.controls.ancienStock.value
+        }
+        this.presentFormEditer(this.produitFormio, data)
+      }
     })
   }
 
-  getDepense(){
-    //if(quantite && prix_unitaire){
-      //this.depense += quantite * prix_unitaire;
-
-    let d: number = 0;
-    //cout des ingredients
-    /*this.ingredients.forEach((i) => {
-      d += /*i.quantite * *****i.cout * 1;
-    })*/
-
-    //cout de la main d'oeuvre interne
-    if(this.productionForm.controls.mode_paiement_interne.value != 'argent'){
-      d += parseFloat(this.productionForm.controls.prix_unitaire.value) * parseFloat(this.productionForm.controls.cout_femme_interne.value);
-      d += parseFloat(this.productionForm.controls.prix_unitaire.value) * parseFloat(this.productionForm.controls.cout_homme_interne.value);
-      //mise à jour de la quantié réelle
-      this.getQuantiteReelle()
-    }else{
-      //cas de paiement par argents
-      d += parseFloat(this.productionForm.controls.cout_femme_interne.value) * 1;
-      d += parseFloat(this.productionForm.controls.cout_homme_interne.value) * 1;
-    }
-
-    //cout de la main d'oeuvre externe
-    //cas de paiement par quantité de produit
-    if(this.productionForm.controls.mode_paiement_externe.value != 'argent'){
-      d += parseFloat(this.productionForm.controls.prix_unitaire.value) * parseFloat(this.productionForm.controls.cout_femme_externe.value);
-      d += parseFloat(this.productionForm.controls.prix_unitaire.value) * parseFloat(this.productionForm.controls.cout_homme_externe.value);
-      //mise à jour de la quantié réelle
-      this.getQuantiteReelle()
-    }else{
-      //cas de paiement par argents
-      d += parseFloat(this.productionForm.controls.cout_femme_externe.value) * 1;
-      d += parseFloat(this.productionForm.controls.cout_homme_externe.value) * 1;
-    }
-
-    if(!isNaN(parseFloat(this.productionForm.controls.autre_depense.value))){
-      d += parseFloat(this.productionForm.controls.autre_depense.value);
-      //this.getBenefice();
-    }
-
-    this.productionForm.controls.depense.setValue(d);
-    this.getBenefice();
-    //}
-  }
-
-  getDepenseSupplementaire(){
-    if(!isNaN(parseFloat(this.productionForm.controls.autre_depense.value))){
-      this.productionForm.controls.depense.setValue(parseFloat(this.productionForm.controls.autre_depense.value) + parseFloat(this.productionForm.controls.depense.value));
-      this.getBenefice();
-    }
-    
-  }
-
-  getPerte(){
-    this.productionForm.controls.perte.setValue(parseFloat(this.productionForm.controls.prix_unitaire.value) * parseFloat(this.productionForm.controls.quantite_gate.value));
-  }
-
-  getTypeMainInterne(type){
-    if(type == 'gratuite'){
-      this.productionForm.controls.cout_femme_interne.setValue(0);
-      this.productionForm.controls.cout_homme_interne.setValue(0);
-      //this.productionForm.controls.mode_paiement_interne.setValue(' ');
-      this.getDepense();
-      this.getQuantiteReelle();
-    }else{
-      this.getDepense();
-      this.getQuantiteReelle();
-    }
-  }
-
-  getTypeMainExterne(type){
-    if(type == 'aucune'){
-      this.productionForm.controls.nombre_femme_externe.setValue(0);
-      this.productionForm.controls.nombre_homme_externe.setValue(0);
-      this.productionForm.controls.cout_femme_externe.setValue(0);
-      this.productionForm.controls.cout_homme_externe.setValue(0);
-      //this.productionForm.controls.mode_paiement_externe.setValue(' ');
-      this.getDepense();
-      this.getQuantiteReelle();
-    }else if(type == 'gratuite'){
-      this.productionForm.controls.cout_femme_externe.setValue(0);
-      this.productionForm.controls.cout_homme_externe.setValue(0);
-      //this.productionForm.controls.mode_paiement_externe.setValue(' ');
-      this.getDepense();
-      this.getQuantiteReelle();
-    }else{
-      this.getDepense();
-      this.getQuantiteReelle();
-    }
-  }
-
-  ModepaiementInterne(mode){
-    this.getDepense();
-    this.getQuantiteReelle();
-  }
-
-  ModepaiementExterne(mode){
-    this.getDepense();
-    this.getQuantiteReelle();
-  }
-
-  /*getCoutM(cout){
-    this.depense += parseFloat(cout);
-  }
-
-  //
-  getCoutMP(cout, prix){
-    this.depense += cout * prix;
-    if(this.productionForm.controls.quantite_produite.value && this.productionForm.controls.quantite_produite.value != ''){
-      this.getQuantiteReelle();
-    }
-  }
-*/
-
-getBenefice(){
-  if(!isNaN(parseFloat(this.productionForm.value.montan_production)) && !isNaN(parseFloat(this.productionForm.controls.depense.value))){
-    this.productionForm.controls.benefice.setValue(parseFloat(this.productionForm.value.montan_production) - parseFloat(this.productionForm.controls.depense.value));
-  }
-  
-}
-
-  getQuantiteReelle(){
-    //cas de main d'oeuvre avec paiement par produit interne et externe
-    if(!isNaN(parseFloat(this.productionForm.value.quantite_produite))){
-      this.productionForm.controls.montan_production.setValue(parseFloat(this.productionForm.value.quantite_produite) * parseFloat(this.productionForm.controls.prix_unitaire.value));
-    }
- 
-    //this.productionForm.controls.perte.setValue(parseFloat(this.productionForm.value.quantite_produite) * parseFloat(this.productionForm.controls.prix_unitaire.value));
-    this.getBenefice();
-    if(this.productionForm.controls.mode_paiement_externe.value != 'argent' && this.productionForm.controls.mode_paiement_interne.value != 'argent'){
-      this.productionForm.controls.quantite_reelle.setValue( parseFloat(this.productionForm.value.quantite_produite) /*- this.productionForm.value.quantite_gate*/ - parseFloat(this.productionForm.controls.cout_femme_externe.value) - parseFloat(this.productionForm.controls.cout_homme_externe.value) - parseFloat(this.productionForm.controls.cout_femme_interne.value) - parseFloat(this.productionForm.controls.cout_homme_interne.value));
-      this.productionForm.controls.nouveau_stock.setValue(parseFloat(this.productionForm.controls.ancien_stock.value) + parseFloat(this.productionForm.controls.quantite_reelle.value));
-    }else 
-    ////cas de main d'oeuvre avec paiement par produit externe seulement
-    if(this.productionForm.controls.mode_paiement_externe.value != 'argent' && this.productionForm.controls.mode_paiement_interne.value == 'argent'){
-      this.productionForm.controls.quantite_reelle.setValue(parseFloat(this.productionForm.value.quantite_produite) /*- this.productionForm.value.quantite_gate*/ - parseFloat(this.productionForm.controls.cout_femme_externe.value) - parseFloat(this.productionForm.controls.cout_homme_externe.value));
-      this.productionForm.controls.nouveau_stock.setValue(parseFloat(this.productionForm.controls.ancien_stock.value) + parseFloat(this.productionForm.controls.quantite_reelle.value));
-    }else
-    //cas de main d'oeuvre avec paiement par produit interne seulement
-    if(this.productionForm.controls.mode_paiement_externe.value == 'argent' && this.productionForm.controls.mode_paiement_interne.value != 'argent'){
-      this.productionForm.controls.quantite_reelle.setValue(parseFloat(this.productionForm.value.quantite_produite) - /*this.productionForm.value.quantite_gate -*/ parseFloat(this.productionForm.controls.cout_femme_interne.value) - parseFloat(this.productionForm.controls.cout_homme_interne.value));
-      this.productionForm.controls.nouveau_stock.setValue(parseFloat(this.productionForm.controls.ancien_stock.value) + parseFloat(this.productionForm.controls.quantite_reelle.value));
-    }else{
-      //sinon
-      this.productionForm.controls.quantite_reelle.setValue(parseFloat(this.productionForm.value.quantite_produite)/* - this.productionForm.value.quantite_gate*/ + 0);
-      this.productionForm.controls.nouveau_stock.setValue(parseFloat(this.productionForm.controls.ancien_stock.value) + parseFloat(this.productionForm.controls.quantite_reelle.value));
-
-    }
-   }
 
   createDate(jour: any, moi: any, annee: any){
     let s = annee+'-';
@@ -595,6 +423,7 @@ getBenefice(){
 
   doRefresh(refresher) {
      // this.productions = [];
+     this.colonnes = [];
       this.servicePouchdb.getDocByType('production', false).then((res) => {
         if(res){
           let productions = res.docs;
@@ -602,9 +431,13 @@ getBenefice(){
             let uns: any= [];
             productions.forEach((u) => {
               if(u.data.id_produit == this.id_produit_selected && u.data.id_centre && u.data.id_centre == this.id_centre){
-                uns.push(u)
+                uns.push(u);
+                this.colonnes = Array.from(new Set(this.colonnes.concat(keys(u.data.formData))));
               }
             });
+            this.colonnes.splice(this.colonnes.indexOf('quantiteProduite'), 1);
+            this.colonnes.splice(this.colonnes.indexOf('prixUnitaire'), 1);
+            this.colonnes.splice(this.colonnes.indexOf('ancienStock'), 1);
             this.productions = uns;
             this.allProductions = uns;
             refresher.complete();
@@ -613,8 +446,12 @@ getBenefice(){
             productions.forEach((u) => {
               if(u.data.id_produit == this.id_produit_selected){
                 uns.push(u)
+                this.colonnes = Array.from(new Set(this.colonnes.concat(keys(u.data.formData))));
               }
             });
+            this.colonnes.splice(this.colonnes.indexOf('quantiteProduite'), 1);
+            this.colonnes.splice(this.colonnes.indexOf('prixUnitaire'), 1);
+            this.colonnes.splice(this.colonnes.indexOf('ancienStock'), 1);
             this.productions = uns;
             this.allProductions = uns;
             refresher.complete();
@@ -720,7 +557,7 @@ getBenefice(){
     });*/
 
 
-    if(production.quantite_produite < 0){
+    if(production.quantiteProduite < 0){
       msg += '\nLa quantité produite ne peut pas être nulle ou négative.' 
     }
 
@@ -768,9 +605,9 @@ getBenefice(){
           u = productionFinal;
 
           //metre à jour le stock
-          this.stock.data.quantite_produite += parseFloat(productionFinal.data.quantite_produite);
+          this.stock.data.quantiteProduite += parseFloat(productionFinal.data.quantiteProduite);
           //this.stock.data.quantite_gate += productionFinal.data.quantite_gate;
-          this.stock.data.quantite_disponible += parseFloat(productionFinal.data.quantite_reelle);
+          this.stock.data.quantite_disponible += parseFloat(productionFinal.data.quantiteProduite);
           this.servicePouchdb.updateDoc(this.stock)
           //fin mise à jour stock
           
@@ -805,38 +642,16 @@ getBenefice(){
         this.production.data.type_produit = production.type_produit;
         
         this.production.data.unite = production.unite;
-        this.production.data.prix_unitaire = production.prix_unitaire;
+        this.production.data.prixUnitaire = production.prixUnitaire;
         this.production.data.formData = production.formData;
         this.production.data.id_centre = production.id_centre;
         this.production.data.nom_centre = production.nom_centre;
         this.production.data.code_centre = production.code_centre;
-        this.production.data.depense = production.depense;
-        this.production.data.quantite_produite = production.quantite_produite;
-        //this.production.data.quantite_gate = production.quantite_gate;
-        this.production.data.quantite_reelle = production.quantite_reelle;
-        this.production.data.ancien_stock = production.ancien_stock;
-        this.production.data.nouveau_stock = production.nouveau_stock;
-        this.production.data.montan_production = production.montan_production;
-        this.production.data.quantite_gate = production.quantite_gate;
-        this.production.data.perte = production.perte;
-        this.production.data.benefice = production.benefice;
-        this.production.data.autre_depense = production.autre_depense;
+        this.production.data.quantiteProduite = production.quantiteProduite;
+        this.production.data.ancienStock = production.ancienStock;
+        this.production.data.nouveauStock = production.nouveauStock;
       
-        this.production.data.type_main_doeuvre_interne = production.type_main_doeuvre_interne;
-        this.production.data.nombre_femme_interne = production.nombre_femme_interne;
-        this.production.data.cout_femme_interne = production.cout_femme_interne;
-        this.production.data.nombre_homme_interne = production.nombre_homme_interne;
-        this.production.data.cout_homme_interne = production.cout_homme_interne;
-        this.production.data.mode_paiement_interne = production.mode_paiement_interne;
-
-        this.production.data.type_main_doeuvre_externe = production.type_main_doeuvre_externe;
-        this.production.data.nombre_femme_externe = production.nombre_femme_externe;
-        this.production.data.cout_femme_externe = production.cout_femme_externe;
-        this.production.data.nombre_homme_externe = production.nombre_homme_externe;
-        this.production.data.cout_homme_externe = production.cout_homme_externe;
-        this.production.data.mode_paiement_externe = production.mode_paiement_externe;
-        this.production.data.id_stock = production.id_stock;
-
+       
         this.production.data.update_deviceid = this.device.uuid;
         this.production.data.update_phonenumber = this.phonenumber;
         this.production.data.update_imei = this.imei;
@@ -847,21 +662,21 @@ getBenefice(){
           //en cas de changement de produit
           if(this.production.data.id_stock != this.copie_stock._id){
             //soustraire l'ancienne production
-            this.copie_stock.data.quantite_produite -= parseFloat(this.copieProduction.data.quantite_produite);
+            this.copie_stock.data.quantiteProduite -= parseFloat(this.copieProduction.data.quantiteProduite);
             //this.copie_stock.data.quantite_gate -= this.copieProduction.data.quantite_gate;
-            this.copie_stock.data.quantite_disponible -= parseFloat(this.copieProduction.data.quantite_reelle);
+            this.copie_stock.data.quantite_disponible -= parseFloat(this.copieProduction.data.quantiteProduite);
             this.servicePouchdb.updateDoc(this.copie_stock);
 
             //mise à jour nouveau stock
-            this.stock.data.quantite_produite += parseFloat(this.production.data.quantite_produite);
+            this.stock.data.quantiteProduite += parseFloat(this.production.data.quantiteProduite);
             //this.stock.data.quantite_gate += this.production.data.quantite_gate;
-            this.stock.data.quantite_disponible += parseFloat(this.production.data.quantite_reelle);
+            this.stock.data.quantite_disponible += parseFloat(this.production.data.quantiteProduite);
             this.servicePouchdb.updateDoc(this.stock);
           }else{
             //mise à jour du stocke
-            this.stock.data.quantite_produite += parseFloat(this.production.data.quantite_produite) - parseFloat(this.copieProduction.data.quantite_produite);
+            this.stock.data.quantiteProduite += parseFloat(this.production.data.quantiteProduite) - parseFloat(this.copieProduction.data.quantiteProduite);
             //this.stock.data.quantite_gate += (this.production.data.quantite_gate - this.copieProduction.data.quantite_gate);
-            this.stock.data.quantite_disponible += parseFloat(this.production.data.quantite_reelle) - parseFloat(this.copieProduction.data.quantite_reelle);
+            this.stock.data.quantite_disponible += parseFloat(this.production.data.quantiteProduite) - parseFloat(this.copieProduction.data.quantiteProduite);
             this.servicePouchdb.updateDoc(this.stock);
           }
           //fin mise à jour stock
@@ -968,6 +783,7 @@ detailIngredient(i){
     
     //this.rechercher = true;
      // this.productions = [];
+     this.colonnes = [];
       this.servicePouchdb.getDocByType('production', false).then((res) => {
         if(res){
           let productions = res.docs;
@@ -976,8 +792,12 @@ detailIngredient(i){
             productions.forEach((u) => {
               if(u.data.id_produit == id_produit_selected && u.data.id_centre && u.data.id_centre == this.id_centre){
                 uns.push(u)
+                this.colonnes = Array.from(new Set(this.colonnes.concat(keys(u.data.formData))));
               }
             });
+            this.colonnes.splice(this.colonnes.indexOf('quantiteProduite'), 1);
+            this.colonnes.splice(this.colonnes.indexOf('prixUnitaire'), 1);
+            this.colonnes.splice(this.colonnes.indexOf('ancienStock'), 1);
             this.productions = uns;
             this.allProductions = uns;
             this.rechercher = false;
@@ -986,11 +806,16 @@ detailIngredient(i){
             productions.forEach((u) => {
               if(u.data.id_produit == id_produit_selected){
                 uns.push(u)
+                this.colonnes = Array.from(new Set(this.colonnes.concat(keys(u.data.formData))));
               }
             });
+            this.colonnes.splice(this.colonnes.indexOf('quantiteProduite'), 1);
+            this.colonnes.splice(this.colonnes.indexOf('prixUnitaire'), 1);
+            this.colonnes.splice(this.colonnes.indexOf('ancienStock'), 1);
             this.productions = uns;
             this.allProductions = uns;
             this.rechercher = false;
+            //console.log(this.colonnes)
           }
           
           //this.allProductions1 = productions;
@@ -1039,7 +864,7 @@ detailIngredient(i){
 
   getProduitsCentreEdit(id_centre){
     this.produitsCentre = [];
-    console.log(this.copieProduction)
+    //console.log(this.copieProduction)
     this.servicePouchdb.getDocByType('produit', false).then((res) => {
       if(res){
         let produits =  res.docs;
@@ -1069,6 +894,7 @@ detailIngredient(i){
 
   presentFormEditer(form, formData){
     var self = this;
+    //console.log(formData)
     this.complete = false;
     $('#formio3').ready(() => {
       //Formio.icons = 'fontawesome';
@@ -1110,6 +936,14 @@ detailIngredient(i){
         form.on('submit', (submission) => {
           //JSON.stringify(submission)
           self.productionForm.controls.formData.setValue(submission.data);
+          //console.log(submission.data)
+          if(self.productionForm.controls.quantiteProduite.value){
+            self.productionForm.controls.nouveauStock.setValue(parseFloat(self.productionForm.controls.ancienStock.value) + (parseFloat(submission.data.quantiteProduite) - parseFloat(self.productionForm.controls.quantiteProduite.value)));
+          }else{
+            self.productionForm.controls.nouveauStock.setValue(parseFloat(self.productionForm.controls.ancienStock.value) + (parseFloat(submission.data.quantiteProduite)/* - parseFloat(self.productionForm.controls.quantiteProduite.value))*/));
+          }
+          self.productionForm.controls.quantiteProduite.setValue(submission.data.quantiteProduite);
+          
           self.complete = true;
           //self.afficheForm = false;
           //form.data = {};
@@ -1302,6 +1136,7 @@ getProduitsByCentre(id_centre){
     //console.log(production.data.id_produit)
     this.servicePouchdb.getDocById(production.data.id_produit).then((s) => {
       //console.log(s.data.formioData)
+      //console.log(production.data.formData)
       this.showForm(s.data.formioData, production.data.formData)
     })
     //this.navCtrl.push('DetailproductionPage', {'production': production, 'selectedSource': selectedSource});
@@ -1341,7 +1176,8 @@ getProduitsByCentre(id_centre){
     if(this.action == 'ajouter'){
       this.action = 'liste';
     }else if (this.action == 'modifier'){
-      this.action = 'detail';
+      this.detail(this.production)
+      //this.action = 'detail';
     }
   }
 
@@ -1378,10 +1214,10 @@ supprimer(production){
           if(data.toString() === 'oui'){
            // this.servicePouchdb.getDocById(production.data.id_stock).then((stock) => {
               //vérifier si le stock disponbile est supérieur la la quantité produite (production à supprimer)
-              //if(stock.data.quantite_disponible - production.data.quantite_reelle >= 0){
-               // stock.data.quantite_produite -= production.data.quantite_produite;
+              //if(stock.data.quantite_disponible - production.data.quantiteProduite >= 0){
+               // stock.data.quantiteProduite -= production.data.quantiteProduite;
                 //stock.data.quantite_gate -= production.data.quantite_gate;
-               // stock.data.quantite_disponible -= production.data.quantite_reelle;
+               // stock.data.quantite_disponible -= production.data.quantiteProduite;
 
                 //supprimer la production
                 this.servicePouchdb.deleteReturn(production).then((res) => {
@@ -1416,10 +1252,10 @@ supprimer(production){
 
             //this.servicePouchdb.getDocById(production.data.id_stock).then((stock) => {
               //vérifier si le stock disponbile est supérieur la la quantité produite (production à supprimer)
-              //if(stock.data.quantite_disponible - production.data.quantite_reelle >= 0){
-               // stock.data.quantite_produite -= production.data.quantite_produite;
+              //if(stock.data.quantite_disponible - production.data.quantiteProduite >= 0){
+               // stock.data.quantiteProduite -= production.data.quantiteProduite;
                 //stock.data.quantite_gate -= production.data.quantite_gate;
-               // stock.data.quantite_disponible -= production.data.quantite_reelle;
+               // stock.data.quantite_disponible -= production.data.quantiteProduite;
 
                 //supprimer la production
                 this.servicePouchdb.deleteDocReturn(production).then((res) => {
@@ -1487,10 +1323,10 @@ annulerProduction(production){
           if(data.toString() === 'oui'){
             this.servicePouchdb.getDocById(production.data.id_stock).then((stock) => {
               //vérifier si le stock disponbile est supérieur la la quantité produite (production à supprimer)
-              if(stock.data.quantite_disponible - production.data.quantite_reelle >= 0){
-                stock.data.quantite_produite -= production.data.quantite_produite;
+              if(stock.data.quantite_disponible - production.data.quantiteProduite >= 0){
+                stock.data.quantiteProduite -= production.data.quantiteProduite;
                 //stock.data.quantite_gate -= production.data.quantite_gate;
-                stock.data.quantite_disponible -= production.data.quantite_reelle;
+                stock.data.quantite_disponible -= production.data.quantiteProduite;
 
                 //supprimer la production
                 this.servicePouchdb.deleteReturn(production).then((res) => {
@@ -1525,10 +1361,10 @@ annulerProduction(production){
 
             this.servicePouchdb.getDocById(production.data.id_stock).then((stock) => {
               //vérifier si le stock disponbile est supérieur la la quantité produite (production à supprimer)
-              if(stock.data.quantite_disponible - production.data.quantite_reelle >= 0){
-                stock.data.quantite_produite -= production.data.quantite_produite;
+              if(stock.data.quantite_disponible - production.data.quantiteProduite >= 0){
+                stock.data.quantiteProduite -= production.data.quantiteProduite;
                 //stock.data.quantite_gate -= production.data.quantite_gate;
-                stock.data.quantite_disponible -= production.data.quantite_reelle;
+                stock.data.quantite_disponible -= production.data.quantiteProduite;
 
                 //supprimer la production
                 this.servicePouchdb.deleteDocReturn(production).then((res) => {

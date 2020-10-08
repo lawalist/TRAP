@@ -515,7 +515,7 @@ openRelationProduitGate(ev: any) {
           u.doc = gateFinal;
 
           //metre à jour le stock
-          //this.stock.data.quantite_produite -= gateFinal.data.quantite_gate;
+          //this.stock.data.quantiteProduite -= gateFinal.data.quantite_gate;
           this.stock.data.quantite_gate += Math.round(gateFinal.data.quantite_gate * 100)/100;
           this.stock.data.quantite_disponible -= Math.round(gateFinal.data.quantite_gate * 100)/100;
           this.servicePouchdb.updateDoc(this.stock)
@@ -573,19 +573,19 @@ openRelationProduitGate(ev: any) {
           //en cas de changement de produit
           if(this.gate.data.id_stock != this.copie_stock._id){
             //soustraire l'ancienne gate
-            //this.copie_stock.data.quantite_produite -= this.copieGate.data.quantite_produite;
+            //this.copie_stock.data.quantiteProduite -= this.copieGate.data.quantiteProduite;
             this.copie_stock.data.quantite_gate -= this.copieGate.data.quantite_gate;
             this.copie_stock.data.quantite_disponible += this.copieGate.data.quantite_gate;
             this.servicePouchdb.updateDoc(this.copie_stock);
 
             //mise à jour nouveau stock
-            //this.stock.data.quantite_produite += this.gate.data.quantite_produite;
+            //this.stock.data.quantiteProduite += this.gate.data.quantiteProduite;
             this.stock.data.quantite_gate += this.gate.data.quantite_gate;
             this.stock.data.quantite_disponible -= this.gate.data.quantite_gate;
             this.servicePouchdb.updateDoc(this.stock);
           }else{
             //mise à jour du stocke
-            //this.stock.data.quantite_produite += (this.gate.data.quantite_produite - this.copieGate.data.quantite_produite);
+            //this.stock.data.quantiteProduite += (this.gate.data.quantiteProduite - this.copieGate.data.quantiteProduite);
             this.stock.data.quantite_gate  += (this.gate.data.quantite_gate - this.copieGate.data.quantite_gate);
             this.stock.data.quantite_disponible -= (this.gate.data.quantite_gate - this.copieGate.data.quantite_gate);
             this.servicePouchdb.updateDoc(this.stock);

@@ -1297,25 +1297,28 @@ updateCentreAssocies(id_centre, nom_centre, code_centre) {
       });
     }else{
       setTimeout( () => { 
-        this.servicePouchdb.remoteSaved.getSession((err, response) => {
-          if (err) {
-            // network error
-            //this.events.publish('user:login');
-            //alert('network')
-            this.aProfile = false;
-          } else if (!response.userCtx.name) {
-            // nobody's logged in
-            //this.events.publish('user:login');
-            //alert('nobady')
-            this.aProfile = false;
-          } else {
-            // response.userCtx.name is the current user
-            //this.events.publish('user:login', response.userCtx);
-            //alert(response.userCtx.name)
-            this.aProfile = true;
-          }
-        }); 
-      }, 500 );
+        if(this.servicePouchdb && this.servicePouchdb.remoteSaved &&this.servicePouchdb.remoteSaved.getSession()){
+          this.servicePouchdb.remoteSaved.getSession((err, response) => {
+            if (err) {
+              // network error
+              //this.events.publish('user:login');
+              //alert('network')
+              this.aProfile = false;
+              console.log(err)
+            } else if (!response.userCtx.name) {
+              // nobody's logged in
+              //this.events.publish('user:login');
+              //alert('nobady')
+              this.aProfile = false;
+            } else {
+              // response.userCtx.name is the current user
+              //this.events.publish('user:login', response.userCtx);
+              //alert(response.userCtx.name)
+              this.aProfile = true;
+            }
+          }); 
+        }
+      }, 1000 );
     }
       
         

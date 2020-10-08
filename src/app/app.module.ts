@@ -27,6 +27,7 @@ import { RelationUnionComponent } from '../components/relation-union/relation-un
 import { RelationOpComponent } from '../components/relation-op/relation-op';
 import { RelationCultureComponent } from '../components/relation-culture/relation-culture';
 import { RelationTypeProduitComponent } from '../components/relation-type-produit/relation-type-produit';
+import { RelationFormulaireEnqueteComponent } from '../components/relation-formulaire-enquete/relation-formulaire-enquete';
 import { RelationProduitComponent } from '../components/relation-produit/relation-produit';
 import { RelationVenteComponent } from '../components/relation-vente/relation-vente';
 import { RelationProduitGateComponent } from '../components/relation-produit-gate/relation-produit-gate';
@@ -44,6 +45,7 @@ enableProdMode();
     RelationOpComponent,
     RelationCultureComponent,
     RelationTypeProduitComponent,
+    RelationFormulaireEnqueteComponent,
     RelationProduitComponent,
     RelationVenteComponent,
     RelationProduitGateComponent,
@@ -67,6 +69,7 @@ enableProdMode();
     RelationOpComponent,
     RelationCultureComponent,
     RelationTypeProduitComponent,
+    RelationFormulaireEnqueteComponent,
     RelationProduitComponent,
     RelationVenteComponent,
     RelationProduitGateComponent,

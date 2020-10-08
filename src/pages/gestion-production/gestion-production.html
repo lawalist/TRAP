@@ -183,47 +183,15 @@
           <th>
             <strong>Nom produit</strong>
           </th>
+
           <th>
             <strong>Prix unitaire</strong>
           </th>
           <th>
             <strong>Unité de mésure</strong>
           </th>
-          <!--ng-container *ngFor="let i of selectedProduitIngredients">
-            <th >
-              <strong>{{i.nom}}.{{i.unite}}</strong>
-            </th>
-            <th>
-              <strong>Coût.{{i.nom}}.F</strong>
-            </th>
-          </ng-container-->
-          <!--div *ngFor="let i of selectedProduitIngredients">
-            <th >
-              <strong>{{i.nom}}.{{i.unite}}</strong>
-            </th>
-            
-            <th>
-              <strong>Coût.{{i.nom}}.F</strong>
-            </th>
-          </div-->
-
           <th>
             <strong>Quantité produite</strong>
-          </th>
-          <th>
-            <strong>Quantité gâtée</strong>
-          </th>
-          <th>
-            <strong>Quantité réelle</strong>
-          </th>
-          <th>
-            <strong>Montan production</strong>
-          </th>
-          <th>
-            <strong>Dépense</strong>
-          </th>
-          <th>
-            <strong>Pertes</strong>
           </th>
           <th>
             <strong>Nouveau stock</strong>
@@ -231,7 +199,11 @@
           <th>
             <strong>Ancien stock</strong>
           </th>
-        
+
+          <th *ngFor="let col of colonnes">
+            <strong>{{col}}</strong>
+          </th>
+          
           </tr>
         </thead>
         <!--hr style="width: 375%"-->
@@ -253,54 +225,23 @@
               {{production.data.nom_produit}}
             </td>
             <td  >
-              {{production.data.prix_unitaire}}
+              {{production.data.prixUnitaire}}
             </td>
             <td  >
               {{production.data.unite}}
             </td>
-            <!--ng-container *ngFor="let k of production.data.ingredients">
-              <td >
-                <strong>{{k.quantite}}</strong>
-              </td>
-              
-              <td>
-                <strong>{{k.cout}}</strong>
-              </td>
-            </ng-container-->
-            <!--div *ngFor="let k of production.data.ingredients">
-              <td >
-                <strong>{{k.quantite}}</strong>
-              </td>
-              
-              <td>
-                <strong>{{k.cout}}</strong>
-              </td>
-            </div--> 
+            <td  >
+              {{production.data.quantiteProduite}}
+            </td>
+            <td  >
+              {{production.data.nouveauStock}}
+            </td>
+            <td  >
+              {{production.data.ancienStock}}
+            </td>
 
-            <td  >
-              {{production.data.quantite_produite}}
-            </td>
-            <td  >
-              {{production.data.quantite_gate}}
-            </td>
-            <td  >
-              {{production.data.quantite_reelle}}
-            </td>
-            <td  >
-              {{production.data.montan_production}}
-            </td>
-            <td  >
-              {{production.data.depense}}
-            </td>
-            <td  >
-              {{production.data.perte}}
-            </td>
-            
-            <td  >
-              {{production.data.nouveau_stock}}
-            </td>
-            <td  >
-              {{production.data.ancien_stock}}
+            <td  *ngFor="let col of colonnes">
+              {{jessy(col, production.data.formData)}}
             </td>
             
           </tr>
@@ -335,41 +276,13 @@
           <ion-row> <ion-col class='meta-key'><strong>Type production:</strong></ion-col> <ion-col class='meta-value'> {{production.data.type_produit}}</ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Code produit:</strong></ion-col> <ion-col class='meta-value'> {{production.data.code_produit}}</ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Nom produit:</strong></ion-col> <ion-col class='meta-value'> {{production.data.nom_produit}} </ion-col> </ion-row>
-          <ion-row> <ion-col class='meta-key'><strong>Prix unitaire:</strong></ion-col> <ion-col class='meta-value'> {{production.data.prix_unitaire}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Prix unitaire:</strong></ion-col> <ion-col class='meta-value'> {{production.data.prixUnitaire}} </ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Unité de mésure:</strong></ion-col> <ion-col class='meta-value'> {{production.data.unite}} </ion-col> </ion-row>
-          <fieldset>
-            <legend>Main d'oeuvre interne</legend>
-            <ion-row> <ion-col class='meta-key'><strong>Type de main d'oeuvre interne:</strong></ion-col> <ion-col class='meta-value'> {{production.data.type_main_doeuvre_interne}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Moyen de paiement:</strong></ion-col> <ion-col class='meta-value'> {{production.data.mode_paiement_interne}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Nombre des femmes:</strong></ion-col> <ion-col class='meta-value'> {{production.data.nombre_femme_interne}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Coût des femmes:</strong></ion-col> <ion-col class='meta-value'> {{production.data.cout_femme_interne}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Nombre des hommes:</strong></ion-col> <ion-col class='meta-value'> {{production.data.nombre_homme_interne}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Coût des hommes:</strong></ion-col> <ion-col class='meta-value'> {{production.data.cout_homme_interne}}</ion-col> </ion-row>
-          </fieldset>
-          <br>
-          <fieldset>
-            <legend>Main d'oeuvre externe</legend>
-            <ion-row> <ion-col class='meta-key'><strong>Type de main d'oeuvre externe:</strong></ion-col> <ion-col class='meta-value'> {{production.data.type_main_doeuvre_externe}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Moyen de paiement:</strong></ion-col> <ion-col class='meta-value'> {{production.data.mode_paiement_externe}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Nombre des femmes:</strong></ion-col> <ion-col class='meta-value'> {{production.data.nombre_femme_externe}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Coût des femmes:</strong></ion-col> <ion-col class='meta-value'> {{production.data.cout_femme_externe}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Nombre des hommes:</strong></ion-col> <ion-col class='meta-value'> {{production.data.nombre_homme_externe}}</ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Coût des hommes:</strong></ion-col> <ion-col class='meta-value'> {{production.data.cout_homme_externe}}</ion-col> </ion-row>
-          </fieldset>
-          <br>
-          <fieldset>
-            <legend>Inventaire</legend>
-            <ion-row> <ion-col class='meta-key'><strong>Quantité produite ({{production.data.unite}}):</strong></ion-col> <ion-col class='meta-value'> {{production.data.quantite_produite}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Quantité gâtée ({{production.data.unite}}):</strong></ion-col> <ion-col class='meta-value'> {{production.data.quantite_gate}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Quantité réelle ({{production.data.unite}}):</strong></ion-col> <ion-col class='meta-value'> {{production.data.quantite_reelle}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Prix unitaire (F):</strong></ion-col> <ion-col class='meta-value'> {{production.data.prix_unitaire}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Montan production (F):</strong></ion-col> <ion-col class='meta-value'> {{production.data.montan_production}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Dépense (F):</strong></ion-col> <ion-col class='meta-value'> {{production.data.depense}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Pertes (F):</strong></ion-col> <ion-col class='meta-value'> {{production.data.perte}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Bénéfice (F):</strong></ion-col> <ion-col class='meta-value'> {{production.data.benefice}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Stock avant production ({{production.data.unite}}):</strong></ion-col> <ion-col class='meta-value'> {{production.data.ancien_stock}} </ion-col> </ion-row>
-            <ion-row> <ion-col class='meta-key'><strong>Stock après production ({{production.data.unite}}):</strong></ion-col> <ion-col class='meta-value'> {{production.data.nouveau_stock}} </ion-col> </ion-row>
-          </fieldset>
+        
+          <ion-row> <ion-col class='meta-key'><strong>Quantité produite ({{production.data.unite}}):</strong></ion-col> <ion-col class='meta-value'> {{production.data.quantiteProduite}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Prix unitaire (F):</strong></ion-col> <ion-col class='meta-value'> {{production.data.prixUnitaire}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Stock avant production ({{production.data.unite}}):</strong></ion-col> <ion-col class='meta-value'> {{production.data.ancienStock}} </ion-col> </ion-row>
+          <ion-row> <ion-col class='meta-key'><strong>Stock après production ({{production.data.unite}}):</strong></ion-col> <ion-col class='meta-value'> {{production.data.nouveauStock}} </ion-col> </ion-row>
           <ion-row> <ion-col class='meta-key'><strong>Date enregistrement:</strong></ion-col> <ion-col class='meta-value'> {{production.data.today | date: 'dd-MM-yyyy'}}</ion-col> </ion-row>
         </ion-grid>
       </ion-card-content>
@@ -385,7 +298,7 @@
         <ion-card-content>
 
             <ion-scroll scrollX="true" scrollY="true" id="ingredients_tableau" style="height: 50vh"> 
-              <ion-row>
+              <ion-row> 
                 <ion-col col-12>
                   <div id="show-ingredient-form" class="card card-body bg-light"></div>
                 </ion-col>
@@ -537,8 +450,26 @@
               <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['id_produit'].hasError('required') && productionForm.controls['id_produit'].touched">* le produit est obligatoir!</div>
             </ion-col>
           </ion-row>
+          <ion-row>
+            <ion-col>
+              <ion-item class="item-no-border">
+                <ion-label floating>Prix unitaire (FCFA) <span class="error-box">*</span></ion-label>
+                <ion-input type="number" formControlName="prixUnitaire" disabled></ion-input>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['prixUnitaire'].hasError('required') && productionForm.controls['prixUnitaire'].touched">* la prix unitaire du produite est obligatoir!</div>    
+            </ion-col>
+
+            <ion-col>
+              <ion-item class="item-no-border">
+                <ion-label floating>Stock disponible <span class="error-box">*</span></ion-label>
+                <ion-input type="number" formControlName="ancienStock" disabled></ion-input>
+              </ion-item>
+              <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['ancienStock'].hasError('required') && productionForm.controls['ancienStock'].touched">* la ancien du produite est obligatoir!</div>    
+            </ion-col>
+          </ion-row>
           <br><br>
-          <button ion-button small ionicStepperNext>Suivant</button>
+          <button ion-button color="annuler" small (click)="annuler()">Annuler</button>
+          <button ion-button small ionicStepperNext [disabled]="!productionForm.valid">Suivant</button>
         </ion-step>
         <ion-step label="Etape 2" description="Formule/Ingrédients">
           <h2>Formule / Ingrédients</h2>
@@ -564,7 +495,9 @@
                 <!-- Renders as a Form -->
                 <div class="row">
                   <div class="col-sm-12">
-                    <div id="formio3" class="card card-body bg-light"></div>
+                    <ion-scroll scrollX="true" scrollY="true" style="min-height: 80vh">
+                      <div id="formio3" class="card card-body bg-light"></div>
+                    </ion-scroll>
                   </div>
                 </div>
       
@@ -583,283 +516,28 @@
           </ion-row>
           <br><br>
           <button ion-button color="light" small ionicStepperPrevious>Précédent</button>
-          <button ion-button small *ngIf="complete" ionicStepperNext>Suivant</button>
-        </ion-step>
-
-        <ion-step label="Etape 3" description="Informations complementaires">
-          <fieldset>
-            <legend>Production</legend>
-            <ion-row>
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Quantité produite en ({{productionForm.value.unite}}) <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="quantite_produite" (keyup)="getQuantiteReelle()"></ion-input>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['quantite_produite'].hasError('required') && productionForm.controls['quantite_produite'].touched">* la quantité produite est obligatoir!</div>    
-              </ion-col>
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Quantité gâtée en ({{productionForm.value.unite}}) <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="quantite_gate" (keyup)="getPerte()"></ion-input>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['quantite_gate'].hasError('required') && productionForm.controls['quantite_gate'].touched">* la quantité gâtée est obligatoir!</div>        
-              </ion-col>
-            </ion-row>
-
-            <ion-item class="item-no-border">
-              <ion-label floating>Dépense supplémentaires </ion-label>
-              <ion-input type="number" formControlName="autre_depense" (keyup)="getDepenseSupplementaire()"></ion-input>
-            </ion-item>
-            <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['autre_depense'].hasError('required') && productionForm.controls['autre_depense'].touched">* dépense supplémentaire est obligatoir!</div>    
-          
-          </fieldset>
-           <br>
-          <fieldset>
-            <legend>Main d'oeuvre interne</legend>
-            <ion-item *ngIf="productionForm.controls.type_main_doeuvre_interne.value != 'payante'">
-              <ion-label floating>Type main d'oeuvre interne <span class="error-box">*</span></ion-label>
-              <ion-select formControlName="type_main_doeuvre_interne" (ionChange)="getTypeMainInterne(productionForm.controls.type_main_doeuvre_interne.value)" cancelText="Annuler" okText="Ok">
-                  <ion-option value="gratuite">Gratuite</ion-option>
-                  <ion-option value="payante">Payante</ion-option>
-                </ion-select>
-            </ion-item>
-            <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['type_main_doeuvre_interne'].hasError('required') && productionForm.controls['type_main_doeuvre_interne'].touched">* le type de main d'oeuvre est obligatoir!</div>
-  
-            <ion-row *ngIf="productionForm.controls.type_main_doeuvre_interne.value == 'payante'">
-              <ion-col>
-                <ion-item>
-                  <ion-label floating>Type de main d'oeuvre <span class="error-box">*</span></ion-label>
-                  <ion-select formControlName="type_main_doeuvre_interne" (ionChange)="getTypeMainInterne(productionForm.controls.type_main_doeuvre_interne.value)" cancelText="Annuler" okText="Ok">
-                      <ion-option value="gratuite">Gratuite</ion-option>
-                      <ion-option value="payante">Payante</ion-option>
-                    </ion-select>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['type_main_doeuvre_interne'].hasError('required') && productionForm.controls['type_main_doeuvre_interne'].touched">* le type de main d'oeuvre est obligatoir!</div>        
-              </ion-col>
-              <ion-col>
-                <ion-item>
-                  <ion-label floating>Mode de paiement <span class="error-box">*</span></ion-label>
-                  <ion-select formControlName="mode_paiement_interne" (ionChange)="ModepaiementInterne(productionForm.controls.type_main_doeuvre_interne.value)" cancelText="Annuler" okText="Ok">
-                    <!--ion-option value=" " disabled>Indéfini</ion-option-->  
-                    <ion-option value="argent">Argent</ion-option>
-                      <ion-option value="produit">Produit transformé</ion-option>
-                    </ion-select>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['mode_paiement_interne'].hasError('required') && productionForm.controls['mode_paiement_interne'].touched">* le mode de paiement est obligatoir!</div>        
-                </ion-col>
-            </ion-row>
-            <!--if type == gratuite-->
-            <ion-row *ngIf="productionForm.controls.type_main_doeuvre_interne.value == 'gratuite'">
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Nombre de femmes <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="nombre_femme_interne"></ion-input>
-                </ion-item>
-              </ion-col>
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Nombre d'hommes <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="nombre_homme_interne"></ion-input>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-            <!--if type == payante-->
-            <ion-row *ngIf="productionForm.controls.type_main_doeuvre_interne.value == 'payante'">
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Nombre de femmes <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="nombre_femme_interne" (keyup)="getDepense()"></ion-input>
-                </ion-item>
-              </ion-col>
-              <ion-col>
-                <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_interne.value == 'argent'">
-                  <ion-label floating>Cout des femmes <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="cout_femme_interne" (keyup)="getDepense()"></ion-input>
-                </ion-item>
-
-                <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_interne.value != 'argent'">
-                  <ion-label floating>Quantité prdouit en {{productionForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="cout_femme_interne" (keyup)="getDepense()"></ion-input>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-              <ion-row *ngIf="productionForm.controls.type_main_doeuvre_interne.value == 'payante'">
-                <ion-col>
-                  <ion-item class="item-no-border">
-                    <ion-label floating>Nombre d'hommes <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="nombre_homme_interne" (keyup)="getDepense()"></ion-input>
-                  </ion-item>
-                </ion-col>
-                <ion-col>
-                  <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_interne.value == 'argent'">
-                    <ion-label floating>Cout des hommes <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="cout_homme_interne" (keyup)="getDepense()"></ion-input>
-                  </ion-item>
-
-                  <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_interne.value != 'argent'">
-                    <ion-label floating>Quantité prdouit en {{productionForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="cout_homme_interne" (keyup)="getDepense()"></ion-input>
-                  </ion-item>
-                </ion-col>
-            </ion-row>
-          </fieldset>
-          <br>
-          
-          <fieldset>
-            <legend>Main d'oeuvre externe</legend>
-            <ion-item *ngIf="productionForm.controls.type_main_doeuvre_externe.value != 'payante'">
-              <ion-label floating>Type main d'oeuvre externe<span class="error-box">*</span></ion-label>
-              <ion-select formControlName="type_main_doeuvre_externe" (ionChange)="getTypeMainExterne(productionForm.controls.type_main_doeuvre_externe.value)" cancelText="Annuler" okText="Ok">
-                  <ion-option value="aucune">Aucune</ion-option>
-                  <ion-option value="gratuite">Gratuite</ion-option>
-                  <ion-option value="payante">Payante</ion-option>
-                </ion-select>
-            </ion-item>
-            <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['type_main_doeuvre_externe'].hasError('required') && productionForm.controls['type_main_doeuvre_externe'].touched">* le type de main d'oeuvre est obligatoir!</div>
-  
-            <ion-row *ngIf="productionForm.controls.type_main_doeuvre_externe.value == 'payante'">
-              <ion-col>
-                <ion-item>
-                  <ion-label floating>Type de main d'oeuvre <span class="error-box">*</span></ion-label>
-                  <ion-select formControlName="type_main_doeuvre_externe" (ionChange)="getTypeMainExterne(productionForm.controls.type_main_doeuvre_externe.value)" cancelText="Annuler" okText="Ok">
-                      <ion-option value="aucune">Aucune</ion-option>
-                      <ion-option value="gratuite">Gratuite</ion-option>
-                      <ion-option value="payante">Payante</ion-option>
-                    </ion-select>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['type_main_doeuvre_externe'].hasError('required') && productionForm.controls['type_main_doeuvre_externe'].touched">* le type de main d'oeuvre est obligatoir!</div>        
-              </ion-col>
-              <ion-col>
-                <ion-item>
-                  <ion-label floating>Mode de paiement <span class="error-box">*</span></ion-label>
-                  <ion-select formControlName="mode_paiement_externe" (ionChange)="ModepaiementExterne(productionForm.controls.type_main_doeuvre_externe.value)" cancelText="Annuler" okText="Ok">
-                    <!--ion-option value=" " disabled>Indéfini</ion-option--> 
-                    <ion-option value="argent">Argent</ion-option>
-                    <ion-option value="produit">Produit transformé</ion-option>
-                  </ion-select>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['mode_paiement_externe'].hasError('required') && productionForm.controls['mode_paiement_externe'].touched">* le mode de paiement est obligatoir!</div>        
-                </ion-col>
-            </ion-row>
-            <!--if type == gratuite-->
-            <ion-row *ngIf="productionForm.controls.type_main_doeuvre_externe.value == 'gratuite'">
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Nombre de femmes <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="nombre_femme_externe"></ion-input>
-                </ion-item>
-              </ion-col>
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Nombre d'hommes <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="nombre_homme_externe"></ion-input>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-            <!--if type == payante-->
-            <ion-row *ngIf="productionForm.controls.type_main_doeuvre_externe.value == 'payante'">
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Nombre de femmes <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="nombre_femme_externe" (keyup)="getDepense()"></ion-input>
-                </ion-item>
-              </ion-col>
-              <ion-col>
-                <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_externe.value == 'argent'">
-                  <ion-label floating>Cout des femmes <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="cout_femme_externe" (keyup)="getDepense()"></ion-input>
-                </ion-item>
-
-                <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_externe.value != 'argent'">
-                  <ion-label floating>Quantité prdouit en {{productionForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="cout_femme_externe" (keyup)="getDepense()"></ion-input>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-              <ion-row *ngIf="productionForm.controls.type_main_doeuvre_externe.value == 'payante'">
-                <ion-col>
-                  <ion-item class="item-no-border">
-                    <ion-label floating>Nombre d'hommes <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="nombre_homme_externe" (keyup)="getDepense()"></ion-input>
-                  </ion-item>
-                </ion-col>
-                <ion-col>
-                  <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_externe.value == 'argent'">
-                    <ion-label floating>Cout des hommes <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="cout_homme_externe" (keyup)="getDepense()"></ion-input>
-                  </ion-item>
-
-                  <ion-item class="item-no-border" *ngIf="productionForm.controls.mode_paiement_externe.value != 'argent'">
-                    <ion-label floating>Quantité prdouit en {{productionForm.controls.unite.value}} <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="cout_homme_externe" (keyup)="getDepense()"></ion-input>
-                  </ion-item>
-                </ion-col>
-            </ion-row>
-          </fieldset>
-          <br>
-          <fieldset>
-              <legend>Dépenses et situation du stock</legend>
-
-              <ion-row>
-                <ion-col>
-                  <ion-item class="item-no-border">
-                    <ion-label floating>Dépense <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="depense"></ion-input>
-                    <!--ion-input type="number" formControlName="depense" disabled></ion-input-->
-                  </ion-item>
-                </ion-col>
-                <ion-col>
-                  <ion-item class="item-no-border">
-                    <ion-label floating>Pertes <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="perte" disabled></ion-input>
-                  </ion-item>
-                </ion-col>
-              </ion-row>
-
-              <ion-row>
-                <ion-col>
-                  <ion-item class="item-no-border">
-                    <ion-label floating>Montan production <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="montan_production" disabled></ion-input>
-                  </ion-item>
-                </ion-col>
-                <ion-col>
-                  <ion-item class="item-no-border">
-                    <ion-label floating>Bénéfice <span class="error-box">*</span></ion-label>
-                    <ion-input type="number" formControlName="benefice" disabled></ion-input>
-                  </ion-item>
-                </ion-col>
-              </ion-row>
-
-              <ion-item class="item-no-border">
-                <ion-label floating>Quantité réelle ({{productionForm.value.unite}}) <span class="error-box">*</span></ion-label>
-                <ion-input type="number" formControlName="quantite_reelle" disabled></ion-input>
-              </ion-item>
-              <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['quantite_reelle'].hasError('required') && productionForm.controls['quantite_reelle'].touched">* la quantité réelle est obligatoir!</div>       
-            
-          
-            <ion-row>
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Ancien stock <span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="ancien_stock" disabled></ion-input>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['ancien_stock'].hasError('required') && productionForm.controls['ancien_stock'].touched">* l'ancien stock est obligatoir!</div>        
-              </ion-col>
-              <ion-col>
-                <ion-item class="item-no-border">
-                  <ion-label floating>Nouveau stock<span class="error-box">*</span></ion-label>
-                  <ion-input type="number" formControlName="nouveau_stock" disabled></ion-input>
-                </ion-item>
-                <div style="padding-left: 15px;" class="error-box" *ngIf="productionForm.controls['nouveau_stock'].hasError('required') && productionForm.controls['nouveau_stock'].touched">* le nouveau stock est obligatoir!</div>        
-              </ion-col>
-            </ion-row>
-          </fieldset>
-          <br><br>
-          <button ion-button color="light" small ionicStepperPrevious>Précédent</button> 
           <button ion-button color="annuler" small (click)="annuler()">Annuler</button>
-          <button ion-button type="submit" color="my_secondary" small (click)="validAction()" [disabled]="!productionForm.valid">Sauvegarder</button>
+          <!--button ion-button small *ngIf="complete" ionicStepperNext>Suivant</button-->
+          <button ion-button *ngIf="complete" type="submit" color="my_secondary" small (click)="validAction()" [disabled]="!productionForm.valid">Sauvegarder</button>
+
         </ion-step>
+
+        <!--ion-step label="Etape 3" description="Terminé">
+          <div class="row justify-content-center">
+            <div class="col-3"> <img src="./assets/images/success1.png" class="fit-image"> </div>
+          </div> <br><br>
+          <div class="row justify-content-center">
+              <div class="col-7 text-center">
+                  <h5 class="purple-text text-center">Bravo! Vous avez terminé avec succès.</h5>
+              </div>
+          </div>
+          <br><br>
+          <div class="row justify-content-center">
+            <button ion-button color="light" small ionicStepperPrevious>Précédent</button> 
+            <button ion-button color="annuler" small (click)="annuler()">Annuler</button>
+            <button ion-button type="submit" color="my_secondary" small (click)="validAction()" [disabled]="!productionForm.valid">Sauvegarder</button>
+          </div>
+       </ion-step-->
       </ion-stepper>
 
       <!--ion-card class="info-card" *ngIf="productionForm.controls.id_produit.value"> 

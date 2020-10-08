@@ -290,7 +290,7 @@ openRelationVente(ev: any) {
         quantite_vendue: [, Validators.required],
         cout_vente: [0, Validators.required],
         //quantite_gate: [0, Validators.required],
-        //quantite_reelle: [0, Validators.required],
+        //quantiteProduite: [0, Validators.required],
         ancien_stock: [0, Validators.required],
         nouveau_stock: [0, Validators.required],
         prix_unitaire: [0, Validators.required],
@@ -326,7 +326,7 @@ openRelationVente(ev: any) {
         reduction: [vente.data.reduction, Validators.required],
         quantite_vendue: [vente.data.quantite_vendue, Validators.required],
         cout_vente: [vente.data.cout_vente, Validators.required],
-        //quantite_reelle: [vente.data.quantite_reelle, Validators.required],
+        //quantiteProduite: [vente.data.quantiteProduite, Validators.required],
         ancien_stock: [vente.data.ancien_stock, Validators.required],
         nouveau_stock: [vente.data.nouveau_stock, Validators.required],
         prix_unitaire: [vente.data.prix_unitaire, Validators.required],
@@ -664,7 +664,7 @@ openRelationVente(ev: any) {
           
           this.vente.data.quantite_vendue = vente.quantite_vendue;
           this.vente.data.cout_vente = vente.cout_vente;
-          //this.vente.data.quantite_reelle = vente.quantite_reelle;
+          //this.vente.data.quantiteProduite = vente.quantiteProduite;
           this.vente.data.ancien_stock = vente.ancien_stock;
           this.vente.data.nouveau_stock = vente.nouveau_stock;
           this.vente.data.prix_unitaire = vente.prix_unitaire;
@@ -1088,7 +1088,7 @@ openRelationVente(ev: any) {
             if(data.toString() === 'oui'){
               //this.servicePouchdb.getDocById(vente.data.id_stock).then((stock) => {
                 //vérifier si le stock disponbile est supérieur la la quantité produite (vente à supprimer)
-                //if(stock.data.quantite_disponible - vente.data.quantite_reelle >= 0){
+                //if(stock.data.quantite_disponible - vente.data.quantiteProduite >= 0){
                   //stock.data.quantite_vendue -= vente.data.quantite_vendue;
                   //stock.data.quantite_gate -= vente.data.quantite_gate;
                   //stock.data.quantite_disponible += vente.data.quantite_vendue;
@@ -1126,7 +1126,7 @@ openRelationVente(ev: any) {
   
               //this.servicePouchdb.getDocById(vente.data.id_stock).then((stock) => {
                 //vérifier si le stock disponbile est supérieur la la quantité produite (vente à supprimer)
-                //if(stock.data.quantite_disponible - vente.data.quantite_reelle >= 0){
+                //if(stock.data.quantite_disponible - vente.data.quantiteProduite >= 0){
                   //stock.data.quantite_vendue -= vente.data.quantite_vendue;
                   //stock.data.quantite_gate -= vente.data.quantite_gate;
                   //stock.data.quantite_disponible += vente.data.quantite_vendue;
@@ -1197,7 +1197,7 @@ openRelationVente(ev: any) {
             if(data.toString() === 'oui'){
               this.servicePouchdb.getDocById(vente.data.id_stock).then((stock) => {
                 //vérifier si le stock disponbile est supérieur la la quantité produite (vente à supprimer)
-                //if(stock.data.quantite_disponible - vente.data.quantite_reelle >= 0){
+                //if(stock.data.quantite_disponible - vente.data.quantiteProduite >= 0){
                   //stock.data.quantite_vendue -= vente.data.quantite_vendue;
                   //stock.data.quantite_gate -= vente.data.quantite_gate;
                   stock.data.quantite_disponible += vente.data.quantite_vendue;
@@ -1235,7 +1235,7 @@ openRelationVente(ev: any) {
   
               this.servicePouchdb.getDocById(vente.data.id_stock).then((stock) => {
                 //vérifier si le stock disponbile est supérieur la la quantité produite (vente à supprimer)
-                //if(stock.data.quantite_disponible - vente.data.quantite_reelle >= 0){
+                //if(stock.data.quantite_disponible - vente.data.quantiteProduite >= 0){
                   //stock.data.quantite_vendue -= vente.data.quantite_vendue;
                   //stock.data.quantite_gate -= vente.data.quantite_gate;
                   stock.data.quantite_disponible += vente.data.quantite_vendue;

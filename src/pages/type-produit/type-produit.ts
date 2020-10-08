@@ -1008,7 +1008,7 @@ reinitFormModifier(){
 }
 
 
-formBuider(form = "form", components = []){
+formBuider(form = "form", components = global.components){
   var self = this;
   $('#conf-builder1').ready(() => {
     var jsonElement = document.getElementById('json1');
@@ -1086,7 +1086,7 @@ showForm(form){
   //this.getCultures();
     let maDate = new Date();
     this.today = this.createDate(maDate.getDate(), maDate.getMonth(), maDate.getFullYear());
-    this.id = cryptoRandomString({length: 10});
+    this.id = cryptoRandomString({length: 12});
 
     this.ajoutForm = true;
     

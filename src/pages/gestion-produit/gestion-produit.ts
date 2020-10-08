@@ -500,8 +500,8 @@ openRelationProduit(ev: any) {
           //créer le stock associé, ce documnt sera utiliser pour savoir si le stock est disponible ou pa et faire un inventaire sommaine de la stuation du stock
           let stock: any = {};
           stock._id = produitFinal.data.id_stock;
-          stock.type = 'stock';
           stock.data = {};
+          stock.data.type = 'stock';
           stock.data.id_centre = produitFinal.data.id_centre;
           stock.data.code_centre = produitFinal.data.code_centre;
           stock.data.nom_centre = produitFinal.data.nom_centre;
@@ -567,8 +567,8 @@ openRelationProduit(ev: any) {
           if(stockDefini == 'non'){
             let stock: any = {};
             stock._id = this.produit.data.id_stock;
-            stock.type = 'stock';
             stock.data = {};
+            stock.data.type = 'stock';
             stock.data.id_centre = this.produit.data.id_centre;
             stock.data.code_centre = this.produit.data.code_centre;
             stock.data.nom_centre = this.produit.data.nom_centre;
